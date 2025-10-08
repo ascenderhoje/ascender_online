@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
+import { useRouter } from '../utils/router';
 
 interface AvaliacaoFormPageProps {
   avaliacaoId?: string;
@@ -32,6 +33,7 @@ interface Psicologa {
 
 export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const { showToast } = useToast();
+  const { navigate } = useRouter();
   const [loading, setLoading] = useState(false);
   const [dataAvaliacao, setDataAvaliacao] = useState('');
   const [empresaId, setEmpresaId] = useState('');
@@ -131,9 +133,15 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         .from('avaliacoes')
         .select('*')
         .eq('id', avaliacaoId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        showToast('error', 'Avaliação não encontrada');
+        return;
+      }
+
+      console.log('Avaliação carregada:', data);
 
       setDataAvaliacao(data.data_avaliacao);
       setEmpresaId(data.empresa_id);
@@ -184,7 +192,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         showToast('success', 'Avaliação criada com sucesso');
       }
 
-      window.location.href = '/avaliacoes';
+      navigate('/avaliacoes');
     } catch (error: any) {
       showToast('error', error.message || 'Erro ao salvar avaliação');
     } finally {
@@ -204,7 +212,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
             <Button variant="secondary" icon={Copy}>
               Copiar
             </Button>
-            <Button variant="ghost" icon={ArrowLeft} onClick={() => (window.location.href = '/avaliacoes')}>
+            <Button variant="ghost" icon={ArrowLeft} onClick={() => navigate('/avaliacoes')}>
               Voltar
             </Button>
           </div>

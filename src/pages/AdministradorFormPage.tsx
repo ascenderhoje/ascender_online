@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
+import { useRouter } from '../utils/router';
 
 interface AdministradorFormPageProps {
   administradorId?: string;
@@ -16,6 +17,7 @@ interface Empresa {
 
 export const AdministradorFormPage = ({ administradorId }: AdministradorFormPageProps) => {
   const { showToast } = useToast();
+  const { navigate } = useRouter();
   const [loading, setLoading] = useState(false);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -58,9 +60,16 @@ export const AdministradorFormPage = ({ administradorId }: AdministradorFormPage
         .from('administradores')
         .select('*')
         .eq('id', administradorId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        showToast('error', 'Administrador não encontrado');
+        navigate('/administradores');
+        return;
+      }
+
+      console.log('Administrador carregado:', data);
 
       setNome(data.nome);
       setEmail(data.email);
@@ -121,7 +130,7 @@ export const AdministradorFormPage = ({ administradorId }: AdministradorFormPage
         showToast('success', 'Administrador criado com sucesso');
       }
 
-      window.location.href = '/administradores';
+      navigate('/administradores');
     } catch (error: any) {
       showToast('error', error.message || 'Erro ao salvar administrador');
     } finally {
@@ -137,7 +146,7 @@ export const AdministradorFormPage = ({ administradorId }: AdministradorFormPage
           <Button
             variant="ghost"
             icon={ArrowLeft}
-            onClick={() => (window.location.href = '/administradores')}
+            onClick={() => navigate('/administradores')}
           >
             Voltar
           </Button>

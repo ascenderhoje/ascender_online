@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
+import { useRouter } from '../utils/router';
 
 interface Avaliacao {
   id: string;
@@ -18,6 +19,7 @@ interface Avaliacao {
 
 export const AvaliacoesPage = () => {
   const { showToast } = useToast();
+  const { navigate } = useRouter();
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,7 +144,7 @@ export const AvaliacoesPage = () => {
             <Button variant="secondary" icon={Copy} disabled={selectedIds.length !== 1}>
               Copiar
             </Button>
-            <Button icon={Plus} onClick={() => (window.location.href = '/avaliacoes/new')}>
+            <Button icon={Plus} onClick={() => navigate('/avaliacoes/new')}>
               Adicionar Avaliação
             </Button>
           </div>
@@ -239,7 +241,7 @@ export const AvaliacoesPage = () => {
                       </td>
                       <td className="px-4 py-4 text-sm text-right space-x-2">
                         <button
-                          onClick={() => (window.location.href = `/avaliacoes/${avaliacao.id}/edit`)}
+                          onClick={() => navigate(`/avaliacoes/${avaliacao.id}/edit`)}
                           className="text-indigo-600 hover:text-indigo-900"
                         >
                           Editar

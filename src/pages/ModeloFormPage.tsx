@@ -93,9 +93,16 @@ export const ModeloFormPage = ({ modeloId }: ModeloFormPageProps) => {
         .from('modelos_avaliacao')
         .select('*')
         .eq('id', modeloId)
-        .single();
+        .maybeSingle();
 
       if (modeloError) throw modeloError;
+      if (!modelo) {
+        showToast('error', 'Modelo não encontrado');
+        navigate('/modelos');
+        return;
+      }
+
+      console.log('Modelo carregado:', modelo);
       setNome(modelo.nome);
 
       const { data: modeloComps, error: compsError } = await supabase

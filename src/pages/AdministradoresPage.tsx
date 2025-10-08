@@ -5,6 +5,7 @@ import { Button } from '../components/Button';
 import { Table } from '../components/Table';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
+import { useRouter } from '../utils/router';
 
 interface Administrador {
   id: string;
@@ -18,6 +19,7 @@ interface Administrador {
 
 export const AdministradoresPage = () => {
   const { showToast } = useToast();
+  const { navigate } = useRouter();
   const [administradores, setAdministradores] = useState<Administrador[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,7 +69,7 @@ export const AdministradoresPage = () => {
   );
 
   const handleEdit = (admin: Administrador) => {
-    window.location.href = `/administradores/${admin.id}/edit`;
+    navigate(`/administradores/${admin.id}/edit`);
   };
 
   const columns = [
@@ -107,7 +109,7 @@ export const AdministradoresPage = () => {
         action={
           <Button
             icon={Plus}
-            onClick={() => (window.location.href = '/administradores/new')}
+            onClick={() => navigate('/administradores/new')}
           >
             Adicionar Administrador do Sistema
           </Button>
