@@ -26,6 +26,90 @@ Deno.serve(async (req: Request) => {
       }
     );
 
+    const { method } = req;
+    const body = method !== 'GET' ? await req.json() : null;
+
+    // Setup route - allows creating first admin without authentication
+    if (method === 'POST' && req.url.includes('/setup')) {
+      // Check if any admins exist
+      const { count } = await supabaseClient
+        .from('administradores')
+        .select('*', { count: 'exact', head: true });
+
+      if (count && count > 0) {
+        return new Response(
+          JSON.stringify({ error: 'System already has administrators' }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      const { email, password, nome } = body;
+
+      if (!email || !password || !nome) {
+        return new Response(
+          JSON.stringify({ error: 'Email, password and name are required' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Create auth user
+      const { data: authData, error: createError } = await supabaseClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { nome },
+      });
+
+      if (createError) {
+        return new Response(
+          JSON.stringify({ error: createError.message }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Create admin record
+      const { error: adminError } = await supabaseClient
+        .from('administradores')
+        .insert({
+          auth_user_id: authData.user.id,
+          nome,
+          email,
+          e_administrador: true,
+          e_psicologa: false,
+          ativo: true,
+        });
+
+      if (adminError) {
+        // Cleanup auth user if admin creation fails
+        await supabaseClient.auth.admin.deleteUser(authData.user.id);
+        return new Response(
+          JSON.stringify({ error: adminError.message }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, user: authData.user }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // All other routes require authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -65,9 +149,6 @@ Deno.serve(async (req: Request) => {
         }
       );
     }
-
-    const { method } = req;
-    const body = method !== 'GET' ? await req.json() : null;
 
     if (method === 'POST' && req.url.includes('/create')) {
       const { email, password, metadata } = body;
