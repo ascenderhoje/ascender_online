@@ -2,6 +2,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { ArrowLeft, Mail, Copy } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Button } from '../components/Button';
+import { RichTextEditor } from '../components/RichTextEditor';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
 import { useRouter } from '../utils/router';
@@ -697,41 +698,38 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Oportunidades de Melhoria
                 </label>
-                <textarea
+                <RichTextEditor
                   value={textosPorIdioma[idiomaAtivo].oportunidades_melhoria}
-                  onChange={(e) => updateTexto(idiomaAtivo, 'oportunidades_melhoria', e.target.value)}
-                  rows={6}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  onChange={(value) => updateTexto(idiomaAtivo, 'oportunidades_melhoria', value)}
                   placeholder="Digite as oportunidades de melhoria..."
+                  rows={6}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Pontos Fortes
                 </label>
-                <textarea
+                <RichTextEditor
                   value={textosPorIdioma[idiomaAtivo].pontos_fortes}
-                  onChange={(e) => updateTexto(idiomaAtivo, 'pontos_fortes', e.target.value)}
-                  rows={6}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  onChange={(value) => updateTexto(idiomaAtivo, 'pontos_fortes', value)}
                   placeholder="Digite os pontos fortes..."
+                  rows={6}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Highlights da Psicóloga
                 </label>
-                <textarea
+                <RichTextEditor
                   value={textosPorIdioma[idiomaAtivo].highlights_psicologa}
-                  onChange={(e) => updateTexto(idiomaAtivo, 'highlights_psicologa', e.target.value)}
-                  rows={6}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  onChange={(value) => updateTexto(idiomaAtivo, 'highlights_psicologa', value)}
                   placeholder="Digite os highlights da psicóloga..."
+                  rows={6}
                 />
               </div>
             </div>
@@ -757,12 +755,11 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
                         {textoPtBr?.descricao && (
                           <p className="text-sm text-gray-500 mb-2">{textoPtBr.descricao}</p>
                         )}
-                        <textarea
+                        <RichTextEditor
                           value={resposta.resposta_texto || ''}
-                          onChange={(e) => updateResposta(pergunta.id, 'resposta_texto', e.target.value)}
-                          rows={3}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onChange={(value) => updateResposta(pergunta.id, 'resposta_texto', value)}
                           placeholder="Digite sua resposta..."
+                          rows={4}
                         />
                       </div>
                     );
@@ -789,13 +786,13 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
 
                           return (
                             <div key={criterio.id} className="bg-gray-50 p-3 rounded">
-                              <div className="mb-2">
+                              <div className="mb-3">
                                 <p className="text-sm font-medium text-gray-900">{textoPtBr?.nome}</p>
                                 {textoPtBr?.descricao && (
                                   <p className="text-xs text-gray-500 mt-1">{textoPtBr.descricao}</p>
                                 )}
                               </div>
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-3">
                                 <div>
                                   <label className="block text-xs font-medium text-gray-700 mb-1">
                                     Pontuação (1-5)
@@ -812,15 +809,14 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  <label className="block text-xs font-medium text-gray-700 mb-2">
                                     Observações
                                   </label>
-                                  <input
-                                    type="text"
+                                  <RichTextEditor
                                     value={rating.observacoes || ''}
-                                    onChange={(e) => updateRating(criterio.id, 'observacoes', e.target.value)}
-                                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    onChange={(value) => updateRating(criterio.id, 'observacoes', value)}
                                     placeholder="Notas adicionais..."
+                                    rows={4}
                                   />
                                 </div>
                               </div>
