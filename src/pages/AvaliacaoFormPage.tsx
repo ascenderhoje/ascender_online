@@ -145,13 +145,6 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     }
   }, [avaliacaoId]);
 
-  useEffect(() => {
-    return () => {
-      if (avaliacaoId && currentUser && !isLocked) {
-        releaseLock();
-      }
-    };
-  }, [avaliacaoId, currentUser, isLocked]);
 
   useEffect(() => {
     if (empresaId) {
@@ -258,6 +251,21 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         .eq('id', avaliacaoId);
     } catch (error: any) {
       console.error('Error releasing lock:', error);
+    }
+  };
+
+  const handleFinalizarEdicao = async () => {
+    if (!avaliacaoId) return;
+
+    try {
+      setLoading(true);
+      await releaseLock();
+      showToast('success', 'Edição finalizada com sucesso');
+      navigate('/avaliacoes');
+    } catch (error: any) {
+      showToast('error', 'Erro ao finalizar edição');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -542,13 +550,11 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         await saveRatings(savedAvaliacaoId);
       }
 
-      if (isEditMode) {
-        await releaseLock();
-      }
-
       showToast('success', `Avaliação ${isEditMode ? 'atualizada' : 'criada'} com sucesso`);
 
-      navigate('/avaliacoes');
+      if (!isEditMode) {
+        navigate('/avaliacoes');
+      }
     } catch (error: any) {
       showToast('error', error.message || 'Erro ao salvar avaliação');
     } finally {
@@ -963,9 +969,19 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || isLocked}>
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>
+            {isEditMode && !isLocked && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleFinalizarEdicao}
+                disabled={loading}
+              >
+                Finalizar Edição
+              </Button>
+            )}
           </div>
           </fieldset>
         </form>

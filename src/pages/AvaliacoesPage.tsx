@@ -236,7 +236,7 @@ export const AvaliacoesPage = () => {
                         {avaliacao.psicologa_responsavel?.nome || '-'}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900">
-                        {avaliacao.usuario_editando?.nome || 'Null'}
+                        {avaliacao.editing_user_name || '-'}
                       </td>
                       <td className="px-4 py-4 text-sm text-right space-x-2">
                         <button
