@@ -38,9 +38,8 @@ export const AvaliacoesPage = () => {
         .select(`
           *,
           empresa:empresas(nome),
-          colaborador:pessoas(nome),
-          psicologa_responsavel:administradores!psicologa_responsavel_id(nome),
-          usuario_editando:administradores!usuario_editando_id(nome)
+          colaborador:pessoas!colaborador_id(nome),
+          psicologa_responsavel:administradores!psicologa_responsavel_id(nome)
         `)
         .order('data_avaliacao', { ascending: false });
 
