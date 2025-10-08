@@ -139,10 +139,15 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     loadEmpresas();
     loadModelos();
     loadPsicologas();
-    selectCurrentUser();
-    if (avaliacaoId) {
-      checkEditingLock();
-    }
+
+    const initializeEdit = async () => {
+      const user = await selectCurrentUser();
+      if (avaliacaoId && user) {
+        await checkEditingLock(user);
+      }
+    };
+
+    initializeEdit();
   }, [avaliacaoId]);
 
 
@@ -164,7 +169,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     }
   }, [modeloId]);
 
-  const selectCurrentUser = async () => {
+  const selectCurrentUser = async (): Promise<Pessoa | null> => {
     try {
       const { data, error } = await supabase
         .from('pessoas')
@@ -175,14 +180,17 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       if (error) throw error;
       if (data) {
         setCurrentUser(data);
+        return data;
       }
+      return null;
     } catch (error: any) {
       console.error('Error selecting current user:', error);
+      return null;
     }
   };
 
-  const checkEditingLock = async () => {
-    if (!avaliacaoId) return;
+  const checkEditingLock = async (user: Pessoa | null) => {
+    if (!avaliacaoId || !user) return;
 
     try {
       const { data, error } = await supabase
@@ -205,33 +213,34 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           setLockedBy(data.editing_user_name);
           setShowLockWarning(true);
         } else {
-          await acquireLock();
+          await acquireLock(user);
           loadAvaliacao();
         }
       } else {
-        await acquireLock();
+        await acquireLock(user);
         loadAvaliacao();
       }
     } catch (error: any) {
       console.error('Error checking editing lock:', error);
-      showToast('Erro ao verificar bloqueio de edição', 'error');
+      showToast('error', 'Erro ao verificar bloqueio de edição');
     }
   };
 
-  const acquireLock = async () => {
-    if (!avaliacaoId || !currentUser) return;
+  const acquireLock = async (user: Pessoa) => {
+    if (!avaliacaoId) return;
 
     try {
       const { error } = await supabase
         .from('avaliacoes')
         .update({
-          editing_user_id: currentUser.id,
-          editing_user_name: currentUser.nome,
+          editing_user_id: user.id,
+          editing_user_name: user.nome,
           editing_started_at: new Date().toISOString(),
         })
         .eq('id', avaliacaoId);
 
       if (error) throw error;
+      console.log('Lock acquired for user:', user.nome);
     } catch (error: any) {
       console.error('Error acquiring lock:', error);
     }
