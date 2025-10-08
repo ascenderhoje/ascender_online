@@ -1,4 +1,4 @@
-import { RouterProvider, Route } from './utils/router';
+import { RouterProvider, Route, useRouter } from './utils/router';
 import { Layout } from './components/Layout';
 import { ToastProvider } from './components/Toast';
 import { HomePage } from './pages/HomePage';
@@ -15,6 +15,26 @@ import { AvaliacaoFormPage } from './pages/AvaliacaoFormPage';
 import { AdministradoresPage } from './pages/AdministradoresPage';
 import { AdministradorFormPage } from './pages/AdministradorFormPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
+
+const CompetenciaFormPageWrapper = () => {
+  const { params } = useRouter();
+  return <CompetenciaFormPage competenciaId={params.id} />;
+};
+
+const ModeloFormPageWrapper = () => {
+  const { params } = useRouter();
+  return <ModeloFormPage modeloId={params.id} />;
+};
+
+const AvaliacaoFormPageWrapper = () => {
+  const { params } = useRouter();
+  return <AvaliacaoFormPage avaliacaoId={params.id} />;
+};
+
+const AdministradorFormPageWrapper = () => {
+  const { params } = useRouter();
+  return <AdministradorFormPage administradorId={params.id} />;
+};
 
 function App() {
   return (
@@ -43,7 +63,7 @@ function App() {
           <CompetenciaFormPage />
         </Route>
         <Route path="/competencias/:id/edit">
-          <CompetenciaFormPage competenciaId={window.location.pathname.split('/')[2]} />
+          <CompetenciaFormPageWrapper />
         </Route>
         <Route path="/modelos">
           <ModelosPage />
@@ -52,7 +72,7 @@ function App() {
           <ModeloFormPage />
         </Route>
         <Route path="/modelos/:id/edit">
-          <ModeloFormPage modeloId={window.location.pathname.split('/')[2]} />
+          <ModeloFormPageWrapper />
         </Route>
         <Route path="/avaliacoes">
           <AvaliacoesPage />
@@ -61,7 +81,7 @@ function App() {
           <AvaliacaoFormPage />
         </Route>
         <Route path="/avaliacoes/:id/edit">
-          <AvaliacaoFormPage avaliacaoId={window.location.pathname.split('/')[2]} />
+          <AvaliacaoFormPageWrapper />
         </Route>
         <Route path="/pdi">
           <PlaceholderPage
@@ -76,7 +96,7 @@ function App() {
           <AdministradorFormPage />
         </Route>
         <Route path="/administradores/:id/edit">
-          <AdministradorFormPage administradorId={window.location.pathname.split('/')[2]} />
+          <AdministradorFormPageWrapper />
         </Route>
       </Layout>
     </RouterProvider>

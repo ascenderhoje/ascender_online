@@ -18,19 +18,26 @@ export const RouterProvider = ({ children }: { children: ReactNode }) => {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [params, setParams] = useState<Record<string, string>>({});
 
-  const navigate = useCallback((path: string) => {
-    window.history.pushState({}, '', path);
-    setCurrentPath(path);
-
+  const extractParams = useCallback((path: string) => {
     const pathParts = path.split('/').filter(Boolean);
     const newParams: Record<string, string> = {};
 
-    if (pathParts.length > 1 && pathParts[1] !== 'new' && pathParts[1] !== 'edit') {
-      newParams.id = pathParts[1];
+    // Extract ID from paths like /competencias/:id/edit or /competencias/:id
+    if (pathParts.length >= 2) {
+      const id = pathParts[1];
+      if (id !== 'new' && id !== 'edit') {
+        newParams.id = id;
+      }
     }
 
-    setParams(newParams);
+    return newParams;
   }, []);
+
+  const navigate = useCallback((path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+    setParams(extractParams(path));
+  }, [extractParams]);
 
   return (
     <RouteContext.Provider value={{ currentPath, navigate, params }}>
