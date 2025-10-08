@@ -19,7 +19,6 @@ import { AvaliacaoFormPage } from './pages/AvaliacaoFormPage';
 import { AdministradoresPage } from './pages/AdministradoresPage';
 import { AdministradorFormPage } from './pages/AdministradorFormPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
-import { PerfilPage } from './pages/PerfilPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -46,9 +45,6 @@ function App() {
     <ToastProvider>
       <AuthProvider>
         <RouterProvider>
-          <Route path="/">
-            <LoginPage />
-          </Route>
           <Route path="/login">
             <LoginPage />
           </Route>
@@ -56,14 +52,9 @@ function App() {
             <ForgotPasswordPage />
           </Route>
           <Layout>
-            <Route path="/dashboard">
+            <Route path="/">
               <PrivateRoute>
                 <HomePage />
-              </PrivateRoute>
-            </Route>
-            <Route path="/perfil">
-              <PrivateRoute>
-                <PerfilPage />
               </PrivateRoute>
             </Route>
             <Route path="/empresas">

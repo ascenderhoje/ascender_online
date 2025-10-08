@@ -1,7 +1,6 @@
-import { Search, User, LogOut, ChevronDown, Settings } from 'lucide-react';
+import { Search, User, LogOut, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useRouter } from '../utils/router';
 
 interface HeaderProps {
   title?: string;
@@ -12,7 +11,6 @@ export const Header = ({ title, action }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { administrador, signOut } = useAuth();
-  const { navigate } = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,16 +80,6 @@ export const Header = ({ title, action }: HeaderProps) => {
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    navigate('/perfil');
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                >
-                  <Settings size={16} />
-                  Meu Perfil
-                </button>
                 <button
                   onClick={handleSignOut}
                   className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"

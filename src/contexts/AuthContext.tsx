@@ -75,10 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loadAdministrador(session.user.id).then((admin) => {
           setAdministrador(admin);
           setLoading(false);
-
-          if (admin && (window.location.pathname === '/' || window.location.pathname === '/login')) {
-            window.history.pushState({}, '', '/dashboard');
-          }
         });
       } else {
         setLoading(false);
@@ -93,10 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           const admin = await loadAdministrador(session.user.id);
           setAdministrador(admin);
-
-          if (admin && (window.location.pathname === '/' || window.location.pathname === '/login')) {
-            window.history.pushState({}, '', '/dashboard');
-          }
         } else {
           setAdministrador(null);
         }
