@@ -201,25 +201,23 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
 
       if (error) throw error;
 
-      if (data?.editing_user_id && data?.editing_user_name) {
+      // Se alguém está editando (e não é o próprio usuário), mostra aviso
+      if (data?.editing_user_id && data?.editing_user_name && data.editing_user_id !== user.id) {
         const timeSinceEdit = data.editing_started_at
           ? Date.now() - new Date(data.editing_started_at).getTime()
           : 0;
 
         const LOCK_TIMEOUT = 30 * 60 * 1000;
 
+        // Se foi editado recentemente, mostra aviso (mas não bloqueia)
         if (timeSinceEdit < LOCK_TIMEOUT) {
-          setIsLocked(true);
           setLockedBy(data.editing_user_name);
           setShowLockWarning(true);
-        } else {
-          await acquireLock(user);
-          loadAvaliacao();
         }
-      } else {
-        await acquireLock(user);
-        loadAvaliacao();
       }
+
+      // Sempre carrega a avaliação, independente de quem esteja editando
+      loadAvaliacao();
     } catch (error: any) {
       console.error('Error checking editing lock:', error);
       showToast('error', 'Erro ao verificar bloqueio de edição');
@@ -559,6 +557,11 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         await saveRatings(savedAvaliacaoId);
       }
 
+      // Adquire o lock quando salva (atualiza o nome do último editor)
+      if (isEditMode && currentUser) {
+        await acquireLock(currentUser);
+      }
+
       showToast('success', `Avaliação ${isEditMode ? 'atualizada' : 'criada'} com sucesso`);
 
       if (!isEditMode) {
@@ -714,7 +717,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
               </div>
             </div>
           )}
-          <fieldset disabled={isLocked} className="space-y-6">
+          <fieldset className="space-y-6">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados da Avaliação</h2>
 
@@ -978,10 +981,10 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={loading || isLocked}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>
-            {isEditMode && !isLocked && (
+            {isEditMode && (
               <Button
                 type="button"
                 variant="secondary"
@@ -1017,10 +1020,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
 
       <Modal
         isOpen={showLockWarning}
-        onClose={() => {
-          setShowLockWarning(false);
-          navigate('/avaliacoes');
-        }}
+        onClose={() => setShowLockWarning(false)}
         title="Avaliação em Edição"
         size="md"
       >
@@ -1037,19 +1037,25 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
                 O usuário <strong>{lockedBy}</strong> está editando esta avaliação no momento.
               </p>
               <p className="text-gray-600 mt-2">
-                Por favor, aguarde até que a edição seja concluída ou entre em contato com este usuário.
+                Você pode continuar, mas suas alterações podem sobrescrever as alterações do outro usuário.
               </p>
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
             <Button
-              variant="primary"
+              variant="secondary"
               onClick={() => {
                 setShowLockWarning(false);
                 navigate('/avaliacoes');
               }}
             >
-              Voltar para Avaliações
+              Voltar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setShowLockWarning(false)}
+            >
+              Ciente
             </Button>
           </div>
         </div>
