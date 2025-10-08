@@ -5,6 +5,7 @@ import { Button } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
 import { useRouter } from '../utils/router';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AdministradorFormPageProps {
   administradorId?: string;
@@ -18,18 +19,23 @@ interface Empresa {
 export const AdministradorFormPage = ({ administradorId }: AdministradorFormPageProps) => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
+  const { administrador: currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
+  const [senha, setSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [ativo, setAtivo] = useState(true);
   const [eAdministrador, setEAdministrador] = useState(false);
   const [ePsicologa, setEPsicologa] = useState(false);
   const [empresaPadraoId, setEmpresaPadraoId] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [authUserId, setAuthUserId] = useState<string>('');
 
   const isEditMode = !!administradorId;
+  const isAdmin = currentUser?.e_administrador || false;
 
   useEffect(() => {
     loadEmpresas();
@@ -79,6 +85,7 @@ export const AdministradorFormPage = ({ administradorId }: AdministradorFormPage
       setEPsicologa(data.e_psicologa);
       setEmpresaPadraoId(data.empresa_padrao_id || '');
       setAvatarUrl(data.avatar_url || '');
+      setAuthUserId(data.auth_user_id || '');
     } catch (error: any) {
       showToast('error', error.message || 'Erro ao carregar administrador');
     } finally {
@@ -99,10 +106,96 @@ export const AdministradorFormPage = ({ administradorId }: AdministradorFormPage
       return;
     }
 
+    if (!isEditMode && !senha) {
+      showToast('error', 'Senha é obrigatória para novos administradores');
+      return;
+    }
+
+    if (!isEditMode && senha !== confirmarSenha) {
+      showToast('error', 'As senhas não coincidem');
+      return;
+    }
+
+    if (!isEditMode && senha.length < 6) {
+      showToast('error', 'A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (isEditMode && senha && senha !== confirmarSenha) {
+      showToast('error', 'As senhas não coincidem');
+      return;
+    }
+
+    if (isEditMode && senha && senha.length < 6) {
+      showToast('error', 'A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const data = {
+      let userId = authUserId;
+
+      if (!isEditMode) {
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
+
+        if (!token) throw new Error('Não autenticado');
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/create`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: email.trim().toLowerCase(),
+              password: senha,
+              metadata: {
+                nome: nome.trim(),
+              },
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Erro ao criar usuário de autenticação');
+        }
+
+        userId = result.user.id;
+      } else if (senha && isAdmin) {
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
+
+        if (!token) throw new Error('Não autenticado');
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/update-password`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: authUserId,
+              password: senha,
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Erro ao atualizar senha');
+        }
+      }
+
+      const adminData = {
         nome: nome.trim(),
         email: email.trim().toLowerCase(),
         telefone: telefone.trim() || null,
@@ -111,20 +204,26 @@ export const AdministradorFormPage = ({ administradorId }: AdministradorFormPage
         e_psicologa: ePsicologa,
         empresa_padrao_id: empresaPadraoId || null,
         avatar_url: avatarUrl.trim() || null,
+        auth_user_id: userId,
       };
 
       if (isEditMode) {
         const { error } = await supabase
           .from('administradores')
-          .update(data)
+          .update(adminData)
           .eq('id', administradorId);
 
         if (error) throw error;
-        showToast('success', 'Administrador atualizado com sucesso');
+
+        if (senha && isAdmin) {
+          showToast('success', 'Administrador e senha atualizados com sucesso');
+        } else {
+          showToast('success', 'Administrador atualizado com sucesso');
+        }
       } else {
         const { error } = await supabase
           .from('administradores')
-          .insert(data);
+          .insert(adminData);
 
         if (error) throw error;
         showToast('success', 'Administrador criado com sucesso');
@@ -132,6 +231,7 @@ export const AdministradorFormPage = ({ administradorId }: AdministradorFormPage
 
       navigate('/administradores');
     } catch (error: any) {
+      console.error('Error saving administrador:', error);
       showToast('error', error.message || 'Erro ao salvar administrador');
     } finally {
       setLoading(false);
@@ -181,7 +281,54 @@ export const AdministradorFormPage = ({ administradorId }: AdministradorFormPage
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={isEditMode}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+                {isEditMode && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    O e-mail não pode ser alterado após o cadastro
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Senha {!isEditMode && <span className="text-red-600">*</span>}
+                </label>
+                <input
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required={!isEditMode}
+                  minLength={6}
+                  disabled={isEditMode && !isAdmin}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder={isEditMode ? 'Deixe em branco para não alterar' : ''}
+                />
+                {isEditMode && !isAdmin && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Apenas administradores podem alterar senhas de outros usuários
+                  </p>
+                )}
+                {!isEditMode && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Mínimo de 6 caracteres
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmar Senha {!isEditMode && <span className="text-red-600">*</span>}
+                </label>
+                <input
+                  type="password"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  required={!isEditMode}
+                  minLength={6}
+                  disabled={isEditMode && !isAdmin}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 

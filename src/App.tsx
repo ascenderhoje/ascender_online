@@ -4,6 +4,7 @@ import { ToastProvider } from './components/Toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
 import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { HomePage } from './pages/HomePage';
 import { EmpresasPage } from './pages/EmpresasPage';
@@ -19,6 +20,7 @@ import { AvaliacaoFormPage } from './pages/AvaliacaoFormPage';
 import { AdministradoresPage } from './pages/AdministradoresPage';
 import { AdministradorFormPage } from './pages/AdministradorFormPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
+import { PerfilPage } from './pages/PerfilPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -45,16 +47,27 @@ function App() {
     <ToastProvider>
       <AuthProvider>
         <RouterProvider>
+          <Route path="/">
+            <LoginPage />
+          </Route>
           <Route path="/login">
             <LoginPage />
+          </Route>
+          <Route path="/register">
+            <RegisterPage />
           </Route>
           <Route path="/forgot-password">
             <ForgotPasswordPage />
           </Route>
           <Layout>
-            <Route path="/">
+            <Route path="/dashboard">
               <PrivateRoute>
                 <HomePage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/perfil">
+              <PrivateRoute>
+                <PerfilPage />
               </PrivateRoute>
             </Route>
             <Route path="/empresas">

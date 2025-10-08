@@ -23,7 +23,7 @@ export function LoginPage() {
       setError(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
       setLoading(false);
     } else {
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 
@@ -96,7 +96,13 @@ export function LoginPage() {
             </div>
           </form>
 
-          <div className="mt-6">
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => navigate('/register')}
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium transition-colors"
+            >
+              Criar Conta
+            </button>
             <button
               onClick={() => navigate('/forgot-password')}
               className="px-6 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-full font-medium transition-colors"
