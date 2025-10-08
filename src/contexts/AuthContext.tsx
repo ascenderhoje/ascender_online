@@ -40,9 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (window.location.pathname === '/' || window.location.pathname === '/login') {
-      window.history.pushState({}, '', '/dashboard');
-    }
+    // No redirect needed - let the router handle the default route
   }, []);
 
   const signIn = async (email: string, password: string) => {
