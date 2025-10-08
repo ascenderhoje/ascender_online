@@ -23,7 +23,7 @@ export function LoginPage() {
       setError(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
       setLoading(false);
     } else {
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 

@@ -1,13 +1,17 @@
-import { Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { ModuleName } from '../types';
 
 interface NavItem {
-  id: ModuleName;
+  id: ModuleName | 'dashboard';
   label: string;
   icon: any;
   path: string;
 }
+
+const dashboardItems: NavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+];
 
 const navItems: NavItem[] = [
   { id: 'empresas', label: 'Empresas', icon: Building2, path: '/empresas' },
@@ -37,7 +41,10 @@ export const Sidebar = () => {
   const { currentPath, navigate } = useRouter();
 
   const isActive = (path: string) => {
-    return currentPath.startsWith(path) && currentPath !== '/';
+    if (path === '/dashboard') {
+      return currentPath === '/dashboard';
+    }
+    return currentPath.startsWith(path);
   };
 
   const NavSection = ({ items, title }: { items: NavItem[], title?: string }) => (
@@ -72,7 +79,7 @@ export const Sidebar = () => {
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col">
       <div className="p-6 border-b border-gray-200">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/dashboard')}
           className="text-base font-semibold text-gray-900 hover:text-indigo-600 transition-colors"
         >
           Ascender RH
@@ -80,6 +87,8 @@ export const Sidebar = () => {
       </div>
 
       <nav className="flex-1 py-4 overflow-y-auto">
+        <NavSection items={dashboardItems} />
+        <div className="border-t border-gray-200 my-2"></div>
         <NavSection items={navItems} />
         <div className="border-t border-gray-200 my-2"></div>
         <NavSection items={secondaryItems} />

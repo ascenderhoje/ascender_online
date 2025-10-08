@@ -45,6 +45,9 @@ function App() {
     <ToastProvider>
       <AuthProvider>
         <RouterProvider>
+          <Route path="/">
+            <LoginPage />
+          </Route>
           <Route path="/login">
             <LoginPage />
           </Route>
@@ -52,7 +55,7 @@ function App() {
             <ForgotPasswordPage />
           </Route>
           <Layout>
-            <Route path="/">
+            <Route path="/dashboard">
               <PrivateRoute>
                 <HomePage />
               </PrivateRoute>
