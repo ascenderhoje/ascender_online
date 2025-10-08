@@ -29,23 +29,8 @@ Deno.serve(async (req: Request) => {
     const { method } = req;
     const body = method !== 'GET' ? await req.json() : null;
 
-    // Setup route - allows creating first admin without authentication
+    // Setup route - allows creating admin without authentication
     if (method === 'POST' && req.url.includes('/setup')) {
-      // Check if any admins exist
-      const { count } = await supabaseClient
-        .from('administradores')
-        .select('*', { count: 'exact', head: true });
-
-      if (count && count > 0) {
-        return new Response(
-          JSON.stringify({ error: 'System already has administrators' }),
-          {
-            status: 403,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
       const { email, password, nome } = body;
 
       if (!email || !password || !nome) {
