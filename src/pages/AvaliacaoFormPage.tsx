@@ -82,6 +82,22 @@ interface CompetenciaRating {
   observacoes?: string;
 }
 
+interface AvaliacaoTexto {
+  idioma: string;
+  oportunidades_melhoria: string;
+  pontos_fortes: string;
+  highlights_psicologa: string;
+  idioma_padrao: boolean;
+}
+
+type Idioma = 'pt-BR' | 'en-US' | 'es-ES';
+
+const IDIOMAS: { value: Idioma; label: string }[] = [
+  { value: 'pt-BR', label: 'Português [Default]' },
+  { value: 'en-US', label: 'Inglês' },
+  { value: 'es-ES', label: 'Espanhol' },
+];
+
 export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
@@ -102,6 +118,13 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const [respostas, setRespostas] = useState<Record<string, Resposta>>({});
   const [ratings, setRatings] = useState<Record<string, CompetenciaRating>>({});
   const [loadingModelo, setLoadingModelo] = useState(false);
+
+  const [textosPorIdioma, setTextosPorIdioma] = useState<Record<Idioma, AvaliacaoTexto>>({
+    'pt-BR': { idioma: 'pt-BR', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', idioma_padrao: true },
+    'en-US': { idioma: 'en-US', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', idioma_padrao: false },
+    'es-ES': { idioma: 'es-ES', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', idioma_padrao: false },
+  });
+  const [idiomaAtivo, setIdiomaAtivo] = useState<Idioma>('pt-BR');
 
   const isEditMode = !!avaliacaoId;
 
@@ -221,6 +244,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         await loadModeloDetails();
         await loadExistingResponses();
       }
+
+      await loadTextos();
     } catch (error: any) {
       showToast('error', error.message || 'Erro ao carregar avaliação');
     } finally {
@@ -337,6 +362,35 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     }
   };
 
+  const loadTextos = async () => {
+    if (!avaliacaoId) return;
+
+    try {
+      const { data: textosData, error } = await supabase
+        .from('avaliacoes_textos')
+        .select('*')
+        .eq('avaliacao_id', avaliacaoId);
+
+      if (error) throw error;
+
+      if (textosData && textosData.length > 0) {
+        const textosMap: Record<Idioma, AvaliacaoTexto> = { ...textosPorIdioma };
+        textosData.forEach((texto: any) => {
+          textosMap[texto.idioma as Idioma] = {
+            idioma: texto.idioma,
+            oportunidades_melhoria: texto.oportunidades_melhoria || '',
+            pontos_fortes: texto.pontos_fortes || '',
+            highlights_psicologa: texto.highlights_psicologa || '',
+            idioma_padrao: texto.idioma_padrao,
+          };
+        });
+        setTextosPorIdioma(textosMap);
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar textos da avaliação:', error);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -374,6 +428,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         if (error) throw error;
         savedAvaliacaoId = newAvaliacao.id;
       }
+
+      await saveTextos(savedAvaliacaoId);
 
       if (modeloId && savedAvaliacaoId) {
         await saveRespostas(savedAvaliacaoId);
@@ -461,6 +517,39 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       ...prev,
       [criterioId]: {
         ...(prev[criterioId] || { criterio_id: criterioId }),
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveTextos = async (avaliacaoIdToSave: string) => {
+    if (isEditMode) {
+      await supabase
+        .from('avaliacoes_textos')
+        .delete()
+        .eq('avaliacao_id', avaliacaoIdToSave);
+    }
+
+    const textosToSave = Object.values(textosPorIdioma).map((texto) => ({
+      avaliacao_id: avaliacaoIdToSave,
+      idioma: texto.idioma,
+      oportunidades_melhoria: texto.oportunidades_melhoria,
+      pontos_fortes: texto.pontos_fortes,
+      highlights_psicologa: texto.highlights_psicologa,
+      idioma_padrao: texto.idioma === 'pt-BR',
+    }));
+
+    if (textosToSave.length > 0) {
+      const { error } = await supabase.from('avaliacoes_textos').insert(textosToSave);
+      if (error) throw error;
+    }
+  };
+
+  const updateTexto = (idioma: Idioma, field: keyof Omit<AvaliacaoTexto, 'idioma' | 'idioma_padrao'>, value: string) => {
+    setTextosPorIdioma((prev) => ({
+      ...prev,
+      [idioma]: {
+        ...prev[idioma],
         [field]: value,
       },
     }));
@@ -582,6 +671,68 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados Básicos da Avaliação</h2>
+
+            <div className="flex gap-2 mb-4 border-b border-gray-200">
+              {IDIOMAS.map((idioma) => (
+                <button
+                  key={idioma.value}
+                  type="button"
+                  onClick={() => setIdiomaAtivo(idioma.value)}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    idiomaAtivo === idioma.value
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {idioma.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Oportunidades de Melhoria
+                </label>
+                <textarea
+                  value={textosPorIdioma[idiomaAtivo].oportunidades_melhoria}
+                  onChange={(e) => updateTexto(idiomaAtivo, 'oportunidades_melhoria', e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  placeholder="Digite as oportunidades de melhoria..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pontos Fortes
+                </label>
+                <textarea
+                  value={textosPorIdioma[idiomaAtivo].pontos_fortes}
+                  onChange={(e) => updateTexto(idiomaAtivo, 'pontos_fortes', e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  placeholder="Digite os pontos fortes..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Highlights da Psicóloga
+                </label>
+                <textarea
+                  value={textosPorIdioma[idiomaAtivo].highlights_psicologa}
+                  onChange={(e) => updateTexto(idiomaAtivo, 'highlights_psicologa', e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  placeholder="Digite os highlights da psicóloga..."
+                />
               </div>
             </div>
           </div>
