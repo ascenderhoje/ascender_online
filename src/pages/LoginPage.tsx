@@ -29,8 +29,8 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden flex">
-        <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="w-full p-8 lg:p-12 flex flex-col justify-center">
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-8 h-8 text-yellow-500" />
@@ -105,82 +105,7 @@ export function LoginPage() {
             </button>
           </div>
         </div>
-
-        <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-blue-400 to-blue-600 relative overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center p-12">
-            <svg
-              viewBox="0 0 400 400"
-              className="w-full h-full"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <pattern
-                  id="grid"
-                  width="40"
-                  height="40"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M 40 0 L 0 0 0 40"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.05)"
-                    strokeWidth="1"
-                  />
-                </pattern>
-              </defs>
-
-              <rect width="400" height="400" fill="url(#grid)" />
-
-              <g className="animate-[float_6s_ease-in-out_infinite]">
-                <circle cx="100" cy="80" r="30" fill="rgba(255,255,255,0.2)" />
-                <circle cx="100" cy="60" r="20" fill="rgba(59,130,246,0.6)" />
-                <circle cx="90" cy="55" r="3" fill="white" />
-                <circle cx="110" cy="55" r="3" fill="white" />
-                <path d="M 85 70 Q 100 75 115 70" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-
-              <g className="animate-[float_7s_ease-in-out_infinite_1s]">
-                <circle cx="300" cy="100" r="35" fill="rgba(255,255,255,0.2)" />
-                <ellipse cx="300" cy="95" rx="25" ry="30" fill="rgba(59,130,246,0.6)" />
-                <circle cx="290" cy="90" r="3" fill="white" />
-                <circle cx="310" cy="90" r="3" fill="white" />
-                <path d="M 285 105 Q 300 110 315 105" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-
-              <g className="animate-[float_8s_ease-in-out_infinite_2s]">
-                <circle cx="200" cy="200" r="40" fill="rgba(255,255,255,0.2)" />
-                <circle cx="200" cy="185" r="25" fill="rgba(59,130,246,0.6)" />
-                <circle cx="188" cy="180" r="4" fill="white" />
-                <circle cx="212" cy="180" r="4" fill="white" />
-                <path d="M 185 200 Q 200 205 215 200" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-
-              <g className="animate-[float_7.5s_ease-in-out_infinite_1.5s]">
-                <circle cx="320" cy="280" r="32" fill="rgba(255,255,255,0.2)" />
-                <circle cx="320" cy="270" r="22" fill="rgba(59,130,246,0.6)" />
-                <circle cx="310" cy="265" r="3" fill="white" />
-                <circle cx="330" cy="265" r="3" fill="white" />
-                <path d="M 305 280 Q 320 285 335 280" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-
-              <g className="animate-[float_6.5s_ease-in-out_infinite_0.5s]">
-                <circle cx="80" cy="300" r="28" fill="rgba(255,255,255,0.2)" />
-                <circle cx="80" cy="290" r="20" fill="rgba(59,130,246,0.6)" />
-                <circle cx="72" cy="286" r="2.5" fill="white" />
-                <circle cx="88" cy="286" r="2.5" fill="white" />
-                <path d="M 68 300 Q 80 304 92 300" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-            </svg>
-          </div>
-        </div>
       </div>
-
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-      `}</style>
     </div>
   );
 }
