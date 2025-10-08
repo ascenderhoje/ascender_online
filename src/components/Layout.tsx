@@ -7,15 +7,6 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { currentPath } = useRouter();
-
-  const publicPaths = ['/', '/login', '/forgot-password'];
-  const isPublicPath = publicPaths.includes(currentPath);
-
-  if (isPublicPath) {
-    return <>{children}</>;
-  }
-
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar />
