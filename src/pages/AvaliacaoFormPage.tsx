@@ -1,7 +1,8 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { ArrowLeft, Mail, Copy } from 'lucide-react';
+import { ArrowLeft, Mail, Copy, AlertTriangle } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Button } from '../components/Button';
+import { Modal } from '../components/Modal';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
@@ -127,16 +128,30 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   });
   const [idiomaAtivo, setIdiomaAtivo] = useState<Idioma>('pt-BR');
 
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockedBy, setLockedBy] = useState<string>('');
+  const [showLockWarning, setShowLockWarning] = useState(false);
+  const [currentUser, setCurrentUser] = useState<Pessoa | null>(null);
+
   const isEditMode = !!avaliacaoId;
 
   useEffect(() => {
     loadEmpresas();
     loadModelos();
     loadPsicologas();
+    selectCurrentUser();
     if (avaliacaoId) {
-      loadAvaliacao();
+      checkEditingLock();
     }
   }, [avaliacaoId]);
+
+  useEffect(() => {
+    return () => {
+      if (avaliacaoId && currentUser && !isLocked) {
+        releaseLock();
+      }
+    };
+  }, [avaliacaoId, currentUser, isLocked]);
 
   useEffect(() => {
     if (empresaId) {
@@ -155,6 +170,96 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       setCompetencias([]);
     }
   }, [modeloId]);
+
+  const selectCurrentUser = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pessoas')
+        .select('id, nome, email')
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setCurrentUser(data);
+      }
+    } catch (error: any) {
+      console.error('Error selecting current user:', error);
+    }
+  };
+
+  const checkEditingLock = async () => {
+    if (!avaliacaoId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('avaliacoes')
+        .select('editing_user_id, editing_user_name, editing_started_at')
+        .eq('id', avaliacaoId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data?.editing_user_id && data?.editing_user_name) {
+        const timeSinceEdit = data.editing_started_at
+          ? Date.now() - new Date(data.editing_started_at).getTime()
+          : 0;
+
+        const LOCK_TIMEOUT = 30 * 60 * 1000;
+
+        if (timeSinceEdit < LOCK_TIMEOUT) {
+          setIsLocked(true);
+          setLockedBy(data.editing_user_name);
+          setShowLockWarning(true);
+        } else {
+          await acquireLock();
+          loadAvaliacao();
+        }
+      } else {
+        await acquireLock();
+        loadAvaliacao();
+      }
+    } catch (error: any) {
+      console.error('Error checking editing lock:', error);
+      showToast('Erro ao verificar bloqueio de edição', 'error');
+    }
+  };
+
+  const acquireLock = async () => {
+    if (!avaliacaoId || !currentUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('avaliacoes')
+        .update({
+          editing_user_id: currentUser.id,
+          editing_user_name: currentUser.nome,
+          editing_started_at: new Date().toISOString(),
+        })
+        .eq('id', avaliacaoId);
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error acquiring lock:', error);
+    }
+  };
+
+  const releaseLock = async () => {
+    if (!avaliacaoId) return;
+
+    try {
+      await supabase
+        .from('avaliacoes')
+        .update({
+          editing_user_id: null,
+          editing_user_name: null,
+          editing_started_at: null,
+        })
+        .eq('id', avaliacaoId);
+    } catch (error: any) {
+      console.error('Error releasing lock:', error);
+    }
+  };
 
   const loadEmpresas = async () => {
     try {
@@ -437,6 +542,10 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         await saveRatings(savedAvaliacaoId);
       }
 
+      if (isEditMode) {
+        await releaseLock();
+      }
+
       showToast('success', `Avaliação ${isEditMode ? 'atualizada' : 'criada'} com sucesso`);
 
       navigate('/avaliacoes');
@@ -577,6 +686,20 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
 
       <div className="p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {isLocked && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertTriangle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-yellow-900">
+                  Esta avaliação está sendo editada por {lockedBy}
+                </p>
+                <p className="text-sm text-yellow-700 mt-1">
+                  O formulário está bloqueado para evitar conflitos de edição.
+                </p>
+              </div>
+            </div>
+          )}
+          <fieldset disabled={isLocked} className="space-y-6">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados da Avaliação</h2>
 
@@ -844,6 +967,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
+          </fieldset>
         </form>
 
         <div className="mt-12">
@@ -865,6 +989,46 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={showLockWarning}
+        onClose={() => {
+          setShowLockWarning(false);
+          navigate('/avaliacoes');
+        }}
+        title="Avaliação em Edição"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+              <AlertTriangle size={24} className="text-yellow-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Esta avaliação já está sendo editada
+              </h3>
+              <p className="text-gray-600">
+                O usuário <strong>{lockedBy}</strong> está editando esta avaliação no momento.
+              </p>
+              <p className="text-gray-600 mt-2">
+                Por favor, aguarde até que a edição seja concluída ou entre em contato com este usuário.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+            <Button
+              variant="primary"
+              onClick={() => {
+                setShowLockWarning(false);
+                navigate('/avaliacoes');
+              }}
+            >
+              Voltar para Avaliações
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
