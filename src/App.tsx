@@ -1,6 +1,10 @@
 import { RouterProvider, Route, useRouter } from './utils/router';
 import { Layout } from './components/Layout';
 import { ToastProvider } from './components/Toast';
+import { AuthProvider } from './contexts/AuthContext';
+import { PrivateRoute } from './components/PrivateRoute';
+import { LoginPage } from './pages/LoginPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { HomePage } from './pages/HomePage';
 import { EmpresasPage } from './pages/EmpresasPage';
 import { PessoasPage } from './pages/PessoasPage';
@@ -39,67 +43,111 @@ const AdministradorFormPageWrapper = () => {
 function App() {
   return (
     <ToastProvider>
-      <RouterProvider>
-        <Layout>
-        <Route path="/">
-          <HomePage />
-        </Route>
-        <Route path="/empresas">
-          <EmpresasPage />
-        </Route>
-        <Route path="/pessoas">
-          <PessoasPage />
-        </Route>
-        <Route path="/grupos">
-          <GruposPage />
-        </Route>
-        <Route path="/perfis">
-          <PerfisPage />
-        </Route>
-        <Route path="/competencias">
-          <CompetenciasPage />
-        </Route>
-        <Route path="/competencias/new">
-          <CompetenciaFormPage />
-        </Route>
-        <Route path="/competencias/:id/edit">
-          <CompetenciaFormPageWrapper />
-        </Route>
-        <Route path="/modelos">
-          <ModelosPage />
-        </Route>
-        <Route path="/modelos/new">
-          <ModeloFormPage />
-        </Route>
-        <Route path="/modelos/:id/edit">
-          <ModeloFormPageWrapper />
-        </Route>
-        <Route path="/avaliacoes">
-          <AvaliacoesPage />
-        </Route>
-        <Route path="/avaliacoes/new">
-          <AvaliacaoFormPage />
-        </Route>
-        <Route path="/avaliacoes/:id/edit">
-          <AvaliacaoFormPageWrapper />
-        </Route>
-        <Route path="/pdi">
-          <PlaceholderPage
-            title="PDI"
-            description="Módulo de Plano de Desenvolvimento Individual em desenvolvimento"
-          />
-        </Route>
-        <Route path="/administradores">
-          <AdministradoresPage />
-        </Route>
-        <Route path="/administradores/new">
-          <AdministradorFormPage />
-        </Route>
-        <Route path="/administradores/:id/edit">
-          <AdministradorFormPageWrapper />
-        </Route>
-      </Layout>
-    </RouterProvider>
+      <AuthProvider>
+        <RouterProvider>
+          <Route path="/login">
+            <LoginPage />
+          </Route>
+          <Route path="/forgot-password">
+            <ForgotPasswordPage />
+          </Route>
+          <Layout>
+            <Route path="/">
+              <PrivateRoute>
+                <HomePage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/empresas">
+              <PrivateRoute>
+                <EmpresasPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/pessoas">
+              <PrivateRoute>
+                <PessoasPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/grupos">
+              <PrivateRoute>
+                <GruposPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/perfis">
+              <PrivateRoute>
+                <PerfisPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/competencias">
+              <PrivateRoute>
+                <CompetenciasPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/competencias/new">
+              <PrivateRoute>
+                <CompetenciaFormPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/competencias/:id/edit">
+              <PrivateRoute>
+                <CompetenciaFormPageWrapper />
+              </PrivateRoute>
+            </Route>
+            <Route path="/modelos">
+              <PrivateRoute>
+                <ModelosPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/modelos/new">
+              <PrivateRoute>
+                <ModeloFormPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/modelos/:id/edit">
+              <PrivateRoute>
+                <ModeloFormPageWrapper />
+              </PrivateRoute>
+            </Route>
+            <Route path="/avaliacoes">
+              <PrivateRoute>
+                <AvaliacoesPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/avaliacoes/new">
+              <PrivateRoute>
+                <AvaliacaoFormPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/avaliacoes/:id/edit">
+              <PrivateRoute>
+                <AvaliacaoFormPageWrapper />
+              </PrivateRoute>
+            </Route>
+            <Route path="/pdi">
+              <PrivateRoute>
+                <PlaceholderPage
+                  title="PDI"
+                  description="Módulo de Plano de Desenvolvimento Individual em desenvolvimento"
+                />
+              </PrivateRoute>
+            </Route>
+            <Route path="/administradores">
+              <PrivateRoute>
+                <AdministradoresPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/administradores/new">
+              <PrivateRoute>
+                <AdministradorFormPage />
+              </PrivateRoute>
+            </Route>
+            <Route path="/administradores/:id/edit">
+              <PrivateRoute>
+                <AdministradorFormPageWrapper />
+              </PrivateRoute>
+            </Route>
+          </Layout>
+        </RouterProvider>
+      </AuthProvider>
     </ToastProvider>
   );
 }
