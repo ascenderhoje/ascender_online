@@ -268,7 +268,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const handleFinalizarEdicao = async () => {
     if (!avaliacaoId) return;
 
-    if (!confirm('Tem certeza que deseja finalizar esta avaliação? Após finalizada, não será possível editá-la novamente.')) {
+    if (!confirm('Tem certeza que deseja finalizar esta avaliação? O status será alterado para "finalizada" e o usuário editando será removido. A avaliação pode ser reaberta para edição posteriormente.')) {
       return;
     }
 
@@ -378,14 +378,6 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       setModeloId(data.modelo_id || '');
       setPsicologaId(data.psicologa_responsavel_id || '');
       setAvaliacaoStatus(data.status || 'rascunho');
-
-      // Se avaliação está finalizada, redireciona para listagem
-      if (data.status === 'finalizada') {
-        showToast('error', 'Esta avaliação já foi finalizada e não pode ser editada');
-        navigate('/avaliacoes');
-        setLoading(false);
-        return;
-      }
 
       await loadColaboradores(data.empresa_id);
 
@@ -553,6 +545,9 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
 
       const colaboradorSelecionado = colaboradores.find((c) => c.id === colaboradorId);
 
+      // Se a avaliação estava finalizada e está sendo editada, volta para rascunho
+      const newStatus = avaliacaoStatus === 'finalizada' ? 'rascunho' : avaliacaoStatus;
+
       const data = {
         data_avaliacao: dataAvaliacao,
         empresa_id: empresaId,
@@ -560,7 +555,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         modelo_id: modeloId || null,
         psicologa_responsavel_id: psicologaId || null,
         colaborador_email: colaboradorSelecionado?.email || '',
-        status: 'rascunho',
+        status: newStatus,
       };
 
       let savedAvaliacaoId = avaliacaoId;
@@ -593,6 +588,11 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           email: administrador.email,
         };
         await acquireLock(userData, savedAvaliacaoId);
+      }
+
+      // Atualiza o status local se mudou de finalizada para rascunho
+      if (avaliacaoStatus === 'finalizada') {
+        setAvaliacaoStatus('rascunho');
       }
 
       showToast('success', `Avaliação ${isEditMode ? 'atualizada' : 'criada'} com sucesso`);
@@ -738,19 +738,19 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       <div className="p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
           {avaliacaoStatus === 'finalizada' && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-              <AlertTriangle size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertTriangle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-green-900">
-                  Esta avaliação foi finalizada
+                <p className="text-sm font-medium text-blue-900">
+                  Esta avaliação está finalizada
                 </p>
-                <p className="text-sm text-green-700 mt-1">
-                  Avaliações finalizadas não podem ser editadas.
+                <p className="text-sm text-blue-700 mt-1">
+                  Ao salvar alterações, o status voltará automaticamente para "rascunho".
                 </p>
               </div>
             </div>
           )}
-          <fieldset className="space-y-6" disabled={avaliacaoStatus === 'finalizada'}>
+          <fieldset className="space-y-6">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados da Avaliação</h2>
 
@@ -1014,7 +1014,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={loading || avaliacaoStatus === 'finalizada'}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>
             {isEditMode && avaliacaoStatus === 'rascunho' && (
