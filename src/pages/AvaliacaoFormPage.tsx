@@ -3,6 +3,7 @@ import { ArrowLeft, Mail, Copy, AlertTriangle } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
@@ -134,6 +135,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const [showLockWarning, setShowLockWarning] = useState(false);
   const [currentUser, setCurrentUser] = useState<Pessoa | null>(null);
   const [avaliacaoStatus, setAvaliacaoStatus] = useState<string>('rascunho');
+  const [showFinalizarConfirm, setShowFinalizarConfirm] = useState(false);
+  const [finalizandoAvaliacao, setFinalizandoAvaliacao] = useState(false);
 
   const isEditMode = !!avaliacaoId;
 
@@ -268,12 +271,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const handleFinalizarEdicao = async () => {
     if (!avaliacaoId) return;
 
-    if (!confirm('Tem certeza que deseja finalizar esta avaliação? O status será alterado para "finalizada" e o usuário editando será removido. A avaliação pode ser reaberta para edição posteriormente.')) {
-      return;
-    }
-
     try {
-      setLoading(true);
+      setFinalizandoAvaliacao(true);
       const { error } = await supabase
         .from('avaliacoes')
         .update({
@@ -286,11 +285,12 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
 
       if (error) throw error;
       showToast('success', 'Avaliação finalizada com sucesso');
+      setShowFinalizarConfirm(false);
       navigate('/avaliacoes');
     } catch (error: any) {
       showToast('error', 'Erro ao finalizar avaliação');
     } finally {
-      setLoading(false);
+      setFinalizandoAvaliacao(false);
     }
   };
 
@@ -1021,7 +1021,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={handleFinalizarEdicao}
+                onClick={() => setShowFinalizarConfirm(true)}
                 disabled={loading}
               >
                 Finalizar Edição
@@ -1093,6 +1093,36 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={showFinalizarConfirm}
+        onClose={() => setShowFinalizarConfirm(false)}
+        onConfirm={handleFinalizarEdicao}
+        title="Finalizar Avaliação"
+        message={
+          <div>
+            <p>Tem certeza que deseja finalizar esta avaliação?</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 mt-0.5">•</span>
+                <span>O status será alterado para "finalizada"</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 mt-0.5">•</span>
+                <span>O usuário editando será removido</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-600 mt-0.5">•</span>
+                <span>A avaliação pode ser reaberta para edição posteriormente</span>
+              </li>
+            </ul>
+          </div>
+        }
+        confirmText="Finalizar"
+        cancelText="Cancelar"
+        variant="info"
+        loading={finalizandoAvaliacao}
+      />
     </>
   );
 };
