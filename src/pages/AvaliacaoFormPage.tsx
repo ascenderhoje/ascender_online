@@ -228,8 +228,9 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     }
   };
 
-  const acquireLock = async (user: Pessoa) => {
-    if (!avaliacaoId) return;
+  const acquireLock = async (user: Pessoa, targetAvaliacaoId?: string) => {
+    const idToUse = targetAvaliacaoId || avaliacaoId;
+    if (!idToUse) return;
 
     try {
       const { error } = await supabase
@@ -239,7 +240,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           editing_user_name: user.nome,
           editing_started_at: new Date().toISOString(),
         })
-        .eq('id', avaliacaoId);
+        .eq('id', idToUse);
 
       if (error) throw error;
     } catch (error: any) {
@@ -585,8 +586,13 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       }
 
       // Atualiza o usuário editando quando salva
-      if (isEditMode && currentUser && savedAvaliacaoId) {
-        await acquireLock(currentUser);
+      if (savedAvaliacaoId && administrador) {
+        const userData: Pessoa = {
+          id: administrador.id,
+          nome: administrador.nome,
+          email: administrador.email,
+        };
+        await acquireLock(userData, savedAvaliacaoId);
       }
 
       showToast('success', `Avaliação ${isEditMode ? 'atualizada' : 'criada'} com sucesso`);
