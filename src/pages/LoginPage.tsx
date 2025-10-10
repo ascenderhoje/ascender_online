@@ -17,13 +17,21 @@ export function LoginPage() {
     setError('');
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error: signInError } = await signIn(email, password);
 
-    if (error) {
-      setError(error.message || 'Erro ao fazer login. Verifique suas credenciais.');
+    if (signInError) {
+      if (signInError.message.includes('Invalid login credentials')) {
+        setError('Email ou senha incorretos. Tente novamente.');
+      } else if (signInError.message.includes('não é um administrador')) {
+        setError('Acesso negado. Você não tem permissão para acessar este sistema.');
+      } else {
+        setError(signInError.message || 'Erro ao fazer login. Tente novamente.');
+      }
       setLoading(false);
     } else {
-      navigate('/dashboard');
+      const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectTo);
     }
   };
 
@@ -99,13 +107,15 @@ export function LoginPage() {
           <div className="mt-6 flex gap-3">
             <button
               onClick={() => navigate('/register')}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium transition-colors"
+              disabled={loading}
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium transition-colors disabled:opacity-50"
             >
               Criar Conta
             </button>
             <button
               onClick={() => navigate('/forgot-password')}
-              className="px-6 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-full font-medium transition-colors"
+              disabled={loading}
+              className="px-6 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-full font-medium transition-colors disabled:opacity-50"
             >
               Esqueceu a senha?
             </button>

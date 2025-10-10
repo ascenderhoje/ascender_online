@@ -3,6 +3,9 @@ import { Layout } from './components/Layout';
 import { ToastProvider } from './components/Toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { HomePage } from './pages/HomePage';
 import { EmpresasPage } from './pages/EmpresasPage';
 import { PessoasPage } from './pages/PessoasPage';
@@ -45,6 +48,15 @@ function App() {
       <AuthProvider>
         <RouterProvider>
           <Layout>
+            <Route path="/login">
+              <LoginPage />
+            </Route>
+            <Route path="/register">
+              <RegisterPage />
+            </Route>
+            <Route path="/forgot-password">
+              <ForgotPasswordPage />
+            </Route>
             <Route path="/">
               <PrivateRoute>
                 <HomePage />

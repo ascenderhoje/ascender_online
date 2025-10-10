@@ -1,5 +1,6 @@
-import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings, LogOut } from 'lucide-react';
 import { useRouter } from '../utils/router';
+import { useAuth } from '../contexts/AuthContext';
 import { ModuleName } from '../types';
 
 interface NavItem {
@@ -39,6 +40,12 @@ const adminItems: NavItem[] = [
 
 export const Sidebar = () => {
   const { currentPath, navigate } = useRouter();
+  const { signOut, administrador } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   const isActive = (path: string) => {
     if (path === '/dashboard') {
@@ -99,6 +106,22 @@ export const Sidebar = () => {
         <div className="border-t border-gray-200 my-2"></div>
         <NavSection items={adminItems} />
       </nav>
+
+      <div className="p-4 border-t border-gray-200">
+        {administrador && (
+          <div className="mb-3 px-2">
+            <p className="text-xs text-gray-500">Conectado como</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{administrador.nome}</p>
+          </div>
+        )}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+        >
+          <LogOut size={18} className="text-gray-500" />
+          <span>Sair</span>
+        </button>
+      </div>
     </aside>
   );
 };

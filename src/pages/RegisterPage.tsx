@@ -16,51 +16,7 @@ export function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/setup`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email.trim().toLowerCase(),
-            password: password,
-            nome: nome.trim(),
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Erro ao criar conta');
-      }
-
-      setSuccess('Conta criada com sucesso! Redirecionando para o login...');
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta');
-      setLoading(false);
-    }
+    setError('O registro público está desabilitado. Entre em contato com um administrador existente para criar sua conta através da página de Administradores.');
   };
 
   return (
@@ -152,19 +108,6 @@ export function RegisterPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <input
-                  type="checkbox"
-                  id="isAdmin"
-                  checked={isAdmin}
-                  onChange={(e) => setIsAdmin(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  disabled={loading || !!success}
-                />
-                <label htmlFor="isAdmin" className="text-sm font-medium text-gray-900 cursor-pointer">
-                  Cadastrar como Administrador
-                </label>
-              </div>
 
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
