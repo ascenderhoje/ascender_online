@@ -1,8 +1,8 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useRef } from 'react';
 import { Button } from './Button';
 import { useToast } from './Toast';
 import { supabase } from '../lib/supabase';
-import { X } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 
 interface GrupoFormData {
   nome: string;
@@ -37,6 +37,12 @@ export const GrupoForm = ({ grupo, onSubmit, onCancel }: GrupoFormProps) => {
   const [loading, setLoading] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
+  const [searchMembro, setSearchMembro] = useState('');
+  const [searchGestor, setSearchGestor] = useState('');
+  const [showMembrosDropdown, setShowMembrosDropdown] = useState(false);
+  const [showGestoresDropdown, setShowGestoresDropdown] = useState(false);
+  const membrosDropdownRef = useRef<HTMLDivElement>(null);
+  const gestoresDropdownRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState<GrupoFormData>({
     nome: grupo?.nome || '',
     empresa_id: grupo?.empresa_id || '',
@@ -59,6 +65,20 @@ export const GrupoForm = ({ grupo, onSubmit, onCancel }: GrupoFormProps) => {
       setFormData(prev => ({ ...prev, membros: [], gestores: [] }));
     }
   }, [formData.empresa_id]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (membrosDropdownRef.current && !membrosDropdownRef.current.contains(event.target as Node)) {
+        setShowMembrosDropdown(false);
+      }
+      if (gestoresDropdownRef.current && !gestoresDropdownRef.current.contains(event.target as Node)) {
+        setShowGestoresDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadEmpresas = async () => {
     try {
@@ -141,22 +161,26 @@ export const GrupoForm = ({ grupo, onSubmit, onCancel }: GrupoFormProps) => {
     }
   };
 
-  const toggleMembro = (pessoaId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      membros: prev.membros.includes(pessoaId)
-        ? prev.membros.filter(id => id !== pessoaId)
-        : [...prev.membros, pessoaId],
-    }));
+  const addMembro = (pessoaId: string) => {
+    if (!formData.membros.includes(pessoaId)) {
+      setFormData(prev => ({
+        ...prev,
+        membros: [...prev.membros, pessoaId],
+      }));
+    }
+    setSearchMembro('');
+    setShowMembrosDropdown(false);
   };
 
-  const toggleGestor = (pessoaId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      gestores: prev.gestores.includes(pessoaId)
-        ? prev.gestores.filter(id => id !== pessoaId)
-        : [...prev.gestores, pessoaId],
-    }));
+  const addGestor = (pessoaId: string) => {
+    if (!formData.gestores.includes(pessoaId)) {
+      setFormData(prev => ({
+        ...prev,
+        gestores: [...prev.gestores, pessoaId],
+      }));
+    }
+    setSearchGestor('');
+    setShowGestoresDropdown(false);
   };
 
   const removeMembro = (pessoaId: string) => {
@@ -175,6 +199,18 @@ export const GrupoForm = ({ grupo, onSubmit, onCancel }: GrupoFormProps) => {
 
   const getSelectedPessoas = (ids: string[]) => {
     return pessoas.filter(p => ids.includes(p.id));
+  };
+
+  const getFilteredPessoas = (search: string, excludeIds: string[]) => {
+    return pessoas.filter(p => {
+      if (excludeIds.includes(p.id)) return false;
+      if (!search.trim()) return true;
+      const searchLower = search.toLowerCase();
+      return (
+        p.nome.toLowerCase().includes(searchLower) ||
+        p.email.toLowerCase().includes(searchLower)
+      );
+    });
   };
 
   return (
@@ -237,7 +273,7 @@ export const GrupoForm = ({ grupo, onSubmit, onCancel }: GrupoFormProps) => {
                     <button
                       type="button"
                       onClick={() => removeMembro(pessoa.id)}
-                      className="hover:bg-blue-200 rounded-full p-0.5"
+                      className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -246,29 +282,50 @@ export const GrupoForm = ({ grupo, onSubmit, onCancel }: GrupoFormProps) => {
               </div>
             )}
 
-            <div className="border border-gray-300 rounded-md max-h-48 overflow-y-auto">
-              {pessoas.length === 0 ? (
-                <p className="p-4 text-sm text-gray-500 text-center">
-                  Nenhuma pessoa cadastrada nesta empresa
-                </p>
-              ) : (
-                pessoas.map((pessoa) => (
-                  <label
-                    key={pessoa.id}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.membros.includes(pessoa.id)}
-                      onChange={() => toggleMembro(pessoa.id)}
-                      className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{pessoa.nome}</p>
-                      <p className="text-xs text-gray-500">{pessoa.email}</p>
-                    </div>
-                  </label>
-                ))
+            <div className="relative" ref={membrosDropdownRef}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  value={searchMembro}
+                  onChange={(e) => {
+                    setSearchMembro(e.target.value);
+                    setShowMembrosDropdown(true);
+                  }}
+                  onFocus={() => setShowMembrosDropdown(true)}
+                  placeholder="Buscar pessoa para adicionar..."
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {showMembrosDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {pessoas.length === 0 ? (
+                    <p className="p-4 text-sm text-gray-500 text-center">
+                      Nenhuma pessoa cadastrada nesta empresa
+                    </p>
+                  ) : (
+                    getFilteredPessoas(searchMembro, formData.membros).length === 0 ? (
+                      <p className="p-4 text-sm text-gray-500 text-center">
+                        {searchMembro ? 'Nenhuma pessoa encontrada' : 'Todas as pessoas já foram adicionadas'}
+                      </p>
+                    ) : (
+                      getFilteredPessoas(searchMembro, formData.membros).map((pessoa) => (
+                        <button
+                          key={pessoa.id}
+                          type="button"
+                          onClick={() => addMembro(pessoa.id)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 text-left border-b border-gray-100 last:border-0 transition-colors"
+                        >
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{pessoa.nome}</p>
+                            <p className="text-xs text-gray-500">{pessoa.email}</p>
+                          </div>
+                        </button>
+                      ))
+                    )
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -292,7 +349,7 @@ export const GrupoForm = ({ grupo, onSubmit, onCancel }: GrupoFormProps) => {
                     <button
                       type="button"
                       onClick={() => removeGestor(pessoa.id)}
-                      className="hover:bg-green-200 rounded-full p-0.5"
+                      className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -301,29 +358,50 @@ export const GrupoForm = ({ grupo, onSubmit, onCancel }: GrupoFormProps) => {
               </div>
             )}
 
-            <div className="border border-gray-300 rounded-md max-h-48 overflow-y-auto">
-              {pessoas.length === 0 ? (
-                <p className="p-4 text-sm text-gray-500 text-center">
-                  Nenhuma pessoa cadastrada nesta empresa
-                </p>
-              ) : (
-                pessoas.map((pessoa) => (
-                  <label
-                    key={pessoa.id}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.gestores.includes(pessoa.id)}
-                      onChange={() => toggleGestor(pessoa.id)}
-                      className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{pessoa.nome}</p>
-                      <p className="text-xs text-gray-500">{pessoa.email}</p>
-                    </div>
-                  </label>
-                ))
+            <div className="relative" ref={gestoresDropdownRef}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  value={searchGestor}
+                  onChange={(e) => {
+                    setSearchGestor(e.target.value);
+                    setShowGestoresDropdown(true);
+                  }}
+                  onFocus={() => setShowGestoresDropdown(true)}
+                  placeholder="Buscar pessoa para adicionar..."
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {showGestoresDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {pessoas.length === 0 ? (
+                    <p className="p-4 text-sm text-gray-500 text-center">
+                      Nenhuma pessoa cadastrada nesta empresa
+                    </p>
+                  ) : (
+                    getFilteredPessoas(searchGestor, formData.gestores).length === 0 ? (
+                      <p className="p-4 text-sm text-gray-500 text-center">
+                        {searchGestor ? 'Nenhuma pessoa encontrada' : 'Todas as pessoas já foram adicionadas'}
+                      </p>
+                    ) : (
+                      getFilteredPessoas(searchGestor, formData.gestores).map((pessoa) => (
+                        <button
+                          key={pessoa.id}
+                          type="button"
+                          onClick={() => addGestor(pessoa.id)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 text-left border-b border-gray-100 last:border-0 transition-colors"
+                        >
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{pessoa.nome}</p>
+                            <p className="text-xs text-gray-500">{pessoa.email}</p>
+                          </div>
+                        </button>
+                      ))
+                    )
+                  )}
+                </div>
               )}
             </div>
           </div>
