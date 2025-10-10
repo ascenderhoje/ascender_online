@@ -2,6 +2,7 @@ import { useState, useEffect, FormEvent, useRef } from 'react';
 import { Button } from './Button';
 import { useToast } from './Toast';
 import { supabase } from '../lib/supabase';
+import { X, Search } from 'lucide-react';
 
 interface PessoaFormData {
   nome: string;
@@ -51,6 +52,12 @@ export const PessoaForm = ({ pessoa, onSubmit, onCancel }: PessoaFormProps) => {
   const [uploading, setUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>(pessoa?.avatar_url || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [searchPertence, setSearchPertence] = useState('');
+  const [searchAcesso, setSearchAcesso] = useState('');
+  const [showPertenceDropdown, setShowPertenceDropdown] = useState(false);
+  const [showAcessoDropdown, setShowAcessoDropdown] = useState(false);
+  const pertenceDropdownRef = useRef<HTMLDivElement>(null);
+  const acessoDropdownRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState<PessoaFormData>({
     nome: pessoa?.nome || '',
     email: pessoa?.email || '',
@@ -72,6 +79,20 @@ export const PessoaForm = ({ pessoa, onSubmit, onCancel }: PessoaFormProps) => {
       loadPessoaGrupos(pessoa.id);
     }
   }, [pessoa]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pertenceDropdownRef.current && !pertenceDropdownRef.current.contains(event.target as Node)) {
+        setShowPertenceDropdown(false);
+      }
+      if (acessoDropdownRef.current && !acessoDropdownRef.current.contains(event.target as Node)) {
+        setShowAcessoDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadEmpresas = async () => {
     try {
@@ -166,6 +187,55 @@ export const PessoaForm = ({ pessoa, onSubmit, onCancel }: PessoaFormProps) => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const addGrupoPertence = (grupoId: string) => {
+    if (!formData.grupos_pertence.includes(grupoId)) {
+      setFormData({
+        ...formData,
+        grupos_pertence: [...formData.grupos_pertence, grupoId],
+      });
+    }
+    setSearchPertence('');
+    setShowPertenceDropdown(false);
+  };
+
+  const addGrupoAcesso = (grupoId: string) => {
+    if (!formData.grupos_tem_acesso.includes(grupoId)) {
+      setFormData({
+        ...formData,
+        grupos_tem_acesso: [...formData.grupos_tem_acesso, grupoId],
+      });
+    }
+    setSearchAcesso('');
+    setShowAcessoDropdown(false);
+  };
+
+  const removeGrupoPertence = (grupoId: string) => {
+    setFormData({
+      ...formData,
+      grupos_pertence: formData.grupos_pertence.filter(id => id !== grupoId),
+    });
+  };
+
+  const removeGrupoAcesso = (grupoId: string) => {
+    setFormData({
+      ...formData,
+      grupos_tem_acesso: formData.grupos_tem_acesso.filter(id => id !== grupoId),
+    });
+  };
+
+  const getSelectedGrupos = (ids: string[]) => {
+    return grupos.filter(g => ids.includes(g.id));
+  };
+
+  const getFilteredGrupos = (search: string, excludeIds: string[]) => {
+    return grupos.filter(g => {
+      if (excludeIds.includes(g.id)) return false;
+      if (!search.trim()) return true;
+      const searchLower = search.toLowerCase();
+      return g.nome.toLowerCase().includes(searchLower);
+    });
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -372,76 +442,146 @@ export const PessoaForm = ({ pessoa, onSubmit, onCancel }: PessoaFormProps) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Pertence a:
             </label>
-            <div className="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
-              {grupos.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-2">Nenhum grupo cadastrado</p>
-              ) : (
-                grupos.map((grupo) => (
-                  <label key={grupo.id} className="flex items-center gap-2 py-1 hover:bg-gray-50 px-2 rounded cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.grupos_pertence.includes(grupo.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData({
-                            ...formData,
-                            grupos_pertence: [...formData.grupos_pertence, grupo.id],
-                          });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            grupos_pertence: formData.grupos_pertence.filter(id => id !== grupo.id),
-                          });
-                        }
-                      }}
-                      className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="text-sm text-gray-700">{grupo.nome}</span>
-                  </label>
-                ))
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mb-3">
               Grupos dos quais a pessoa é colaboradora
             </p>
+
+            {formData.grupos_pertence.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {getSelectedGrupos(formData.grupos_pertence).map((grupo) => (
+                  <span
+                    key={grupo.id}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                  >
+                    {grupo.nome}
+                    <button
+                      type="button"
+                      onClick={() => removeGrupoPertence(grupo.id)}
+                      className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="relative" ref={pertenceDropdownRef}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  value={searchPertence}
+                  onChange={(e) => {
+                    setSearchPertence(e.target.value);
+                    setShowPertenceDropdown(true);
+                  }}
+                  onFocus={() => setShowPertenceDropdown(true)}
+                  placeholder="Buscar grupo para adicionar..."
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {showPertenceDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {grupos.length === 0 ? (
+                    <p className="p-4 text-sm text-gray-500 text-center">
+                      Nenhum grupo cadastrado
+                    </p>
+                  ) : (
+                    getFilteredGrupos(searchPertence, formData.grupos_pertence).length === 0 ? (
+                      <p className="p-4 text-sm text-gray-500 text-center">
+                        {searchPertence ? 'Nenhum grupo encontrado' : 'Todos os grupos já foram adicionados'}
+                      </p>
+                    ) : (
+                      getFilteredGrupos(searchPertence, formData.grupos_pertence).map((grupo) => (
+                        <button
+                          key={grupo.id}
+                          type="button"
+                          onClick={() => addGrupoPertence(grupo.id)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 text-left border-b border-gray-100 last:border-0 transition-colors"
+                        >
+                          <span className="text-sm text-gray-700">{grupo.nome}</span>
+                        </button>
+                      ))
+                    )
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tem acesso a:
             </label>
-            <div className="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
-              {grupos.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-2">Nenhum grupo cadastrado</p>
-              ) : (
-                grupos.map((grupo) => (
-                  <label key={grupo.id} className="flex items-center gap-2 py-1 hover:bg-gray-50 px-2 rounded cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.grupos_tem_acesso.includes(grupo.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData({
-                            ...formData,
-                            grupos_tem_acesso: [...formData.grupos_tem_acesso, grupo.id],
-                          });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            grupos_tem_acesso: formData.grupos_tem_acesso.filter(id => id !== grupo.id),
-                          });
-                        }
-                      }}
-                      className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="text-sm text-gray-700">{grupo.nome}</span>
-                  </label>
-                ))
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mb-3">
               Grupos que a pessoa gerencia (pode ver todos os colaboradores)
             </p>
+
+            {formData.grupos_tem_acesso.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {getSelectedGrupos(formData.grupos_tem_acesso).map((grupo) => (
+                  <span
+                    key={grupo.id}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm"
+                  >
+                    {grupo.nome}
+                    <button
+                      type="button"
+                      onClick={() => removeGrupoAcesso(grupo.id)}
+                      className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="relative" ref={acessoDropdownRef}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  value={searchAcesso}
+                  onChange={(e) => {
+                    setSearchAcesso(e.target.value);
+                    setShowAcessoDropdown(true);
+                  }}
+                  onFocus={() => setShowAcessoDropdown(true)}
+                  placeholder="Buscar grupo para adicionar..."
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {showAcessoDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {grupos.length === 0 ? (
+                    <p className="p-4 text-sm text-gray-500 text-center">
+                      Nenhum grupo cadastrado
+                    </p>
+                  ) : (
+                    getFilteredGrupos(searchAcesso, formData.grupos_tem_acesso).length === 0 ? (
+                      <p className="p-4 text-sm text-gray-500 text-center">
+                        {searchAcesso ? 'Nenhum grupo encontrado' : 'Todos os grupos já foram adicionados'}
+                      </p>
+                    ) : (
+                      getFilteredGrupos(searchAcesso, formData.grupos_tem_acesso).map((grupo) => (
+                        <button
+                          key={grupo.id}
+                          type="button"
+                          onClick={() => addGrupoAcesso(grupo.id)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 text-left border-b border-gray-100 last:border-0 transition-colors"
+                        >
+                          <span className="text-sm text-gray-700">{grupo.nome}</span>
+                        </button>
+                      ))
+                    )
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
