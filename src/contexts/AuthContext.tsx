@@ -89,19 +89,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
+      (event, session) => {
+        (async () => {
+          console.log('Auth state changed:', event);
+          setSession(session);
+          setUser(session?.user ?? null);
 
-        if (session?.user) {
-          const adminData = await loadAdministrador(session.user.id);
-          setAdministrador(adminData);
-        } else {
-          setAdministrador(null);
-        }
+          if (session?.user) {
+            const adminData = await loadAdministrador(session.user.id);
+            setAdministrador(adminData);
+          } else {
+            setAdministrador(null);
+          }
 
-        setLoading(false);
+          setLoading(false);
+        })();
       }
     );
 
