@@ -11,10 +11,10 @@ interface Avaliacao {
   data_avaliacao: string;
   colaborador_email: string;
   status: string;
-  editing_user_name: string | null;
   empresa: { nome: string };
   colaborador: { nome: string };
   psicologa_responsavel: { nome: string } | null;
+  usuario_editando: { nome: string } | null;
 }
 
 export const AvaliacoesPage = () => {
@@ -124,21 +124,6 @@ export const AvaliacoesPage = () => {
     return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  const getStatusBadge = (status: string) => {
-    if (status === 'finalizada') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          Finalizada
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-        Rascunho
-      </span>
-    );
-  };
-
   const filteredAvaliacoes = avaliacoes.filter(
     (avaliacao) =>
       avaliacao.colaborador.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -198,9 +183,6 @@ export const AvaliacoesPage = () => {
                     Data da Avaliação ↓
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
                     Empresa
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
@@ -223,13 +205,13 @@ export const AvaliacoesPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                       Carregando...
                     </td>
                   </tr>
                 ) : filteredAvaliacoes.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                       Nenhuma avaliação encontrada
                     </td>
                   </tr>
@@ -247,9 +229,6 @@ export const AvaliacoesPage = () => {
                       <td className="px-4 py-4 text-sm text-gray-900">
                         {formatDate(avaliacao.data_avaliacao)}
                       </td>
-                      <td className="px-4 py-4 text-sm">
-                        {getStatusBadge(avaliacao.status)}
-                      </td>
                       <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.empresa.nome}</td>
                       <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.colaborador.nome}</td>
                       <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.colaborador_email}</td>
@@ -257,7 +236,7 @@ export const AvaliacoesPage = () => {
                         {avaliacao.psicologa_responsavel?.nome || '-'}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900">
-                        {avaliacao.status === 'rascunho' && avaliacao.editing_user_name ? avaliacao.editing_user_name : '-'}
+                        {avaliacao.editing_user_name || '-'}
                       </td>
                       <td className="px-4 py-4 text-sm text-right space-x-2">
                         <button
