@@ -7,6 +7,7 @@ import { RichTextEditor } from '../components/RichTextEditor';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
 import { useRouter } from '../utils/router';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AvaliacaoFormPageProps {
   avaliacaoId?: string;
@@ -103,6 +104,7 @@ const IDIOMAS: { value: Idioma; label: string }[] = [
 export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
+  const { administrador } = useAuth();
   const [loading, setLoading] = useState(false);
   const [dataAvaliacao, setDataAvaliacao] = useState('');
   const [empresaId, setEmpresaId] = useState('');
@@ -141,6 +143,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     loadPsicologas();
 
     const initializeEdit = async () => {
+      if (!administrador) return;
+
       const user = await selectCurrentUser();
       if (avaliacaoId && user) {
         await checkEditingLock(user);
@@ -150,7 +154,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     };
 
     initializeEdit();
-  }, [avaliacaoId]);
+  }, [avaliacaoId, administrador]);
 
 
   useEffect(() => {
@@ -172,23 +176,17 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   }, [modeloId]);
 
   const selectCurrentUser = async (): Promise<Pessoa | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('pessoas')
-        .select('id, nome, email')
-        .limit(1)
-        .maybeSingle();
+    if (!administrador) return null;
 
-      if (error) throw error;
-      if (data) {
-        setCurrentUser(data);
-        return data;
-      }
-      return null;
-    } catch (error: any) {
-      console.error('Error selecting current user:', error);
-      return null;
-    }
+    // Use administrador data as the current user
+    const userData: Pessoa = {
+      id: administrador.id,
+      nome: administrador.nome,
+      email: administrador.email,
+    };
+
+    setCurrentUser(userData);
+    return userData;
   };
 
   const checkEditingLock = async (user: Pessoa | null) => {
