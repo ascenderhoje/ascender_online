@@ -128,10 +128,10 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   });
   const [idiomaAtivo, setIdiomaAtivo] = useState<Idioma>('pt-BR');
 
-  const [isLocked, setIsLocked] = useState(false);
   const [lockedBy, setLockedBy] = useState<string>('');
   const [showLockWarning, setShowLockWarning] = useState(false);
   const [currentUser, setCurrentUser] = useState<Pessoa | null>(null);
+  const [avaliacaoStatus, setAvaliacaoStatus] = useState<string>('rascunho');
 
   const isEditMode = !!avaliacaoId;
 
@@ -144,6 +144,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       const user = await selectCurrentUser();
       if (avaliacaoId && user) {
         await checkEditingLock(user);
+      } else if (!avaliacaoId) {
+        setLoading(false);
       }
     };
 
@@ -195,24 +197,28 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     try {
       const { data, error } = await supabase
         .from('avaliacoes')
-        .select('editing_user_id, editing_user_name, editing_started_at')
+        .select('editing_user_id, editing_user_name, editing_started_at, status')
         .eq('id', avaliacaoId)
         .maybeSingle();
 
       if (error) throw error;
 
-      // Se alguém está editando (e não é o próprio usuário), mostra aviso
-      if (data?.editing_user_id && data?.editing_user_name && data.editing_user_id !== user.id) {
-        const timeSinceEdit = data.editing_started_at
-          ? Date.now() - new Date(data.editing_started_at).getTime()
-          : 0;
+      if (data) {
+        setAvaliacaoStatus(data.status || 'rascunho');
 
-        const LOCK_TIMEOUT = 30 * 60 * 1000;
+        // Se alguém está editando (e não é o próprio usuário), mostra aviso
+        if (data?.editing_user_id && data?.editing_user_name && data.editing_user_id !== user.id) {
+          const timeSinceEdit = data.editing_started_at
+            ? Date.now() - new Date(data.editing_started_at).getTime()
+            : 0;
 
-        // Se foi editado recentemente, mostra aviso (mas não bloqueia)
-        if (timeSinceEdit < LOCK_TIMEOUT) {
-          setLockedBy(data.editing_user_name);
-          setShowLockWarning(true);
+          const LOCK_TIMEOUT = 30 * 60 * 1000;
+
+          // Se foi editado recentemente, mostra aviso (mas não bloqueia)
+          if (timeSinceEdit < LOCK_TIMEOUT) {
+            setLockedBy(data.editing_user_name);
+            setShowLockWarning(true);
+          }
         }
       }
 
@@ -238,7 +244,6 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         .eq('id', avaliacaoId);
 
       if (error) throw error;
-      console.log('Lock acquired for user:', user.nome);
     } catch (error: any) {
       console.error('Error acquiring lock:', error);
     }
@@ -264,13 +269,27 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const handleFinalizarEdicao = async () => {
     if (!avaliacaoId) return;
 
+    if (!confirm('Tem certeza que deseja finalizar esta avaliação? Após finalizada, não será possível editá-la novamente.')) {
+      return;
+    }
+
     try {
       setLoading(true);
-      await releaseLock();
-      showToast('success', 'Edição finalizada com sucesso');
+      const { error } = await supabase
+        .from('avaliacoes')
+        .update({
+          status: 'finalizada',
+          editing_user_id: null,
+          editing_user_name: null,
+          editing_started_at: null,
+        })
+        .eq('id', avaliacaoId);
+
+      if (error) throw error;
+      showToast('success', 'Avaliação finalizada com sucesso');
       navigate('/avaliacoes');
     } catch (error: any) {
-      showToast('error', 'Erro ao finalizar edição');
+      showToast('error', 'Erro ao finalizar avaliação');
     } finally {
       setLoading(false);
     }
@@ -337,6 +356,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   };
 
   const loadAvaliacao = async () => {
+    if (!avaliacaoId) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -348,16 +369,24 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       if (error) throw error;
       if (!data) {
         showToast('error', 'Avaliação não encontrada');
+        setLoading(false);
         return;
       }
-
-      console.log('Avaliação carregada:', data);
 
       setDataAvaliacao(data.data_avaliacao);
       setEmpresaId(data.empresa_id);
       setColaboradorId(data.colaborador_id);
       setModeloId(data.modelo_id || '');
       setPsicologaId(data.psicologa_responsavel_id || '');
+      setAvaliacaoStatus(data.status || 'rascunho');
+
+      // Se avaliação está finalizada, redireciona para listagem
+      if (data.status === 'finalizada') {
+        showToast('error', 'Esta avaliação já foi finalizada e não pode ser editada');
+        navigate('/avaliacoes');
+        setLoading(false);
+        return;
+      }
 
       await loadColaboradores(data.empresa_id);
 
@@ -557,8 +586,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         await saveRatings(savedAvaliacaoId);
       }
 
-      // Adquire o lock quando salva (atualiza o nome do último editor)
-      if (isEditMode && currentUser) {
+      // Atualiza o usuário editando quando salva
+      if (isEditMode && currentUser && savedAvaliacaoId) {
         await acquireLock(currentUser);
       }
 
@@ -704,20 +733,20 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
 
       <div className="p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {isLocked && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-              <AlertTriangle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+          {avaliacaoStatus === 'finalizada' && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertTriangle size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-yellow-900">
-                  Esta avaliação está sendo editada por {lockedBy}
+                <p className="text-sm font-medium text-green-900">
+                  Esta avaliação foi finalizada
                 </p>
-                <p className="text-sm text-yellow-700 mt-1">
-                  O formulário está bloqueado para evitar conflitos de edição.
+                <p className="text-sm text-green-700 mt-1">
+                  Avaliações finalizadas não podem ser editadas.
                 </p>
               </div>
             </div>
           )}
-          <fieldset className="space-y-6">
+          <fieldset className="space-y-6" disabled={avaliacaoStatus === 'finalizada'}>
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados da Avaliação</h2>
 
@@ -981,10 +1010,10 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || avaliacaoStatus === 'finalizada'}>
               {loading ? 'Salvando...' : 'Salvar'}
             </Button>
-            {isEditMode && (
+            {isEditMode && avaliacaoStatus === 'rascunho' && (
               <Button
                 type="button"
                 variant="secondary"
