@@ -144,6 +144,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       const user = await selectCurrentUser();
       if (avaliacaoId && user) {
         await checkEditingLock(user);
+      } else if (!avaliacaoId) {
+        setLoading(false);
       }
     };
 
@@ -354,6 +356,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   };
 
   const loadAvaliacao = async () => {
+    if (!avaliacaoId) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -365,6 +369,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       if (error) throw error;
       if (!data) {
         showToast('error', 'Avaliação não encontrada');
+        setLoading(false);
         return;
       }
 
@@ -379,6 +384,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       if (data.status === 'finalizada') {
         showToast('error', 'Esta avaliação já foi finalizada e não pode ser editada');
         navigate('/avaliacoes');
+        setLoading(false);
         return;
       }
 
