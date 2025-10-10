@@ -56,14 +56,42 @@ export const GruposPage = () => {
 
   const handleCreate = async (formData: any) => {
     try {
-      const { error: grupoError } = await supabase
+      const { data: grupoData, error: grupoError } = await supabase
         .from('grupos')
         .insert([{
           nome: formData.nome,
           empresa_id: formData.empresa_id || null
-        }]);
+        }])
+        .select()
+        .single();
 
       if (grupoError) throw grupoError;
+
+      if (grupoData && formData.membros?.length > 0) {
+        const membrosInsert = formData.membros.map((pessoaId: string) => ({
+          grupo_id: grupoData.id,
+          pessoa_id: pessoaId,
+        }));
+
+        const { error: membrosError } = await supabase
+          .from('pessoas_grupos')
+          .insert(membrosInsert);
+
+        if (membrosError) throw membrosError;
+      }
+
+      if (grupoData && formData.gestores?.length > 0) {
+        const gestoresInsert = formData.gestores.map((pessoaId: string) => ({
+          grupo_id: grupoData.id,
+          pessoa_id: pessoaId,
+        }));
+
+        const { error: gestoresError } = await supabase
+          .from('grupos_gestores')
+          .insert(gestoresInsert);
+
+        if (gestoresError) throw gestoresError;
+      }
 
       showToast('success', 'Grupo criado com sucesso!');
       setIsCreateModalOpen(false);
@@ -92,6 +120,42 @@ export const GruposPage = () => {
         .eq('id', grupoToEdit.id);
 
       if (grupoError) throw grupoError;
+
+      await supabase
+        .from('pessoas_grupos')
+        .delete()
+        .eq('grupo_id', grupoToEdit.id);
+
+      await supabase
+        .from('grupos_gestores')
+        .delete()
+        .eq('grupo_id', grupoToEdit.id);
+
+      if (formData.membros?.length > 0) {
+        const membrosInsert = formData.membros.map((pessoaId: string) => ({
+          grupo_id: grupoToEdit.id,
+          pessoa_id: pessoaId,
+        }));
+
+        const { error: membrosError } = await supabase
+          .from('pessoas_grupos')
+          .insert(membrosInsert);
+
+        if (membrosError) throw membrosError;
+      }
+
+      if (formData.gestores?.length > 0) {
+        const gestoresInsert = formData.gestores.map((pessoaId: string) => ({
+          grupo_id: grupoToEdit.id,
+          pessoa_id: pessoaId,
+        }));
+
+        const { error: gestoresError } = await supabase
+          .from('grupos_gestores')
+          .insert(gestoresInsert);
+
+        if (gestoresError) throw gestoresError;
+      }
 
       showToast('success', 'Grupo atualizado com sucesso!');
       setIsEditModalOpen(false);
