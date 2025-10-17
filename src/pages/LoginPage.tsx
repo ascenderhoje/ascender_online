@@ -9,7 +9,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, userType } = useAuth();
+  const { signIn } = useAuth();
   const { navigate } = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,7 +17,7 @@ export function LoginPage() {
     setError('');
     setLoading(true);
 
-    const { error: signInError } = await signIn(email, password);
+    const { error: signInError, userType: authenticatedUserType } = await signIn(email, password);
 
     if (signInError) {
       if (signInError.message.includes('Invalid login credentials')) {
@@ -29,15 +29,13 @@ export function LoginPage() {
       }
       setLoading(false);
     } else {
-      setTimeout(() => {
-        if (userType === 'admin') {
-          const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
-          sessionStorage.removeItem('redirectAfterLogin');
-          navigate(redirectTo);
-        } else if (userType === 'pessoa') {
-          navigate('/user-dashboard');
-        }
-      }, 100);
+      if (authenticatedUserType === 'admin') {
+        const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectTo);
+      } else if (authenticatedUserType === 'pessoa') {
+        navigate('/user-dashboard');
+      }
     }
   };
 

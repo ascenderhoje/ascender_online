@@ -32,7 +32,7 @@ interface AuthContextType {
   userType: UserType;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; userType?: UserType }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
 }
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAdministrador(adminData);
           setPessoa(null);
           setUserType('admin');
-          return { error: null };
+          return { error: null, userType: 'admin' as UserType };
         }
 
         const pessoaData = await loadPessoa(data.user.id);
@@ -204,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPessoa(pessoaData);
           setAdministrador(null);
           setUserType('pessoa');
-          return { error: null };
+          return { error: null, userType: 'pessoa' as UserType };
         }
 
         await supabase.auth.signOut();

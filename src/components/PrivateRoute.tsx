@@ -7,15 +7,15 @@ interface PrivateRouteProps {
 }
 
 export const PrivateRoute = ({ children }: PrivateRouteProps) => {
-  const { administrador, loading } = useAuth();
+  const { administrador, pessoa, loading, user } = useAuth();
   const { navigate, currentPath } = useRouter();
 
   useEffect(() => {
-    if (!loading && !administrador) {
+    if (!loading && !user) {
       sessionStorage.setItem('redirectAfterLogin', currentPath);
       navigate('/login');
     }
-  }, [administrador, loading, navigate, currentPath]);
+  }, [user, loading, navigate, currentPath]);
 
   if (loading) {
     return (
@@ -28,7 +28,7 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
     );
   }
 
-  if (!administrador) {
+  if (!user || (!administrador && !pessoa)) {
     return null;
   }
 
