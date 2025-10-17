@@ -25,6 +25,7 @@ import { AdministradorFormPage } from './pages/AdministradorFormPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { PerfilPage } from './pages/PerfilPage';
 import { UserDashboardPage } from './pages/UserDashboardPage';
+import { UserAvaliacaoViewPage } from './pages/UserAvaliacaoViewPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -97,6 +98,14 @@ function App() {
             <PrivateRoute>
               <UserLayout>
                 <UserDashboardPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <Route path="/user-avaliacao/:id">
+            <PrivateRoute>
+              <UserLayout>
+                <UserAvaliacaoViewPage />
               </UserLayout>
             </PrivateRoute>
           </Route>

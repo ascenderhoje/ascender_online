@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useRouter } from '../utils/router';
 import { supabase } from '../lib/supabase';
-import { ClipboardList, TrendingUp, User, Calendar } from 'lucide-react';
+import { ClipboardList, TrendingUp, User, Calendar, Eye } from 'lucide-react';
 
 interface Avaliacao {
   id: string;
@@ -15,6 +16,7 @@ interface Avaliacao {
 
 export function UserDashboardPage() {
   const { pessoa } = useAuth();
+  const { navigate } = useRouter();
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -190,6 +192,9 @@ export function UserDashboardPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Observações
                     </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ações
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -208,6 +213,15 @@ export function UserDashboardPage() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {avaliacao.observacoes || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        <button
+                          onClick={() => navigate(`/user-avaliacao/${avaliacao.id}`)}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Visualizar
+                        </button>
                       </td>
                     </tr>
                   ))}
