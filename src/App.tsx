@@ -2,8 +2,9 @@ import { RouterProvider, Route, useRouter } from './utils/router';
 import { Layout } from './components/Layout';
 import { UserLayout } from './components/UserLayout';
 import { ToastProvider } from './components/Toast';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
+import { AdminRoute } from './components/AdminRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -44,16 +45,6 @@ const AdministradorFormPageWrapper = () => {
   return <AdministradorFormPage administradorId={params.id} />;
 };
 
-const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
-  const { userType } = useAuth();
-
-  if (userType === 'pessoa') {
-    return <UserLayout>{children}</UserLayout>;
-  }
-
-  return <Layout>{children}</Layout>;
-};
-
 function App() {
   return (
     <ToastProvider>
@@ -77,111 +68,111 @@ function App() {
             </PrivateRoute>
           </Route>
 
-          <LayoutWrapper>
+          <Layout>
             <Route path="/">
-              <PrivateRoute>
+              <AdminRoute>
                 <HomePage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/dashboard">
-              <PrivateRoute>
+              <AdminRoute>
                 <HomePage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/perfil">
-              <PrivateRoute>
+              <AdminRoute>
                 <PerfilPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/empresas">
-              <PrivateRoute>
+              <AdminRoute>
                 <EmpresasPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/pessoas">
-              <PrivateRoute>
+              <AdminRoute>
                 <PessoasPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/grupos">
-              <PrivateRoute>
+              <AdminRoute>
                 <GruposPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/perfis">
-              <PrivateRoute>
+              <AdminRoute>
                 <PerfisPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/competencias">
-              <PrivateRoute>
+              <AdminRoute>
                 <CompetenciasPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/competencias/new">
-              <PrivateRoute>
+              <AdminRoute>
                 <CompetenciaFormPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/competencias/:id/edit">
-              <PrivateRoute>
+              <AdminRoute>
                 <CompetenciaFormPageWrapper />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/modelos">
-              <PrivateRoute>
+              <AdminRoute>
                 <ModelosPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/modelos/new">
-              <PrivateRoute>
+              <AdminRoute>
                 <ModeloFormPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/modelos/:id/edit">
-              <PrivateRoute>
+              <AdminRoute>
                 <ModeloFormPageWrapper />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/avaliacoes">
-              <PrivateRoute>
+              <AdminRoute>
                 <AvaliacoesPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/avaliacoes/new">
-              <PrivateRoute>
+              <AdminRoute>
                 <AvaliacaoFormPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/avaliacoes/:id/edit">
-              <PrivateRoute>
+              <AdminRoute>
                 <AvaliacaoFormPageWrapper />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/pdi">
-              <PrivateRoute>
+              <AdminRoute>
                 <PlaceholderPage
                   title="PDI"
                   description="Módulo de Plano de Desenvolvimento Individual em desenvolvimento"
                 />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/administradores">
-              <PrivateRoute>
+              <AdminRoute>
                 <AdministradoresPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/administradores/new">
-              <PrivateRoute>
+              <AdminRoute>
                 <AdministradorFormPage />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
             <Route path="/administradores/:id/edit">
-              <PrivateRoute>
+              <AdminRoute>
                 <AdministradorFormPageWrapper />
-              </PrivateRoute>
+              </AdminRoute>
             </Route>
-          </LayoutWrapper>
+          </Layout>
         </RouterProvider>
       </AuthProvider>
     </ToastProvider>
