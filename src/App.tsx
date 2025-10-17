@@ -1,3 +1,4 @@
+import React from 'react';
 import { RouterProvider, Route, useRouter } from './utils/router';
 import { Layout } from './components/Layout';
 import { UserLayout } from './components/UserLayout';
@@ -45,6 +46,38 @@ const AdministradorFormPageWrapper = () => {
   return <AdministradorFormPage administradorId={params.id} />;
 };
 
+const AdminLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { currentPath } = useRouter();
+
+  // Only render Layout for admin routes
+  const adminPaths = [
+    '/',
+    '/dashboard',
+    '/perfil',
+    '/empresas',
+    '/pessoas',
+    '/grupos',
+    '/perfis',
+    '/competencias',
+    '/modelos',
+    '/avaliacoes',
+    '/pdi',
+    '/administradores',
+  ];
+
+  const isAdminPath = adminPaths.some(path =>
+    currentPath === path ||
+    currentPath.startsWith(path + '/') ||
+    currentPath.startsWith(path + '?')
+  );
+
+  if (!isAdminPath) {
+    return null;
+  }
+
+  return <Layout>{children}</Layout>;
+};
+
 function App() {
   return (
     <ToastProvider>
@@ -68,7 +101,7 @@ function App() {
             </PrivateRoute>
           </Route>
 
-          <Layout>
+          <AdminLayoutWrapper>
             <Route path="/">
               <AdminRoute>
                 <HomePage />
@@ -172,7 +205,7 @@ function App() {
                 <AdministradorFormPageWrapper />
               </AdminRoute>
             </Route>
-          </Layout>
+          </AdminLayoutWrapper>
         </RouterProvider>
       </AuthProvider>
     </ToastProvider>
