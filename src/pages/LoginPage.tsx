@@ -9,7 +9,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, userType } = useAuth();
   const { navigate } = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,16 +22,22 @@ export function LoginPage() {
     if (signInError) {
       if (signInError.message.includes('Invalid login credentials')) {
         setError('Email ou senha incorretos. Tente novamente.');
-      } else if (signInError.message.includes('não é um administrador')) {
-        setError('Acesso negado. Você não tem permissão para acessar este sistema.');
+      } else if (signInError.message.includes('não encontrado ou inativo')) {
+        setError('Acesso negado. Usuário não encontrado ou inativo.');
       } else {
         setError(signInError.message || 'Erro ao fazer login. Tente novamente.');
       }
       setLoading(false);
     } else {
-      const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
-      sessionStorage.removeItem('redirectAfterLogin');
-      navigate(redirectTo);
+      setTimeout(() => {
+        if (userType === 'admin') {
+          const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+          sessionStorage.removeItem('redirectAfterLogin');
+          navigate(redirectTo);
+        } else if (userType === 'pessoa') {
+          navigate('/user-dashboard');
+        }
+      }, 100);
     }
   };
 

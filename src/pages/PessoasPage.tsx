@@ -53,6 +53,41 @@ export const PessoasPage = () => {
 
   const handleCreate = async (formData: any) => {
     try {
+      let authUserId = null;
+
+      if (formData.senha) {
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
+
+        if (!token) throw new Error('Não autenticado');
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-management/create`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: formData.email.trim().toLowerCase(),
+              password: formData.senha,
+              metadata: {
+                nome: formData.nome.trim(),
+              },
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Erro ao criar usuário de autenticação');
+        }
+
+        authUserId = result.user.id;
+      }
+
       const { data: pessoaData, error: pessoaError } = await supabase
         .from('pessoas')
         .insert([
@@ -65,12 +100,35 @@ export const PessoasPage = () => {
             funcao: formData.funcao || null,
             avatar_url: formData.avatar_url || null,
             tipo_acesso: formData.tipo_acesso,
+            auth_user_id: authUserId,
+            senha_definida: formData.senha ? true : false,
+            ativo: true,
           },
         ])
         .select()
         .single();
 
-      if (pessoaError) throw pessoaError;
+      if (pessoaError) {
+        if (authUserId) {
+          const { data: session } = await supabase.auth.getSession();
+          const token = session?.session?.access_token;
+
+          if (token) {
+            await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-management/delete`,
+              {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: authUserId }),
+              }
+            );
+          }
+        }
+        throw pessoaError;
+      }
 
       if (formData.grupos_pertence && formData.grupos_pertence.length > 0) {
         const { error: gruposPertenceError } = await supabase
@@ -116,18 +174,58 @@ export const PessoasPage = () => {
     if (!pessoaToEdit) return;
 
     try {
+      const { data: pessoaData } = await supabase
+        .from('pessoas')
+        .select('auth_user_id')
+        .eq('id', pessoaToEdit.id)
+        .maybeSingle();
+
+      if (formData.senha && pessoaData?.auth_user_id) {
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
+
+        if (!token) throw new Error('Não autenticado');
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-management/update-password`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: pessoaData.auth_user_id,
+              password: formData.senha,
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Erro ao atualizar senha');
+        }
+      }
+
+      const updateData: any = {
+        nome: formData.nome,
+        email: formData.email,
+        idioma: formData.idioma,
+        genero: formData.genero || null,
+        empresa_id: formData.empresa_id || null,
+        funcao: formData.funcao || null,
+        avatar_url: formData.avatar_url || null,
+        tipo_acesso: formData.tipo_acesso,
+      };
+
+      if (formData.senha) {
+        updateData.senha_definida = true;
+      }
+
       const { error } = await supabase
         .from('pessoas')
-        .update({
-          nome: formData.nome,
-          email: formData.email,
-          idioma: formData.idioma,
-          genero: formData.genero || null,
-          empresa_id: formData.empresa_id || null,
-          funcao: formData.funcao || null,
-          avatar_url: formData.avatar_url || null,
-          tipo_acesso: formData.tipo_acesso,
-        })
+        .update(updateData)
         .eq('id', pessoaToEdit.id);
 
       if (error) throw error;

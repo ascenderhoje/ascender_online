@@ -1,7 +1,8 @@
 import { RouterProvider, Route, useRouter } from './utils/router';
 import { Layout } from './components/Layout';
+import { UserLayout } from './components/UserLayout';
 import { ToastProvider } from './components/Toast';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -21,6 +22,7 @@ import { AdministradoresPage } from './pages/AdministradoresPage';
 import { AdministradorFormPage } from './pages/AdministradorFormPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { PerfilPage } from './pages/PerfilPage';
+import { UserDashboardPage } from './pages/UserDashboardPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -42,21 +44,40 @@ const AdministradorFormPageWrapper = () => {
   return <AdministradorFormPage administradorId={params.id} />;
 };
 
+const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { userType } = useAuth();
+
+  if (userType === 'pessoa') {
+    return <UserLayout>{children}</UserLayout>;
+  }
+
+  return <Layout>{children}</Layout>;
+};
+
 function App() {
   return (
     <ToastProvider>
       <AuthProvider>
         <RouterProvider>
-          <Layout>
-            <Route path="/login">
-              <LoginPage />
-            </Route>
-            <Route path="/register">
-              <RegisterPage />
-            </Route>
-            <Route path="/forgot-password">
-              <ForgotPasswordPage />
-            </Route>
+          <Route path="/login">
+            <LoginPage />
+          </Route>
+          <Route path="/register">
+            <RegisterPage />
+          </Route>
+          <Route path="/forgot-password">
+            <ForgotPasswordPage />
+          </Route>
+
+          <Route path="/user-dashboard">
+            <PrivateRoute>
+              <UserLayout>
+                <UserDashboardPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <LayoutWrapper>
             <Route path="/">
               <PrivateRoute>
                 <HomePage />
@@ -160,7 +181,7 @@ function App() {
                 <AdministradorFormPageWrapper />
               </PrivateRoute>
             </Route>
-          </Layout>
+          </LayoutWrapper>
         </RouterProvider>
       </AuthProvider>
     </ToastProvider>
