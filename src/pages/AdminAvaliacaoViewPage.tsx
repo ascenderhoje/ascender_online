@@ -121,19 +121,43 @@ export function AdminAvaliacaoViewPage() {
           competencia_id,
           competencias (
             id,
-            nome,
-            descricao,
-            criterios (
-              id,
-              nome,
-              descricao,
-              peso
-            )
+            nome
           )
         `)
         .eq('modelo_id', modeloId);
 
       if (competenciasError) throw competenciasError;
+
+      const competenciaIds = (competenciasData || []).map((item: any) => item.competencias.id);
+
+      const { data: criteriosData } = await supabase
+        .from('criterios')
+        .select(`
+          id,
+          competencia_id,
+          criterios_textos!inner (
+            nome,
+            descricao,
+            idioma_padrao
+          )
+        `)
+        .in('competencia_id', competenciaIds)
+        .eq('criterios_textos.idioma_padrao', true)
+        .order('ordem', { ascending: true });
+
+      const criteriosByCompetencia: Record<string, any[]> = {};
+      (criteriosData || []).forEach((criterio: any) => {
+        const compId = criterio.competencia_id;
+        if (!criteriosByCompetencia[compId]) {
+          criteriosByCompetencia[compId] = [];
+        }
+        criteriosByCompetencia[compId].push({
+          id: criterio.id,
+          nome: criterio.criterios_textos[0]?.nome || '',
+          descricao: criterio.criterios_textos[0]?.descricao || '',
+          peso: 1,
+        });
+      });
 
       const { data: pontuacoesData } = await supabase
         .from('avaliacoes_competencias')
@@ -148,20 +172,24 @@ export function AdminAvaliacaoViewPage() {
         };
       });
 
-      const competencias: Competencia[] = (competenciasData || []).map((item: any) => ({
-        id: item.competencias.id,
-        nome: item.competencias.nome,
-        descricao: item.competencias.descricao,
-        criterios: item.competencias.criterios,
-        pontuacoes: item.competencias.criterios.reduce((acc: any, crit: any) => {
-          acc[crit.id] = pontuacoesMap[crit.id]?.pontuacao || 0;
-          return acc;
-        }, {}),
-        observacoes: item.competencias.criterios.reduce((acc: any, crit: any) => {
-          acc[crit.id] = pontuacoesMap[crit.id]?.observacoes || '';
-          return acc;
-        }, {}),
-      }));
+      const competencias: Competencia[] = (competenciasData || []).map((item: any) => {
+        const compId = item.competencias.id;
+        const criterios = criteriosByCompetencia[compId] || [];
+        return {
+          id: compId,
+          nome: item.competencias.nome,
+          descricao: '',
+          criterios: criterios,
+          pontuacoes: criterios.reduce((acc: any, crit: any) => {
+            acc[crit.id] = pontuacoesMap[crit.id]?.pontuacao || 0;
+            return acc;
+          }, {}),
+          observacoes: criterios.reduce((acc: any, crit: any) => {
+            acc[crit.id] = pontuacoesMap[crit.id]?.observacoes || '';
+            return acc;
+          }, {}),
+        };
+      });
 
       const { data: perguntasData, error: perguntasError } = await supabase
         .from('perguntas_personalizadas')
