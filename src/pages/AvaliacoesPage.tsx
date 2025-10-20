@@ -261,6 +261,12 @@ export const AvaliacoesPage = () => {
                       </td>
                       <td className="px-4 py-4 text-sm text-right space-x-2">
                         <button
+                          onClick={() => navigate(`/avaliacoes/${avaliacao.id}/view`)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Visualizar
+                        </button>
+                        <button
                           onClick={() => navigate(`/avaliacoes/${avaliacao.id}/edit`)}
                           className="text-indigo-600 hover:text-indigo-900"
                         >

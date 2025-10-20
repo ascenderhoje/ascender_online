@@ -30,6 +30,7 @@ import { GestorDashboardPage } from './pages/GestorDashboardPage';
 import { GestorPessoasPage } from './pages/GestorPessoasPage';
 import { GestorPessoaDetailPage } from './pages/GestorPessoaDetailPage';
 import { GestorAvaliacoesPage } from './pages/GestorAvaliacoesPage';
+import { AdminAvaliacaoViewPage } from './pages/AdminAvaliacaoViewPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -220,6 +221,11 @@ function App() {
             <Route path="/avaliacoes/new">
               <AdminRoute>
                 <AvaliacaoFormPage />
+              </AdminRoute>
+            </Route>
+            <Route path="/avaliacoes/:id/view">
+              <AdminRoute>
+                <AdminAvaliacaoViewPage />
               </AdminRoute>
             </Route>
             <Route path="/avaliacoes/:id/edit">
