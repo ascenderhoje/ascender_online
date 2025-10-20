@@ -70,6 +70,8 @@ export function UserAvaliacaoViewPage() {
     try {
       setLoading(true);
 
+      console.log('[UserAvaliacaoViewPage] Carregando avaliação:', { id, pessoaId: pessoa?.id });
+
       const { data: avaliacaoData, error: avaliacaoError } = await supabase
         .from('avaliacoes')
         .select(`
@@ -91,15 +93,21 @@ export function UserAvaliacaoViewPage() {
           )
         `)
         .eq('id', id)
-        .eq('colaborador_id', pessoa?.id)
         .eq('status', 'finalizada')
         .maybeSingle();
 
-      if (avaliacaoError) throw avaliacaoError;
+      if (avaliacaoError) {
+        console.error('[UserAvaliacaoViewPage] Erro ao buscar avaliação:', avaliacaoError);
+        throw avaliacaoError;
+      }
+
       if (!avaliacaoData) {
+        console.warn('[UserAvaliacaoViewPage] Avaliação não encontrada ou sem permissão de acesso');
         navigate('/user-dashboard');
         return;
       }
+
+      console.log('[UserAvaliacaoViewPage] Avaliação carregada com sucesso:', avaliacaoData.id);
 
       const { data: modeloData, error: modeloError } = await supabase
         .from('modelos_avaliacao')
@@ -226,8 +234,16 @@ export function UserAvaliacaoViewPage() {
         perguntas,
         textos,
       } as Avaliacao);
-    } catch (error) {
-      console.error('Erro ao carregar avaliação:', error);
+    } catch (error: any) {
+      console.error('[UserAvaliacaoViewPage] Erro ao carregar avaliação:', error);
+
+      if (error?.code === 'PGRST116' || error?.message?.includes('Row level security')) {
+        console.error('[UserAvaliacaoViewPage] Erro de permissão RLS - usuário não tem acesso a esta avaliação');
+      } else if (error?.code === '42501') {
+        console.error('[UserAvaliacaoViewPage] Erro de autorização - verifique as políticas RLS');
+      }
+
+      navigate('/user-dashboard');
     } finally {
       setLoading(false);
     }
