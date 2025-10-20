@@ -59,8 +59,12 @@ export function AdminAvaliacaoViewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[AdminAvaliacaoViewPage] Params:', params);
     if (params.id) {
+      console.log('[AdminAvaliacaoViewPage] Loading avaliacao with ID:', params.id);
       loadAvaliacao(params.id);
+    } else {
+      console.warn('[AdminAvaliacaoViewPage] No ID in params');
     }
   }, [params.id]);
 

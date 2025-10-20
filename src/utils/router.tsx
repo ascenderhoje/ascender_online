@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext, useState, useCallback } from 'react';
+import { ReactNode, createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 interface RouteContextType {
   currentPath: string;
@@ -22,10 +22,10 @@ export const RouterProvider = ({ children }: { children: ReactNode }) => {
     const pathParts = path.split('/').filter(Boolean);
     const newParams: Record<string, string> = {};
 
-    // Extract ID from paths like /competencias/:id/edit or /competencias/:id
+    // Extract ID from paths like /competencias/:id/edit, /avaliacoes/:id/view or /competencias/:id
     if (pathParts.length >= 2) {
       const id = pathParts[1];
-      if (id !== 'new' && id !== 'edit') {
+      if (id !== 'new' && id !== 'edit' && id !== 'view') {
         newParams.id = id;
       }
     }
@@ -34,9 +34,26 @@ export const RouterProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const navigate = useCallback((path: string) => {
+    console.log('[Router] Navigating to:', path);
     window.history.pushState({}, '', path);
     setCurrentPath(path);
     setParams(extractParams(path));
+    window.scrollTo(0, 0);
+  }, [extractParams]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const newPath = window.location.pathname;
+      console.log('[Router] PopState - new path:', newPath);
+      setCurrentPath(newPath);
+      setParams(extractParams(newPath));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [extractParams]);
 
   return (
