@@ -17,7 +17,7 @@ export function LoginPage() {
     setError('');
     setLoading(true);
 
-    const { error: signInError, userType: authenticatedUserType } = await signIn(email, password);
+    const { error: signInError, userType: authenticatedUserType, pessoa: pessoaData } = await signIn(email, password);
 
     if (signInError) {
       if (signInError.message.includes('Invalid login credentials')) {
@@ -34,7 +34,11 @@ export function LoginPage() {
         sessionStorage.removeItem('redirectAfterLogin');
         navigate(redirectTo);
       } else if (authenticatedUserType === 'pessoa') {
-        navigate('/user-dashboard');
+        if (pessoaData?.tipo_acesso === 'gestor') {
+          navigate('/gestor-dashboard');
+        } else {
+          navigate('/user-dashboard');
+        }
       }
     }
   };

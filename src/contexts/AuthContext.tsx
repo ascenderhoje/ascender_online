@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAdministrador(adminData);
           setPessoa(null);
           setUserType('admin');
-          return { error: null, userType: 'admin' as UserType };
+          return { error: null, userType: 'admin' as UserType, pessoa: null };
         }
 
         const pessoaData = await loadPessoa(data.user.id);
@@ -204,17 +204,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPessoa(pessoaData);
           setAdministrador(null);
           setUserType('pessoa');
-          return { error: null, userType: 'pessoa' as UserType };
+          return { error: null, userType: 'pessoa' as UserType, pessoa: pessoaData };
         }
 
         await supabase.auth.signOut();
         throw new Error('Acesso negado. Usuário não encontrado ou inativo.');
       }
 
-      return { error: null };
+      return { error: null, pessoa: null };
     } catch (error: any) {
       console.error('Erro no login:', error);
-      return { error };
+      return { error, pessoa: null };
     }
   };
 

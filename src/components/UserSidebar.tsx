@@ -1,4 +1,4 @@
-import { LayoutDashboard, ClipboardList, LogOut } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, LogOut, Users } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,14 +9,22 @@ interface NavItem {
   path: string;
 }
 
-const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/user-dashboard' },
+const gestorNavItems: NavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/gestor-dashboard' },
+  { id: 'pessoas', label: 'Pessoas', icon: Users, path: '/gestor-pessoas' },
+  { id: 'avaliacoes', label: 'Minhas Avaliações', icon: ClipboardList, path: '/gestor-avaliacoes' },
+];
+
+const colaboradorNavItems: NavItem[] = [
   { id: 'avaliacoes', label: 'Minhas Avaliações', icon: ClipboardList, path: '/user-dashboard' },
 ];
 
 export const UserSidebar = () => {
   const { currentPath, navigate } = useRouter();
   const { signOut, pessoa } = useAuth();
+
+  const isGestor = pessoa?.tipo_acesso === 'gestor';
+  const navItems = isGestor ? gestorNavItems : colaboradorNavItems;
 
   const handleLogout = async () => {
     await signOut();
@@ -26,6 +34,15 @@ export const UserSidebar = () => {
   const isActive = (path: string) => {
     if (path === '/user-dashboard') {
       return currentPath === '/user-dashboard' || currentPath.startsWith('/user-avaliacao');
+    }
+    if (path === '/gestor-dashboard') {
+      return currentPath === '/gestor-dashboard';
+    }
+    if (path === '/gestor-pessoas') {
+      return currentPath === '/gestor-pessoas' || currentPath.startsWith('/gestor-pessoa/');
+    }
+    if (path === '/gestor-avaliacoes') {
+      return currentPath === '/gestor-avaliacoes' || currentPath.startsWith('/user-avaliacao');
     }
     return currentPath.startsWith(path);
   };
@@ -57,11 +74,19 @@ export const UserSidebar = () => {
     </div>
   );
 
+  const handleLogoClick = () => {
+    if (isGestor) {
+      navigate('/gestor-dashboard');
+    } else {
+      navigate('/user-dashboard');
+    }
+  };
+
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col">
       <div className="p-6 border-b border-gray-200">
         <button
-          onClick={() => navigate('/user-dashboard')}
+          onClick={handleLogoClick}
           className="text-base font-semibold text-gray-900 hover:text-blue-600 transition-colors"
         >
           Ascender RH

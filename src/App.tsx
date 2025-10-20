@@ -26,6 +26,10 @@ import { PlaceholderPage } from './pages/PlaceholderPage';
 import { PerfilPage } from './pages/PerfilPage';
 import { UserDashboardPage } from './pages/UserDashboardPage';
 import { UserAvaliacaoViewPage } from './pages/UserAvaliacaoViewPage';
+import { GestorDashboardPage } from './pages/GestorDashboardPage';
+import { GestorPessoasPage } from './pages/GestorPessoasPage';
+import { GestorPessoaDetailPage } from './pages/GestorPessoaDetailPage';
+import { GestorAvaliacoesPage } from './pages/GestorAvaliacoesPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -106,6 +110,38 @@ function App() {
             <PrivateRoute>
               <UserLayout>
                 <UserAvaliacaoViewPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <Route path="/gestor-dashboard">
+            <PrivateRoute>
+              <UserLayout>
+                <GestorDashboardPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <Route path="/gestor-pessoas">
+            <PrivateRoute>
+              <UserLayout>
+                <GestorPessoasPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <Route path="/gestor-pessoa/:id">
+            <PrivateRoute>
+              <UserLayout>
+                <GestorPessoaDetailPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <Route path="/gestor-avaliacoes">
+            <PrivateRoute>
+              <UserLayout>
+                <GestorAvaliacoesPage />
               </UserLayout>
             </PrivateRoute>
           </Route>
