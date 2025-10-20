@@ -12,6 +12,9 @@ interface Avaliacao {
   modelo: {
     nome: string;
   } | null;
+  psicologa: {
+    nome: string;
+  } | null;
 }
 
 export function UserDashboardPage() {
@@ -38,9 +41,13 @@ export function UserDashboardPage() {
           observacoes,
           modelos_avaliacao (
             nome
+          ),
+          psicologa:administradores!psicologa_responsavel_id (
+            nome
           )
         `)
         .eq('colaborador_id', pessoa.id)
+        .eq('status', 'finalizada')
         .order('data_avaliacao', { ascending: false });
 
       if (error) throw error;
@@ -51,6 +58,7 @@ export function UserDashboardPage() {
         status: item.status,
         observacoes: item.observacoes,
         modelo: item.modelos_avaliacao ? { nome: item.modelos_avaliacao.nome } : null,
+        psicologa: item.psicologa ? { nome: item.psicologa.nome } : null,
       }));
 
       setAvaliacoes(formattedData);
@@ -123,14 +131,14 @@ export function UserDashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <ClipboardList className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total de Avaliações</p>
+                <p className="text-sm text-gray-500">Avaliações Disponíveis</p>
                 <p className="text-2xl font-bold text-gray-900">{avaliacoes.length}</p>
               </div>
             </div>
@@ -142,23 +150,9 @@ export function UserDashboardPage() {
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Concluídas</p>
+                <p className="text-sm text-gray-500">Finalizadas</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {avaliacoes.filter(a => a.status === 'concluida').length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Pendentes</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {avaliacoes.filter(a => a.status === 'pendente' || a.status === 'em_andamento').length}
+                  {avaliacoes.length}
                 </p>
               </div>
             </div>
@@ -184,13 +178,7 @@ export function UserDashboardPage() {
                       Data
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Modelo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Observações
+                      Psicóloga
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ações
@@ -204,15 +192,7 @@ export function UserDashboardPage() {
                         {formatDate(avaliacao.data_avaliacao)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {avaliacao.modelo?.nome || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(avaliacao.status)}`}>
-                          {getStatusLabel(avaliacao.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {avaliacao.observacoes || '-'}
+                        {avaliacao.psicologa?.nome || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <button

@@ -40,12 +40,11 @@ interface Avaliacao {
     email: string;
     avatar_url: string | null;
   } | null;
-  avaliador: {
+  psicologa: {
     nome: string;
   } | null;
   modelo: {
     nome: string;
-    descricao: string;
   } | null;
   competencias: Competencia[];
   perguntas: PerguntaPersonalizada[];
@@ -78,21 +77,22 @@ export function UserAvaliacaoViewPage() {
           data_avaliacao,
           status,
           observacoes,
-          colaborador:pessoas!avaliacoes_colaborador_id_fkey (
+          modelo_id,
+          colaborador:pessoas!colaborador_id (
             nome,
             email,
             avatar_url
           ),
-          avaliador:pessoas!avaliacoes_avaliador_id_fkey (
+          psicologa:administradores!psicologa_responsavel_id (
             nome
           ),
           modelo:modelos_avaliacao (
-            nome,
-            descricao
+            nome
           )
         `)
         .eq('id', id)
         .eq('colaborador_id', pessoa?.id)
+        .eq('status', 'finalizada')
         .maybeSingle();
 
       if (avaliacaoError) throw avaliacaoError;
@@ -193,15 +193,38 @@ export function UserAvaliacaoViewPage() {
 
       const { data: textosData } = await supabase
         .from('avaliacoes_textos')
-        .select('titulo, conteudo')
+        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa')
         .eq('avaliacao_id', id)
-        .order('ordem', { ascending: true });
+        .eq('idioma_padrao', true)
+        .maybeSingle();
+
+      const textos = [];
+      if (textosData) {
+        if (textosData.pontos_fortes) {
+          textos.push({
+            titulo: 'Pontos Fortes',
+            conteudo: textosData.pontos_fortes,
+          });
+        }
+        if (textosData.oportunidades_melhoria) {
+          textos.push({
+            titulo: 'Oportunidades de Melhoria',
+            conteudo: textosData.oportunidades_melhoria,
+          });
+        }
+        if (textosData.highlights_psicologa) {
+          textos.push({
+            titulo: 'Análise da Psicóloga',
+            conteudo: textosData.highlights_psicologa,
+          });
+        }
+      }
 
       setAvaliacao({
         ...avaliacaoData,
         competencias,
         perguntas,
-        textos: textosData || [],
+        textos,
       } as Avaliacao);
     } catch (error) {
       console.error('Erro ao carregar avaliação:', error);
@@ -316,9 +339,11 @@ export function UserAvaliacaoViewPage() {
             </div>
           </div>
 
-          {avaliacao.modelo?.descricao && (
+          {avaliacao.psicologa && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-blue-900 text-sm">{avaliacao.modelo.descricao}</p>
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold">Psicóloga Responsável:</span> {avaliacao.psicologa.nome}
+              </p>
             </div>
           )}
         </div>
