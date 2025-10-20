@@ -15,6 +15,8 @@ Sistema completo de gestão de recursos humanos para avaliação de competência
 - **Avaliações 360°**: Processo completo de avaliação de desempenho
 - **PDI (Plano de Desenvolvimento Individual)**: Acompanhamento e planejamento de desenvolvimento profissional
 - **Gestão de Administradores**: Controle de acesso e permissões
+- **Portal do Colaborador**: Interface dedicada para colaboradores visualizarem suas avaliações
+- **Portal do Gestor**: Dashboard para gestores acompanharem suas equipes
 
 ## Tecnologias Utilizadas
 
@@ -29,12 +31,14 @@ Sistema completo de gestão de recursos humanos para avaliação de competência
 - **Supabase** - Plataforma completa de backend (PostgreSQL, Auth, Storage, Edge Functions)
 - **PostgreSQL** - Banco de dados relacional robusto
 - **Row Level Security (RLS)** - Segurança nativa no banco de dados
+- **Supabase Auth** - Sistema de autenticação com email/senha
 
 ### Arquitetura
 - **Single Page Application (SPA)** - Navegação rápida sem recarregamento de página
 - **Client-side Routing** - Roteamento customizado e otimizado
 - **Context API** - Gerenciamento de estado global
 - **Componentização** - Arquitetura modular e reutilizável
+- **Multi-tenant** - Suporte para múltiplas empresas com isolamento de dados
 
 ## Estrutura do Projeto
 
@@ -42,48 +46,63 @@ Sistema completo de gestão de recursos humanos para avaliação de competência
 ascender-rh/
 ├── src/
 │   ├── components/          # Componentes reutilizáveis
-│   │   ├── Button.tsx
-│   │   ├── Header.tsx
-│   │   ├── Layout.tsx
-│   │   ├── Modal.tsx
-│   │   ├── PrivateRoute.tsx
-│   │   ├── RichTextEditor.tsx
-│   │   ├── Sidebar.tsx
-│   │   ├── Table.tsx
-│   │   ├── Toast.tsx
-│   │   └── Forms/           # Formulários específicos
+│   │   ├── AdminRoute.tsx       # Proteção de rotas administrativas
+│   │   ├── Button.tsx           # Botão reutilizável
+│   │   ├── ConfirmModal.tsx     # Modal de confirmação
+│   │   ├── CriterioItem.tsx     # Item de critério de avaliação
+│   │   ├── Header.tsx           # Cabeçalho do sistema
+│   │   ├── Layout.tsx           # Layout administrativo
+│   │   ├── Modal.tsx            # Modal genérico
+│   │   ├── PerguntaPersonalizadaItem.tsx  # Item de pergunta customizada
+│   │   ├── PrivateRoute.tsx     # Proteção de rotas autenticadas
+│   │   ├── RichTextEditor.tsx   # Editor de texto rico
+│   │   ├── Sidebar.tsx          # Menu lateral administrativo
+│   │   ├── Table.tsx            # Tabela reutilizável
+│   │   ├── Toast.tsx            # Notificações toast
+│   │   ├── UserLayout.tsx       # Layout para colaboradores/gestores
+│   │   ├── UserSidebar.tsx      # Menu lateral para usuários
+│   │   └── Forms/               # Formulários específicos
 │   │       ├── EmpresaForm.tsx
 │   │       ├── GrupoForm.tsx
 │   │       └── PessoaForm.tsx
 │   │
 │   ├── contexts/            # Context API para estado global
-│   │   └── AuthContext.tsx
+│   │   └── AuthContext.tsx      # Contexto de autenticação
 │   │
 │   ├── lib/                 # Configurações de bibliotecas
-│   │   └── supabase.ts
+│   │   └── supabase.ts          # Cliente Supabase
 │   │
 │   ├── pages/               # Páginas da aplicação
-│   │   ├── HomePage.tsx
-│   │   ├── EmpresasPage.tsx
-│   │   ├── PessoasPage.tsx
-│   │   ├── GruposPage.tsx
-│   │   ├── PerfisPage.tsx
-│   │   ├── CompetenciasPage.tsx
-│   │   ├── CompetenciaFormPage.tsx
-│   │   ├── ModelosPage.tsx
-│   │   ├── ModeloFormPage.tsx
-│   │   ├── AvaliacoesPage.tsx
-│   │   ├── AvaliacaoFormPage.tsx
-│   │   ├── AdministradoresPage.tsx
-│   │   ├── AdministradorFormPage.tsx
-│   │   ├── PerfilPage.tsx
-│   │   └── PlaceholderPage.tsx
+│   │   ├── AdministradorFormPage.tsx    # Formulário de administradores
+│   │   ├── AdministradoresPage.tsx      # Lista de administradores
+│   │   ├── AvaliacaoFormPage.tsx        # Formulário de avaliação
+│   │   ├── AvaliacoesPage.tsx           # Lista de avaliações
+│   │   ├── CompetenciaFormPage.tsx      # Formulário de competências
+│   │   ├── CompetenciasPage.tsx         # Lista de competências
+│   │   ├── EmpresasPage.tsx             # Lista de empresas
+│   │   ├── ForgotPasswordPage.tsx       # Recuperação de senha
+│   │   ├── GestorAvaliacoesPage.tsx     # Avaliações (visão gestor)
+│   │   ├── GestorDashboardPage.tsx      # Dashboard do gestor
+│   │   ├── GestorPessoaDetailPage.tsx   # Detalhes da pessoa (gestor)
+│   │   ├── GestorPessoasPage.tsx        # Lista de pessoas (gestor)
+│   │   ├── GruposPage.tsx               # Lista de grupos
+│   │   ├── HomePage.tsx                 # Dashboard administrativo
+│   │   ├── LoginPage.tsx                # Página de login
+│   │   ├── ModeloFormPage.tsx           # Formulário de modelos
+│   │   ├── ModelosPage.tsx              # Lista de modelos
+│   │   ├── PerfilPage.tsx               # Perfil do usuário
+│   │   ├── PerfisPage.tsx               # Lista de perfis comportamentais
+│   │   ├── PessoasPage.tsx              # Lista de pessoas
+│   │   ├── PlaceholderPage.tsx          # Página placeholder
+│   │   ├── RegisterPage.tsx             # Página de registro
+│   │   ├── UserAvaliacaoViewPage.tsx    # Visualização de avaliação (colaborador)
+│   │   └── UserDashboardPage.tsx        # Dashboard do colaborador
 │   │
 │   ├── types/               # Definições TypeScript
 │   │   └── index.ts
 │   │
 │   ├── utils/               # Utilitários
-│   │   └── router.tsx
+│   │   └── router.tsx           # Sistema de roteamento customizado
 │   │
 │   ├── App.tsx              # Componente raiz
 │   ├── main.tsx             # Entry point
@@ -91,7 +110,8 @@ ascender-rh/
 │
 ├── supabase/
 │   ├── functions/           # Edge Functions (serverless)
-│   │   └── admin-users/
+│   │   ├── admin-users/         # Gerenciamento de usuários admin
+│   │   └── user-management/     # Gerenciamento de usuários
 │   └── migrations/          # Migrações do banco de dados
 │
 ├── .env                     # Variáveis de ambiente
@@ -179,7 +199,7 @@ O sistema utiliza PostgreSQL via Supabase com as seguintes tabelas principais:
 
 #### Tabelas de Cadastro
 - **empresas** - Dados das empresas clientes
-- **pessoas** - Colaboradores e funcionários
+- **pessoas** - Colaboradores e funcionários (com campo `auth_user_id` para integração com Supabase Auth)
 - **grupos** - Equipes e departamentos
 - **grupos_gestores** - Gestores responsáveis por grupos
 - **pessoas_grupos** - Relacionamento pessoas ↔ grupos
@@ -192,16 +212,40 @@ O sistema utiliza PostgreSQL via Supabase com as seguintes tabelas principais:
 - **perguntas_personalizadas** - Perguntas customizadas
 - **avaliacoes** - Processos de avaliação
 - **respostas_avaliacoes** - Respostas das avaliações
+- **textos_avaliacoes** - Textos descritivos e feedback
 
 #### Tabelas de Administração
-- **administradores** - Usuários do sistema com permissões
+- **administradores** - Usuários do sistema com permissões (com campo `auth_user_id`)
 
 ### Segurança (Row Level Security)
 
 Todas as tabelas possuem políticas RLS (Row Level Security) configuradas para garantir que:
-- Apenas usuários autenticados possam acessar dados
-- Usuários só possam ver/editar dados de sua empresa
-- Administradores tenham acesso total aos dados
+
+#### Para Administradores
+- Acesso completo aos dados através das policies
+- Verificação via `get_admin_user_id_from_auth()` que valida se o usuário autenticado é um administrador
+
+#### Para Colaboradores
+- Acesso apenas às suas próprias avaliações finalizadas
+- Verificação via `get_pessoa_id_from_auth()` que mapeia o `auth.uid()` para o ID da pessoa
+- Políticas específicas:
+  - **avaliacoes**: `"Employees can read own finalized evaluations"` - permite leitura de avaliações finalizadas onde `colaborador_id = get_pessoa_id_from_auth()`
+  - **competencias_avaliacoes**: Acesso às competências das avaliações do colaborador
+  - **criterios_avaliacoes**: Acesso aos critérios das competências das avaliações do colaborador
+  - **respostas_avaliacoes**: Acesso às respostas das avaliações do colaborador
+  - **textos_avaliacoes**: Acesso aos textos das avaliações do colaborador
+
+#### Para Gestores
+- Acesso aos dados das pessoas do seu grupo
+- Acesso às avaliações dos membros da equipe
+- Verificação de vínculo através da tabela `grupos_gestores`
+
+### Funções Helper
+
+O sistema utiliza funções PostgreSQL para facilitar as verificações de segurança:
+
+- **get_pessoa_id_from_auth()** - Retorna o ID da pessoa baseado no `auth.uid()` do usuário autenticado
+- **get_admin_user_id_from_auth()** - Retorna o ID do administrador baseado no `auth.uid()` do usuário autenticado
 
 ### Migrações
 
@@ -223,76 +267,245 @@ supabase/migrations/
 ├── 20251008131026_add_avaliacoes_basic_fields.sql
 ├── 20251008132103_add_editing_lock_to_avaliacoes.sql
 ├── 20251008132805_fix_avaliacoes_editing_constraint_name.sql
-├── 20251008135843_20251008140000_setup_auth_integration.sql
+├── 20251008135843_setup_auth_integration.sql
 ├── 20251008140000_setup_auth_integration.sql
 ├── 20251008140100_update_rls_policies_for_auth.sql
-└── 20251008142530_create_auth_user_helper_function.sql
+├── 20251008142530_create_auth_user_helper_function.sql
+├── 20251010174928_update_avaliacoes_status_constraint.sql
+├── 20251010181119_fix_avaliacoes_editing_user_reference.sql
+├── 20251017132112_add_auth_to_pessoas.sql
+└── 20251020122204_add_employee_evaluation_access_policies.sql
 ```
+
+## Rotas e Navegação
+
+O sistema possui três tipos principais de rotas:
+
+### Rotas Públicas (Sem Autenticação)
+- `/login` - Página de login
+- `/register` - Registro de novos usuários
+- `/forgot-password` - Recuperação de senha
+
+### Rotas de Colaborador (Requer Autenticação)
+- `/user-dashboard` - Dashboard do colaborador com avaliações disponíveis
+- `/user-avaliacao/:id` - Visualização detalhada de uma avaliação finalizada
+
+### Rotas de Gestor (Requer Autenticação + Permissão de Gestor)
+- `/gestor-dashboard` - Dashboard do gestor com visão geral da equipe
+- `/gestor-pessoas` - Lista de pessoas da equipe do gestor
+- `/gestor-pessoa/:id` - Detalhes de uma pessoa específica
+- `/gestor-avaliacoes` - Avaliações da equipe
+
+### Rotas Administrativas (Requer Autenticação + Permissão de Admin)
+- `/` ou `/dashboard` - Dashboard administrativo com estatísticas gerais
+- `/perfil` - Perfil do usuário logado
+- `/empresas` - Gestão de empresas
+- `/pessoas` - Gestão de pessoas/colaboradores
+- `/grupos` - Gestão de grupos e departamentos
+- `/perfis` - Gestão de perfis comportamentais
+- `/competencias` - Gestão de competências
+- `/competencias/new` - Criar nova competência
+- `/competencias/:id` - Editar competência existente
+- `/modelos` - Gestão de modelos de avaliação
+- `/modelos/new` - Criar novo modelo
+- `/modelos/:id` - Editar modelo existente
+- `/avaliacoes` - Gestão de avaliações
+- `/avaliacoes/new` - Criar nova avaliação
+- `/avaliacoes/:id` - Editar avaliação existente
+- `/pdi` - Planos de Desenvolvimento Individual (placeholder)
+- `/administradores` - Gestão de administradores
+- `/administradores/new` - Criar novo administrador
+- `/administradores/:id` - Editar administrador existente
 
 ## Funcionalidades Principais
 
-### 1. Dashboard
+### 1. Dashboard Administrativo
 - Visão geral com estatísticas de empresas, pessoas, grupos e avaliações
+- Cards informativos com contadores em tempo real
 - Atividades recentes
 - Ações rápidas para cadastros
+- Navegação intuitiva para todas as seções
 
-### 2. Gestão de Empresas
+### 2. Sistema de Autenticação
+- Login com email e senha via Supabase Auth
+- Registro de novos usuários
+- Recuperação de senha
+- Sessões persistentes
+- Proteção de rotas por permissão (Admin, Gestor, Colaborador)
+- Logout seguro
+
+### 3. Gestão de Empresas
 - Cadastro completo de empresas clientes
 - CNPJ, razão social, nome fantasia
 - Endereço completo e contatos
 - Status ativo/inativo
+- Listagem com pesquisa e filtros
+- Edição e exclusão de registros
 
-### 3. Gestão de Pessoas
+### 4. Gestão de Pessoas
 - Cadastro detalhado de colaboradores
 - CPF, data de nascimento, foto
 - Vinculação com empresa e grupos
 - Histórico e informações profissionais
+- Integração com sistema de autenticação
+- Associação de usuário auth com pessoa
+- Listagem com pesquisa e filtros
 
-### 4. Grupos
+### 5. Grupos e Departamentos
 - Criação de equipes e departamentos
 - Associação de pessoas aos grupos
-- Definição de gestores
+- Definição de gestores por grupo
 - Vinculação com empresas
+- Hierarquia organizacional
+- Gestão de membros
 
-### 5. Perfis Comportamentais
+### 6. Perfis Comportamentais
 - Criação de perfis personalizados
 - Descrição de características
 - Aplicação em avaliações
+- Reutilização em múltiplos contextos
 
-### 6. Competências
+### 7. Competências
 - Biblioteca de competências técnicas e comportamentais
 - Descrições detalhadas com rich text editor
 - Níveis de proficiência
 - Reutilização em múltiplos modelos
+- Criação e edição com interface intuitiva
+- Critérios de avaliação personalizados
 
-### 7. Modelos de Avaliação
+### 8. Modelos de Avaliação
 - Templates personalizados de avaliação
-- Critérios de avaliação com escalas
-- Perguntas customizadas (múltipla escolha, texto, etc.)
+- Seleção de competências da biblioteca
+- Critérios de avaliação com escalas customizadas
+- Perguntas personalizadas (múltipla escolha, texto livre, escala Likert)
 - Vinculação com competências
+- Editor visual com prévia
+- Clonagem de modelos existentes
 
-### 8. Avaliações 360°
-- Criação de processos de avaliação
-- Seleção de avaliadores (superior, pares, subordinados)
-- Aplicação de modelos
-- Coleta de respostas
-- Relatórios e análises
+### 9. Avaliações 360°
+- Criação de processos de avaliação baseados em modelos
+- Seleção de colaborador a ser avaliado
+- Definição de psicóloga responsável
+- Aplicação de modelos pré-configurados
+- Coleta estruturada de respostas
+- Sistema de bloqueio para edições concorrentes
+- Status de avaliação (rascunho, em_andamento, finalizada)
+- Observações e feedbacks
 
-### 9. Administradores
+### 10. Portal do Colaborador
+- **Dashboard do Colaborador** (`/user-dashboard`)
+  - Visualização de todas as avaliações finalizadas
+  - Cards com informações da avaliação
+  - Data de realização
+  - Psicóloga responsável
+  - Botão para visualizar detalhes
+  - Interface limpa e focada
+
+- **Visualização de Avaliação** (`/user-avaliacao/:id`)
+  - Acesso apenas às avaliações finalizadas do próprio colaborador
+  - Visualização completa de competências avaliadas
+  - Critérios e pontuações recebidas
+  - Respostas a perguntas personalizadas
+  - Feedback da psicóloga
+  - Observações gerais
+  - Impossibilidade de edição (somente leitura)
+  - Segurança garantida por RLS policies
+
+### 11. Portal do Gestor
+- **Dashboard do Gestor** (`/gestor-dashboard`)
+  - Visão geral da equipe
+  - Estatísticas de desempenho
+  - Avaliações pendentes e finalizadas
+  - Acesso rápido aos membros da equipe
+
+- **Gestão de Pessoas** (`/gestor-pessoas`)
+  - Lista de todos os membros da equipe do gestor
+  - Informações básicas de cada pessoa
+  - Acesso aos detalhes individuais
+  - Histórico de avaliações
+
+- **Detalhes da Pessoa** (`/gestor-pessoa/:id`)
+  - Informações completas do colaborador
+  - Histórico de avaliações
+  - PDI (Plano de Desenvolvimento Individual)
+  - Competências desenvolvidas
+
+- **Avaliações da Equipe** (`/gestor-avaliacoes`)
+  - Todas as avaliações da equipe
+  - Filtros por período e status
+  - Comparativos de desempenho
+  - Análises de desenvolvimento
+
+### 12. Administradores
 - Gestão de usuários do sistema
-- Permissões (administrador, psicóloga)
-- Controle de acesso
+- Permissões diferenciadas (administrador, psicóloga)
+- Controle de acesso por tipo
+- Vinculação com Supabase Auth
+- Criação via Edge Function para segurança
+- Listagem e edição de administradores
+
+## Segurança e Controle de Acesso
+
+### Níveis de Permissão
+
+1. **Administrador**
+   - Acesso total ao sistema
+   - Gestão de empresas, pessoas, grupos
+   - Criação de modelos e avaliações
+   - Gestão de outros administradores
+   - Acesso a relatórios e estatísticas
+
+2. **Gestor**
+   - Acesso aos dados da sua equipe
+   - Visualização de avaliações dos membros
+   - Acompanhamento de desenvolvimento
+   - Sem permissão para editar modelos ou competências
+
+3. **Colaborador**
+   - Acesso apenas às próprias avaliações finalizadas
+   - Visualização em modo somente leitura
+   - Dashboard pessoal simplificado
+   - Sem acesso a dados de outros colaboradores
+
+### Proteção de Rotas
+
+- **PrivateRoute**: Verifica apenas se o usuário está autenticado
+- **AdminRoute**: Verifica autenticação + permissão de administrador
+- Redirecionamento automático para login se não autenticado
+- Redirecionamento para dashboard apropriado baseado em permissão
+
+### Row Level Security (RLS)
+
+Todas as operações no banco são protegidas por policies RLS que:
+- Validam o usuário autenticado via `auth.uid()`
+- Verificam permissões através de funções helper
+- Isolam dados por empresa (multi-tenant)
+- Impedem acesso não autorizado mesmo com SQL direto
+- Garantem que colaboradores só vejam suas próprias avaliações
 
 ## Acesso ao Sistema
 
-**Modo de Desenvolvimento**: O sistema está configurado para acesso direto sem autenticação, entrando automaticamente com um usuário administrativo padrão.
+### Login como Administrador
 
-**Usuário Padrão (Dev)**:
-- Nome: Administrador
-- Email: admin@sistema.com
-- Permissões: Administrador completo
+Para acessar o sistema como administrador:
+1. Acesse `/login`
+2. Use as credenciais de um administrador cadastrado
+3. Será redirecionado para `/dashboard`
 
-**Nota**: Em produção, implemente autenticação completa via Supabase Auth.
+### Login como Colaborador
+
+Para acessar como colaborador:
+1. Acesse `/login`
+2. Use as credenciais vinculadas à pessoa
+3. Será redirecionado para `/user-dashboard`
+
+### Primeiro Acesso
+
+No primeiro acesso, é necessário:
+1. Ter um administrador cadastrado via Edge Function
+2. Criar empresas e pessoas
+3. Vincular auth_user_id às pessoas para acesso de colaborador
+4. Finalizar avaliações para visualização no portal do colaborador
 
 ## Desenvolvimento
 
@@ -308,25 +521,19 @@ supabase/migrations/
 ### Convenções de Componentes
 
 ```typescript
-// Exemplo de estrutura de componente
 interface ComponentProps {
   title: string;
   onAction: () => void;
 }
 
 export const Component = ({ title, onAction }: ComponentProps) => {
-  // Estados
   const [state, setState] = useState<Type>();
-
-  // Hooks
   const { navigate } = useRouter();
 
-  // Handlers
   const handleClick = () => {
     // lógica
   };
 
-  // Render
   return (
     <div>
       {/* JSX */}
@@ -345,6 +552,54 @@ O projeto usa Tailwind CSS para estilização. Principais classes utilizadas:
 - **Espaçamento**: `p-4`, `px-6`, `py-3`, `m-4`
 - **Responsividade**: `sm:`, `md:`, `lg:`, `xl:`
 - **Estados**: `hover:`, `focus:`, `active:`, `disabled:`
+
+### Trabalhando com Supabase
+
+```typescript
+// Queries básicas
+const { data, error } = await supabase
+  .from('tabela')
+  .select('*')
+  .eq('campo', valor)
+  .maybeSingle();
+
+// Inserts
+const { data, error } = await supabase
+  .from('tabela')
+  .insert({ campo: valor })
+  .select()
+  .single();
+
+// Updates
+const { error } = await supabase
+  .from('tabela')
+  .update({ campo: novoValor })
+  .eq('id', id);
+
+// Deletes
+const { error } = await supabase
+  .from('tabela')
+  .delete()
+  .eq('id', id);
+```
+
+### Debugging de RLS Policies
+
+Se encontrar problemas de acesso:
+
+1. Verifique se o usuário está autenticado: `console.log(await supabase.auth.getUser())`
+2. Verifique se o `auth_user_id` está preenchido na tabela pessoas/administradores
+3. Teste a função helper no SQL Editor: `SELECT get_pessoa_id_from_auth()`
+4. Verifique os logs do console do navegador (F12)
+5. Revise as policies RLS no Supabase Dashboard
+
+## Edge Functions
+
+### admin-users
+Gerencia a criação de usuários administradores via Supabase Auth, garantindo que apenas administradores possam criar novos usuários com permissões.
+
+### user-management
+Gerencia operações relacionadas a usuários do sistema, incluindo sincronização entre auth.users e as tabelas de pessoas/administradores.
 
 ## Deploy
 
@@ -380,6 +635,17 @@ Certifique-se de configurar:
 - `VITE_SUPABASE_URL` - URL do seu projeto Supabase
 - `VITE_SUPABASE_ANON_KEY` - Chave anônima do Supabase
 
+### Checklist de Deploy
+
+- [ ] Configurar variáveis de ambiente
+- [ ] Executar todas as migrações no Supabase
+- [ ] Verificar policies RLS ativas
+- [ ] Testar fluxo de autenticação
+- [ ] Criar primeiro usuário administrador via Edge Function
+- [ ] Testar acesso de colaborador
+- [ ] Validar proteção de rotas
+- [ ] Verificar logs de erro
+
 ## Suporte e Contribuição
 
 ### Reportar Problemas
@@ -393,6 +659,30 @@ Para reportar bugs ou solicitar funcionalidades, abra uma issue no repositório.
 3. Commit suas mudanças (`git commit -m 'Adiciona MinhaFeature'`)
 4. Push para a branch (`git push origin feature/MinhaFeature`)
 5. Abra um Pull Request
+
+## Troubleshooting
+
+### Problema: "Avaliação não encontrada"
+**Causa**: As RLS policies podem estar bloqueando o acesso ou o `auth_user_id` não está vinculado corretamente.
+
+**Solução**:
+1. Verifique se a pessoa tem `auth_user_id` preenchido
+2. Confirme que a avaliação está com status 'finalizada'
+3. Verifique os logs do console para erros específicos
+4. Execute `SELECT get_pessoa_id_from_auth()` no SQL Editor enquanto logado
+
+### Problema: Erro 400 no Supabase
+**Causa**: Conflito entre filtros manuais na query e políticas RLS.
+
+**Solução**: As RLS policies já filtram automaticamente os dados. Evite adicionar filtros redundantes como `.eq('colaborador_id', pessoa?.id)`.
+
+### Problema: Usuário não consegue fazer login
+**Causa**: Usuário pode não existir no Supabase Auth ou não estar vinculado a uma pessoa/administrador.
+
+**Solução**:
+1. Verifique se o email existe em auth.users
+2. Confirme que o `auth_user_id` está preenchido na tabela correspondente
+3. Use a Edge Function para criar administradores corretamente
 
 ## Licença
 
