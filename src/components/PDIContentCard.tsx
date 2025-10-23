@@ -49,16 +49,16 @@ export const PDIContentCard = ({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      <div className="relative w-full aspect-square bg-gray-100">
+      <div className="relative w-full aspect-square bg-white flex items-center justify-center">
         {!imageError && content.cover_image_url ? (
           <img
             src={content.cover_image_url}
             alt={content.titulo}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
             <span className="text-sm">Imagem não disponível</span>
           </div>
         )}

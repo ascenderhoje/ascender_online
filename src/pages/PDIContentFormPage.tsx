@@ -30,6 +30,7 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
     external_url: '',
     duration_minutes: '',
     investment_cents: '',
+    investment_display: '',
     is_active: true,
     selectedTags: [] as string[],
     selectedCompetencies: [] as string[],
@@ -80,6 +81,9 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
         supabase.from('pdi_content_audiences').select('audience_id').eq('content_id', contentId),
       ]);
 
+      const investmentValue = data.investment_cents ? (data.investment_cents / 100) : 0;
+      const investmentDisplay = investmentValue > 0 ? investmentValue.toFixed(2).replace('.', ',') : '';
+
       setFormData({
         titulo: data.titulo,
         descricao_curta: data.descricao_curta,
@@ -88,7 +92,8 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
         media_type_id: data.media_type_id,
         external_url: data.external_url || '',
         duration_minutes: data.duration_minutes?.toString() || '',
-        investment_cents: data.investment_cents ? (data.investment_cents / 100).toString() : '',
+        investment_cents: data.investment_cents?.toString() || '',
+        investment_display: investmentDisplay,
         is_active: data.is_active,
         selectedTags: tagsRes.data?.map((t) => t.tag_id) || [],
         selectedCompetencies: competenciesRes.data?.map((c) => c.competency_id) || [],
@@ -148,6 +153,27 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
     }
   };
 
+  const handleInvestmentChange = (value: string) => {
+    const cleaned = value.replace(/[^0-9,]/g, '');
+    const parts = cleaned.split(',');
+
+    if (parts.length > 2) return;
+
+    if (parts[1] && parts[1].length > 2) {
+      parts[1] = parts[1].substring(0, 2);
+    }
+
+    const formatted = parts.join(',');
+    const valueInReais = cleaned.replace(',', '.');
+    const cents = valueInReais ? Math.round(parseFloat(valueInReais) * 100) : 0;
+
+    setFormData({
+      ...formData,
+      investment_display: formatted,
+      investment_cents: cents > 0 ? cents.toString() : ''
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -167,7 +193,7 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
         media_type_id: formData.media_type_id,
         external_url: formData.external_url.trim() || null,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
-        investment_cents: formData.investment_cents ? Math.round(parseFloat(formData.investment_cents) * 100) : null,
+        investment_cents: formData.investment_cents ? parseInt(formData.investment_cents) : null,
         is_active: formData.is_active,
       };
 
@@ -330,11 +356,11 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
                   {formData.cover_image_url && (
                     <div className="mt-3">
                       <p className="text-xs text-gray-600 mb-2">Preview (aspect ratio 1:1):</p>
-                      <div className="w-48 aspect-square border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="w-48 aspect-square border border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
                         <img
                           src={formData.cover_image_url}
                           alt="Preview"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           onError={(e) => {
                             e.currentTarget.src = '';
                             e.currentTarget.alt = 'Erro ao carregar imagem';
@@ -397,13 +423,11 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
                   Investimento (R$)
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.investment_cents}
-                  onChange={(e) => setFormData({ ...formData, investment_cents: e.target.value })}
+                  type="text"
+                  value={formData.investment_display}
+                  onChange={(e) => handleInvestmentChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: 49.90"
+                  placeholder="Ex: 49,90"
                 />
               </div>
 
