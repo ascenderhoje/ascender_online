@@ -31,8 +31,8 @@ const tertiaryItems: NavItem[] = [
 ];
 
 const pdiItems = [
-  { id: 'pdi-tags', label: 'Tags PDI', icon: Tag, path: '/pdi/tags' },
   { id: 'pdi-conteudos', label: 'Conteúdos PDI', icon: BookOpen, path: '/pdi/conteudos' },
+  { id: 'pdi-tags', label: 'Tags PDI', icon: Tag, path: '/pdi/tags' },
 ];
 
 const adminItems: NavItem[] = [
