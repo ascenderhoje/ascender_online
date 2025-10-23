@@ -7,6 +7,7 @@ import { useRouter } from '../utils/router';
 import { supabase } from '../lib/supabase';
 import { PDIContent, PDITag, PDIMediaType } from '../types';
 import { PDIContentCard } from '../components/PDIContentCard';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 export const PDIContentsPage = () => {
   const { showToast } = useToast();
@@ -18,6 +19,7 @@ export const PDIContentsPage = () => {
   const [selectedMediaType, setSelectedMediaType] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [mediaTypes, setMediaTypes] = useState<PDIMediaType[]>([]);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
 
   useEffect(() => {
     loadContents();
@@ -86,11 +88,11 @@ export const PDIContentsPage = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este conteúdo?')) return;
+  const handleDelete = async () => {
+    if (!deleteConfirm.id) return;
 
     try {
-      const { error } = await supabase.from('pdi_contents').delete().eq('id', id);
+      const { error } = await supabase.from('pdi_contents').delete().eq('id', deleteConfirm.id);
       if (error) throw error;
       showToast('success', 'Conteúdo excluído com sucesso');
       loadContents();
@@ -229,8 +231,9 @@ export const PDIContentsPage = () => {
                   <PDIContentCard
                     content={content}
                     onEdit={(id) => navigate(`/pdi/conteudos/${id}/edit`)}
-                    onRemove={handleDelete}
+                    onRemove={(id) => setDeleteConfirm({ show: true, id })}
                     showActions={true}
+                    showRatingCount={true}
                   />
                   <div className="absolute top-2 left-2">
                     <button
@@ -250,6 +253,17 @@ export const PDIContentsPage = () => {
           </>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, id: null })}
+        onConfirm={handleDelete}
+        title="Excluir Conteúdo"
+        message="Tem certeza que deseja excluir este conteúdo? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </>
   );
 };

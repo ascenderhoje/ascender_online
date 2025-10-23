@@ -13,6 +13,7 @@ interface PDIContentCardProps {
   showActions?: boolean;
   plannedDate?: string;
   status?: string;
+  showRatingCount?: boolean;
 }
 
 export const PDIContentCard = ({
@@ -24,6 +25,7 @@ export const PDIContentCard = ({
   showActions = true,
   plannedDate,
   status,
+  showRatingCount = false,
 }: PDIContentCardProps) => {
   const [imageError, setImageError] = useState(false);
 
@@ -47,8 +49,8 @@ export const PDIContentCard = ({
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      <div className="relative h-48 bg-gray-100">
-        {!imageError ? (
+      <div className="relative w-full aspect-square bg-gray-100">
+        {!imageError && content.cover_image_url ? (
           <img
             src={content.cover_image_url}
             alt={content.titulo}
@@ -136,7 +138,8 @@ export const PDIContentCard = ({
           <div className="flex items-center gap-2">
             <PDIRatingStars rating={content.avg_rating} size={16} />
             <span className="text-xs text-gray-500">
-              {content.avg_rating.toFixed(1)} ({content.ratings_count})
+              {content.avg_rating.toFixed(1)}
+              {showRatingCount && ` (${content.ratings_count})`}
             </span>
           </div>
 

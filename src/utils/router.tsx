@@ -22,7 +22,17 @@ export const RouterProvider = ({ children }: { children: ReactNode }) => {
     const pathParts = path.split('/').filter(Boolean);
     const newParams: Record<string, string> = {};
 
-    // Extract ID from paths like /competencias/:id/edit, /avaliacoes/:id/view or /competencias/:id
+    // Extract ID from paths like /competencias/:id/edit, /avaliacoes/:id/view, /pdi/conteudos/:id/edit
+    // Check for 3-level paths first (e.g., /pdi/conteudos/:id)
+    if (pathParts.length >= 3) {
+      const potentialId = pathParts[2];
+      if (potentialId !== 'new' && potentialId !== 'edit' && potentialId !== 'view') {
+        newParams.id = potentialId;
+        return newParams;
+      }
+    }
+
+    // Check for 2-level paths (e.g., /competencias/:id)
     if (pathParts.length >= 2) {
       const id = pathParts[1];
       if (id !== 'new' && id !== 'edit' && id !== 'view') {

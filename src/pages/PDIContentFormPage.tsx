@@ -15,6 +15,7 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [mediaTypes, setMediaTypes] = useState<PDIMediaType[]>([]);
   const [tags, setTags] = useState<PDITag[]>([]);
   const [audiences, setAudiences] = useState<PDIAudience[]>([]);
@@ -110,10 +111,47 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
     }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/jpeg') && !file.type.startsWith('image/jpg')) {
+      showToast('error', 'Apenas imagens JPG são permitidas');
+      return;
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      showToast('error', 'A imagem deve ter no máximo 3MB');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `pdi-covers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('public')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('public').getPublicUrl(filePath);
+
+      setFormData({ ...formData, cover_image_url: data.publicUrl });
+      showToast('success', 'Imagem enviada com sucesso');
+    } catch (error: any) {
+      showToast('error', error.message || 'Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.titulo.trim() || !formData.descricao_curta.trim() || !formData.cover_image_url.trim() || !formData.media_type_id) {
+    if (!formData.titulo.trim() || !formData.descricao_curta.trim() || !formData.media_type_id) {
       showToast('error', 'Preencha todos os campos obrigatórios');
       return;
     }
@@ -125,7 +163,7 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
         titulo: formData.titulo.trim(),
         descricao_curta: formData.descricao_curta.trim(),
         descricao_longa: formData.descricao_longa.trim() || null,
-        cover_image_url: formData.cover_image_url.trim(),
+        cover_image_url: formData.cover_image_url.trim() || null,
         media_type_id: formData.media_type_id,
         external_url: formData.external_url.trim() || null,
         duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
@@ -254,29 +292,58 @@ export const PDIContentFormPage = ({ contentId }: PDIContentFormPageProps) => {
 
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL da Imagem de Capa <span className="text-red-500">*</span>
+                  Imagem de Capa
                 </label>
-                <input
-                  type="url"
-                  value={formData.cover_image_url}
-                  onChange={(e) => setFormData({ ...formData, cover_image_url: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://exemplo.com/imagem.jpg"
-                  required
-                />
-                {formData.cover_image_url && (
-                  <div className="mt-2">
-                    <img
-                      src={formData.cover_image_url}
-                      alt="Preview"
-                      className="h-32 rounded border border-gray-200"
-                      onError={(e) => {
-                        e.currentTarget.src = '';
-                        e.currentTarget.alt = 'Erro ao carregar imagem';
-                      }}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">Fazer upload (JPG, máx. 3MB)</label>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                    />
+                    {uploading && <p className="text-xs text-blue-600 mt-1">Enviando...</p>}
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="px-2 bg-white text-gray-500">ou</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-2">Informar URL da imagem</label>
+                    <input
+                      type="url"
+                      value={formData.cover_image_url}
+                      onChange={(e) => setFormData({ ...formData, cover_image_url: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://exemplo.com/imagem.jpg"
                     />
                   </div>
-                )}
+
+                  {formData.cover_image_url && (
+                    <div className="mt-3">
+                      <p className="text-xs text-gray-600 mb-2">Preview (aspect ratio 1:1):</p>
+                      <div className="w-48 aspect-square border border-gray-200 rounded-lg overflow-hidden">
+                        <img
+                          src={formData.cover_image_url}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = '';
+                            e.currentTarget.alt = 'Erro ao carregar imagem';
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>

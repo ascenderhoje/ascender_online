@@ -3,6 +3,7 @@ import { Calendar, CheckCircle, Edit2, Trash2, Star, Plus } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useToast } from '../components/Toast';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -20,6 +21,7 @@ export const MeuPDIPage = () => {
   const [loading, setLoading] = useState(true);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
   const [selectedUserContent, setSelectedUserContent] = useState<PDIUserContent | null>(null);
 
   const [completionForm, setCompletionForm] = useState({
@@ -95,11 +97,11 @@ export const MeuPDIPage = () => {
     }
   };
 
-  const handleRemoveContent = async (id: string) => {
-    if (!confirm('Tem certeza que deseja remover este conteúdo do seu PDI?')) return;
+  const handleRemoveContent = async () => {
+    if (!deleteConfirm.id) return;
 
     try {
-      const { error } = await supabase.from('pdi_user_contents').delete().eq('id', id);
+      const { error } = await supabase.from('pdi_user_contents').delete().eq('id', deleteConfirm.id);
       if (error) throw error;
       showToast('success', 'Conteúdo removido do seu PDI');
       loadUserPDI();
@@ -241,7 +243,7 @@ export const MeuPDIPage = () => {
                               Concluir
                             </button>
                             <button
-                              onClick={() => handleRemoveContent(uc.id)}
+                              onClick={() => setDeleteConfirm({ show: true, id: uc.id })}
                               className="text-sm px-3 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
                             >
                               <Trash2 size={14} />
@@ -406,6 +408,17 @@ export const MeuPDIPage = () => {
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, id: null })}
+        onConfirm={handleRemoveContent}
+        title="Remover Conteúdo"
+        message="Tem certeza que deseja remover este conteúdo do seu PDI?"
+        confirmText="Remover"
+        cancelText="Cancelar"
+        variant="warning"
+      />
     </>
   );
 };
