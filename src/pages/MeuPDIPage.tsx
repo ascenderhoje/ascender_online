@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, CheckCircle, Edit2, Trash2, Star, Plus } from 'lucide-react';
+import { Calendar, CheckCircle, Trash2, Plus, Sparkles } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
@@ -16,9 +16,12 @@ export const MeuPDIPage = () => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
   const { pessoa } = useAuth();
+  const [activeTab, setActiveTab] = useState<'meu-pdi' | 'sugestoes'>('meu-pdi');
   const [userContents, setUserContents] = useState<PDIUserContent[]>([]);
   const [userActions, setUserActions] = useState<PDIUserAction[]>([]);
+  const [recommendedContents, setRecommendedContents] = useState<PDIContent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
@@ -36,6 +39,7 @@ export const MeuPDIPage = () => {
   useEffect(() => {
     if (pessoa?.id) {
       loadUserPDI();
+      loadRecommendations();
     }
   }, [pessoa]);
 
@@ -177,41 +181,163 @@ export const MeuPDIPage = () => {
     }
   };
 
+  const loadRecommendations = async () => {
+    if (!pessoa?.id) return;
+
+    try {
+      setLoadingRecommendations(true);
+      const { data: recommendations, error } = await supabase.rpc(
+        'get_user_pdi_tag_recommendations',
+        { p_user_id: pessoa.id }
+      );
+
+      if (error) throw error;
+
+      if (!recommendations || recommendations.length === 0) {
+        setRecommendedContents([]);
+        return;
+      }
+
+      const contentIds = recommendations.map((r: any) => r.content_id);
+      const { data: contentsData, error: contentsError } = await supabase
+        .from('pdi_contents')
+        .select(`
+          *,
+          media_type:pdi_media_types(*)
+        `)
+        .in('id', contentIds)
+        .eq('is_active', true);
+
+      if (contentsError) throw contentsError;
+
+      const contentsWithRelations = await Promise.all(
+        (contentsData || []).map(async (content) => {
+          const [tagsRes, competenciesRes, audiencesRes] = await Promise.all([
+            supabase
+              .from('pdi_content_tags')
+              .select('tag:pdi_tags(*)')
+              .eq('content_id', content.id),
+            supabase
+              .from('pdi_content_competencies')
+              .select('competency:competencias(*)')
+              .eq('content_id', content.id),
+            supabase
+              .from('pdi_content_audiences')
+              .select('audience:pdi_audiences(*)')
+              .eq('content_id', content.id),
+          ]);
+
+          return {
+            ...content,
+            tags: tagsRes.data?.map((t: any) => t.tag) || [],
+            competencies: competenciesRes.data?.map((c: any) => c.competency) || [],
+            audiences: audiencesRes.data?.map((a: any) => a.audience) || [],
+          };
+        })
+      );
+
+      const orderedContents = contentIds
+        .map((id: string) => contentsWithRelations.find((c: PDIContent) => c.id === id))
+        .filter((c): c is PDIContent => c !== undefined);
+
+      setRecommendedContents(orderedContents);
+    } catch (error: any) {
+      console.error('Erro ao carregar recomendações:', error);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+
+  const handleAddRecommendedContent = async (content: PDIContent) => {
+    if (!pessoa?.id) return;
+
+    try {
+      const { error } = await supabase.from('pdi_user_contents').insert({
+        user_id: pessoa.id,
+        content_id: content.id,
+        status: 'em_andamento',
+      });
+
+      if (error) {
+        if (error.code === '23505') {
+          showToast('error', 'Este conteúdo já está no seu PDI');
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      showToast('success', 'Conteúdo adicionado ao seu PDI');
+      loadUserPDI();
+      loadRecommendations();
+    } catch (error: any) {
+      showToast('error', error.message || 'Erro ao adicionar conteúdo');
+    }
+  };
+
   const upcomingContents = userContents.filter((uc) => uc.status === 'em_andamento');
   const completedContents = userContents.filter((uc) => uc.status === 'concluido');
 
   return (
     <>
-      <Header
-        title="Meu PDI"
-        subtitle="Acompanhe seu Plano de Desenvolvimento Individual"
-      />
+      <Header title="Meu PDI" />
 
       <div className="p-6">
-        <div className="flex gap-4 mb-6">
-          <Button onClick={() => navigate('/pdi/biblioteca')}>
-            <Plus size={18} />
-            Explorar Conteúdos
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/pdi/acoes')}>
-            <Plus size={18} />
-            Criar Ação
-          </Button>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="flex gap-2 border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab('meu-pdi')}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'meu-pdi'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Meu PDI
+            </button>
+            <button
+              onClick={() => setActiveTab('sugestoes')}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
+                activeTab === 'sugestoes'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Sparkles size={16} />
+              Sugestões para Você
+              {recommendedContents.length > 0 && (
+                <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                  {recommendedContents.length}
+                </span>
+              )}
+            </button>
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={() => navigate('/pdi/biblioteca')}>
+              <Plus size={18} />
+              Explorar Conteúdos
+            </Button>
+            <Button variant="secondary" onClick={() => navigate('/pdi/acoes')}>
+              <Plus size={18} />
+              Criar Ação
+            </Button>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12 text-gray-500">Carregando...</div>
-        ) : (
-          <>
-            {upcomingContents.length === 0 && completedContents.length === 0 && userActions.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 mb-4">Você ainda não adicionou conteúdos ao seu PDI</p>
-                <Button onClick={() => navigate('/pdi/biblioteca')}>
-                  <Plus size={18} />
-                  Explorar Conteúdos
-                </Button>
-              </div>
-            ) : (
+        {activeTab === 'meu-pdi' ? (
+          loading ? (
+            <div className="text-center py-12 text-gray-500">Carregando...</div>
+          ) : (
+            <>
+              {upcomingContents.length === 0 && completedContents.length === 0 && userActions.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 mb-4">Você ainda não adicionou conteúdos ao seu PDI</p>
+                  <Button onClick={() => navigate('/pdi/biblioteca')}>
+                    <Plus size={18} />
+                    Explorar Conteúdos
+                  </Button>
+                </div>
+              ) : (
               <>
                 {upcomingContents.length > 0 && (
                   <div className="mb-8">
@@ -261,7 +387,7 @@ export const MeuPDIPage = () => {
                       <h2 className="text-lg font-semibold text-gray-900">
                         Minhas Ações ({userActions.length})
                       </h2>
-                      <Button variant="outline" onClick={() => navigate('/pdi/acoes')}>
+                      <Button variant="secondary" onClick={() => navigate('/pdi/acoes')}>
                         Gerenciar Ações
                       </Button>
                     </div>
@@ -327,8 +453,59 @@ export const MeuPDIPage = () => {
                   </div>
                 )}
               </>
-            )}
-          </>
+              )}
+            </>
+          )
+        ) : (
+          loadingRecommendations ? (
+            <div className="text-center py-12 text-gray-500">Carregando sugestões...</div>
+          ) : recommendedContents.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <Sparkles className="text-gray-400" size={32} />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Nenhuma sugestão disponível
+              </h3>
+              <p className="text-gray-500 max-w-md mx-auto">
+                As sugestões são baseadas nas tags marcadas em suas avaliações.
+                Quando você tiver uma avaliação finalizada com tags, os conteúdos recomendados aparecerão aqui.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="text-blue-600 mt-0.5" size={20} />
+                  <div>
+                    <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                      Conteúdos Personalizados para Você
+                    </h3>
+                    <p className="text-sm text-blue-800">
+                      Estas sugestões foram selecionadas com base nas tags identificadas em sua última avaliação.
+                      Explore os conteúdos abaixo para continuar seu desenvolvimento.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4 text-sm text-gray-600">
+                {recommendedContents.length} conteúdo{recommendedContents.length !== 1 ? 's' : ''} sugerido{recommendedContents.length !== 1 ? 's' : ''}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recommendedContents.map((content) => (
+                  <PDIContentCard
+                    key={content.id}
+                    content={content}
+                    showActions={true}
+                    isAdded={false}
+                    onAdd={handleAddRecommendedContent}
+                  />
+                ))}
+              </div>
+            </>
+          )
         )}
       </div>
 
