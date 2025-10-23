@@ -78,7 +78,8 @@ const AdminLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
     '/competencias',
     '/modelos',
     '/avaliacoes',
-    '/pdi',
+    '/pdi/tags',
+    '/pdi/conteudos',
     '/administradores',
   ];
 
