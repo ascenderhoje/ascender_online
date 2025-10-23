@@ -31,6 +31,12 @@ import { GestorPessoasPage } from './pages/GestorPessoasPage';
 import { GestorPessoaDetailPage } from './pages/GestorPessoaDetailPage';
 import { GestorAvaliacoesPage } from './pages/GestorAvaliacoesPage';
 import { AdminAvaliacaoViewPage } from './pages/AdminAvaliacaoViewPage';
+import { PDITagsPage } from './pages/PDITagsPage';
+import { PDIContentsPage } from './pages/PDIContentsPage';
+import { PDIContentFormPage } from './pages/PDIContentFormPage';
+import { MeuPDIPage } from './pages/MeuPDIPage';
+import { PDIBibliotecaPage } from './pages/PDIBibliotecaPage';
+import { PDIAcoesPage } from './pages/PDIAcoesPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -50,6 +56,11 @@ const AvaliacaoFormPageWrapper = () => {
 const AdministradorFormPageWrapper = () => {
   const { params } = useRouter();
   return <AdministradorFormPage administradorId={params.id} />;
+};
+
+const PDIContentFormPageWrapper = () => {
+  const { params } = useRouter();
+  return <PDIContentFormPage contentId={params.id} />;
 };
 
 const AdminLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -147,6 +158,30 @@ function App() {
             </PrivateRoute>
           </Route>
 
+          <Route path="/pdi/meu-pdi">
+            <PrivateRoute>
+              <UserLayout>
+                <MeuPDIPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <Route path="/pdi/biblioteca">
+            <PrivateRoute>
+              <UserLayout>
+                <PDIBibliotecaPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <Route path="/pdi/acoes">
+            <PrivateRoute>
+              <UserLayout>
+                <PDIAcoesPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
           <AdminLayoutWrapper>
             <Route path="/">
               <AdminRoute>
@@ -233,12 +268,24 @@ function App() {
                 <AvaliacaoFormPageWrapper />
               </AdminRoute>
             </Route>
-            <Route path="/pdi">
+            <Route path="/pdi/tags">
               <AdminRoute>
-                <PlaceholderPage
-                  title="PDI"
-                  description="Módulo de Plano de Desenvolvimento Individual em desenvolvimento"
-                />
+                <PDITagsPage />
+              </AdminRoute>
+            </Route>
+            <Route path="/pdi/conteudos">
+              <AdminRoute>
+                <PDIContentsPage />
+              </AdminRoute>
+            </Route>
+            <Route path="/pdi/conteudos/new">
+              <AdminRoute>
+                <PDIContentFormPage />
+              </AdminRoute>
+            </Route>
+            <Route path="/pdi/conteudos/:id/edit">
+              <AdminRoute>
+                <PDIContentFormPageWrapper />
               </AdminRoute>
             </Route>
             <Route path="/administradores">

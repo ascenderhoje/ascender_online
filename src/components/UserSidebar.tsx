@@ -1,4 +1,4 @@
-import { LayoutDashboard, ClipboardList, LogOut, Users } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, ListChecks } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -13,10 +13,16 @@ const gestorNavItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/gestor-dashboard' },
   { id: 'pessoas', label: 'Pessoas', icon: Users, path: '/gestor-pessoas' },
   { id: 'avaliacoes', label: 'Minhas Avaliações', icon: ClipboardList, path: '/gestor-avaliacoes' },
+  { id: 'meu-pdi', label: 'Meu PDI', icon: TrendingUp, path: '/pdi/meu-pdi' },
+  { id: 'biblioteca', label: 'Biblioteca', icon: BookOpen, path: '/pdi/biblioteca' },
+  { id: 'acoes', label: 'Minhas Ações', icon: ListChecks, path: '/pdi/acoes' },
 ];
 
 const colaboradorNavItems: NavItem[] = [
   { id: 'avaliacoes', label: 'Minhas Avaliações', icon: ClipboardList, path: '/user-dashboard' },
+  { id: 'meu-pdi', label: 'Meu PDI', icon: TrendingUp, path: '/pdi/meu-pdi' },
+  { id: 'biblioteca', label: 'Biblioteca', icon: BookOpen, path: '/pdi/biblioteca' },
+  { id: 'acoes', label: 'Minhas Ações', icon: ListChecks, path: '/pdi/acoes' },
 ];
 
 export const UserSidebar = () => {
@@ -43,6 +49,9 @@ export const UserSidebar = () => {
     }
     if (path === '/gestor-avaliacoes') {
       return currentPath === '/gestor-avaliacoes' || currentPath.startsWith('/user-avaliacao');
+    }
+    if (path.startsWith('/pdi/')) {
+      return currentPath.startsWith(path) || currentPath === path;
     }
     return currentPath.startsWith(path);
   };

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings, LogOut, Tag, BookOpen } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { ModuleName } from '../types';
@@ -30,8 +30,9 @@ const tertiaryItems: NavItem[] = [
   { id: 'avaliacoes', label: 'Avaliações', icon: ClipboardList, path: '/avaliacoes' },
 ];
 
-const pdiItems: NavItem[] = [
-  { id: 'pdi', label: 'PDI', icon: TrendingUp, path: '/pdi' },
+const pdiItems = [
+  { id: 'pdi-tags', label: 'Tags PDI', icon: Tag, path: '/pdi/tags' },
+  { id: 'pdi-conteudos', label: 'Conteúdos PDI', icon: BookOpen, path: '/pdi/conteudos' },
 ];
 
 const adminItems: NavItem[] = [
