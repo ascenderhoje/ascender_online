@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Eye, EyeOff } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
 import { Button } from '../components/Button';
@@ -9,7 +9,6 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const { signIn } = useAuth();
   const { navigate } = useRouter();
 
@@ -45,113 +44,86 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-ascender-neutral-light flex items-center justify-center p-4 animate-fadeIn">
-      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-xl overflow-hidden flex animate-slideUp">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden flex">
         <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-          <div className="mb-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-ascender-yellow rounded-full p-2">
-                <Sparkles className="w-8 h-8 text-ascender-purple" />
-              </div>
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-8 h-8 text-yellow-500" />
               <div>
-                <h1 className="text-3xl font-bold text-ascender-yellow font-poppins">ascender</h1>
-                <h2 className="text-2xl font-bold text-ascender-purple font-poppins">online</h2>
+                <h1 className="text-2xl font-bold text-yellow-500">ascender</h1>
+                <h2 className="text-2xl font-bold text-gray-800">online</h2>
               </div>
             </div>
           </div>
 
           <div className="mb-8">
-            <h3 className="text-4xl font-bold text-gray-800 mb-3 font-poppins leading-tight">
-              Que bom ter você
-              <br />
-              <span className="text-ascender-purple">com a gente</span>
+            <h3 className="text-3xl font-semibold text-gray-800 mb-1">
+              Que bom ter você com a gente
             </h3>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-ascender-yellow" />
-              <p className="text-gray-600 font-nunito">Faça login para continuar</p>
-            </div>
+            <Sparkles className="w-6 h-6 text-yellow-500" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="bg-gradient-to-r from-ascender-purple to-ascender-purple-dark text-white p-5 rounded-t-2xl shadow-md">
-              <h4 className="text-xl font-semibold font-poppins">Login</h4>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-ascender-purple text-white p-4 rounded-t-lg">
+              <h4 className="text-lg font-semibold">Login</h4>
             </div>
 
-            <div className="space-y-5 border-2 border-ascender-purple/20 border-t-0 rounded-b-2xl p-8 bg-white shadow-sm">
+            <div className="space-y-4 border-2 border-ascender-purple border-t-0 rounded-b-lg p-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 font-nunito">E-mail</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
+                  placeholder="E-mail"
                   required
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-ascender-purple focus:ring-2 focus:ring-ascender-purple/20 transition-all duration-200 font-nunito"
+                  className="w-full px-4 py-3 border-2 border-ascender-purple-light rounded-lg focus:outline-none focus:border-ascender-purple transition-colors"
                   disabled={loading}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 font-nunito">Senha</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Digite sua senha"
-                    required
-                    className="w-full px-4 py-3.5 pr-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-ascender-purple focus:ring-2 focus:ring-ascender-purple/20 transition-all duration-200 font-nunito"
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-ascender-purple transition-colors"
-                    disabled={loading}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Senha"
+                  required
+                  className="w-full px-4 py-3 border-2 border-ascender-purple-light rounded-lg focus:outline-none focus:border-ascender-purple transition-colors"
+                  disabled={loading}
+                />
               </div>
 
               {error && (
-                <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-shake">
-                  <p className="text-sm text-red-700 font-nunito">{error}</p>
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
                 </div>
               )}
 
-              <div className="flex justify-end pt-2">
-                <button
+              <div className="flex justify-end">
+                <Button
                   type="submit"
                   disabled={loading}
-                  className="px-10 py-3.5 bg-gradient-to-r from-ascender-purple to-ascender-purple-dark hover:shadow-lg hover:scale-105 text-white rounded-full font-semibold transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100 font-poppins"
+                  className="px-8 py-2 bg-ascender-purple hover:bg-ascender-purple-dark text-white rounded-full font-medium transition-colors disabled:opacity-50"
                 >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Entrando...
-                    </span>
-                  ) : 'Entrar'}
-                </button>
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </Button>
               </div>
             </div>
           </form>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <div className="mt-6 flex gap-3">
             <button
               onClick={() => navigate('/register')}
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-ascender-yellow hover:bg-ascender-yellow-dark hover:shadow-md text-ascender-purple-dark rounded-full font-semibold transition-all duration-200 disabled:opacity-50 font-poppins"
+              className="px-6 py-2 bg-ascender-yellow hover:bg-ascender-yellow-dark text-ascender-purple-dark rounded-full font-medium transition-colors disabled:opacity-50"
             >
               Criar Conta
             </button>
             <button
               onClick={() => navigate('/forgot-password')}
               disabled={loading}
-              className="flex-1 px-6 py-3 border-2 border-ascender-purple text-ascender-purple hover:bg-ascender-purple hover:text-white rounded-full font-semibold transition-all duration-200 disabled:opacity-50 font-poppins"
+              className="px-6 py-2 bg-ascender-purple-dark hover:bg-ascender-purple text-white rounded-full font-medium transition-colors disabled:opacity-50"
             >
               Esqueceu a senha?
             </button>
@@ -231,34 +203,6 @@ export function LoginPage() {
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out;
-        }
-        .animate-slideUp {
-          animation: slideUp 0.6s ease-out;
-        }
-        .animate-shake {
-          animation: shake 0.3s ease-in-out;
         }
       `}</style>
     </div>
