@@ -30,11 +30,17 @@ interface PerguntaPersonalizada {
   resposta: any;
 }
 
+interface PDITag {
+  id: string;
+  nome: string;
+}
+
 interface Avaliacao {
   id: string;
   data_avaliacao: string;
   status: string;
   observacoes: string | null;
+  pdi_tags: string[];
   colaborador: {
     nome: string;
     email: string;
@@ -52,6 +58,7 @@ interface Avaliacao {
     titulo: string;
     conteudo: string;
   }>;
+  pdiTagsDetails: PDITag[];
 }
 
 export function UserAvaliacaoViewPage() {
@@ -80,6 +87,7 @@ export function UserAvaliacaoViewPage() {
           status,
           observacoes,
           modelo_id,
+          pdi_tags,
           colaborador:pessoas!colaborador_id (
             nome,
             email,
@@ -262,11 +270,24 @@ export function UserAvaliacaoViewPage() {
         }
       }
 
+      let pdiTagsDetails: PDITag[] = [];
+      if (avaliacaoData.pdi_tags && Array.isArray(avaliacaoData.pdi_tags) && avaliacaoData.pdi_tags.length > 0) {
+        const { data: tagsData } = await supabase
+          .from('pdi_tags')
+          .select('id, nome')
+          .in('id', avaliacaoData.pdi_tags);
+
+        if (tagsData) {
+          pdiTagsDetails = tagsData;
+        }
+      }
+
       setAvaliacao({
         ...avaliacaoData,
         competencias,
         perguntas,
         textos,
+        pdiTagsDetails,
       } as Avaliacao);
     } catch (error: any) {
       console.error('[UserAvaliacaoViewPage] Erro ao carregar avaliação:', error);
@@ -419,6 +440,21 @@ export function UserAvaliacaoViewPage() {
                     className="prose prose-sm max-w-none text-gray-700"
                     dangerouslySetInnerHTML={{ __html: texto.conteudo }}
                   />
+                  {texto.titulo === 'Sugestões de Desenvolvimento' && avaliacao.pdiTagsDetails && avaliacao.pdiTagsDetails.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3">Áreas de Desenvolvimento Identificadas</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {avaliacao.pdiTagsDetails.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                          >
+                            {tag.nome}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
