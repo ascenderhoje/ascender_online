@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, CheckCircle, Trash2, Plus, Sparkles } from 'lucide-react';
+import { Calendar, CheckCircle, Trash2, Plus, Sparkles, Search } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
@@ -26,6 +26,7 @@ export const MeuPDIPage = () => {
   const [showDateModal, setShowDateModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
   const [selectedUserContent, setSelectedUserContent] = useState<PDIUserContent | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [completionForm, setCompletionForm] = useState({
     rating_stars: 0,
@@ -237,7 +238,7 @@ export const MeuPDIPage = () => {
       );
 
       const orderedContents = contentIds
-        .map((id: string) => contentsWithRelations.find((c: PDIContent) => c.id === id))
+        .map((id: string) => contentsWithRelations.find((c) => c.id === id))
         .filter((c): c is PDIContent => c !== undefined);
 
       setRecommendedContents(orderedContents);
@@ -275,8 +276,30 @@ export const MeuPDIPage = () => {
     }
   };
 
-  const upcomingContents = userContents.filter((uc) => uc.status === 'em_andamento');
-  const completedContents = userContents.filter((uc) => uc.status === 'concluido');
+  const filterBySearch = (contents: PDIUserContent[]) => {
+    if (!searchTerm) return contents;
+    const term = searchTerm.toLowerCase();
+    return contents.filter((uc) => {
+      const content = uc.content as PDIContent;
+      return (
+        content.titulo.toLowerCase().includes(term) ||
+        content.descricao_curta.toLowerCase().includes(term) ||
+        content.descricao_longa?.toLowerCase().includes(term)
+      );
+    });
+  };
+
+  const filterActionsBySearch = (actions: PDIUserAction[]) => {
+    if (!searchTerm) return actions;
+    const term = searchTerm.toLowerCase();
+    return actions.filter((action) =>
+      action.description.toLowerCase().includes(term)
+    );
+  };
+
+  const upcomingContents = filterBySearch(userContents.filter((uc) => uc.status === 'em_andamento'));
+  const completedContents = filterBySearch(userContents.filter((uc) => uc.status === 'concluido'));
+  const filteredActions = filterActionsBySearch(userActions);
 
   return (
     <>
@@ -324,18 +347,37 @@ export const MeuPDIPage = () => {
           </div>
         </div>
 
+        {activeTab === 'meu-pdi' && (
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar conteúdos e ações..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        )}
+
         {activeTab === 'meu-pdi' ? (
           loading ? (
             <div className="text-center py-12 text-gray-500">Carregando...</div>
           ) : (
             <>
-              {upcomingContents.length === 0 && completedContents.length === 0 && userActions.length === 0 ? (
+              {upcomingContents.length === 0 && completedContents.length === 0 && filteredActions.length === 0 && !searchTerm ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500 mb-4">Você ainda não adicionou conteúdos ao seu PDI</p>
                   <Button onClick={() => navigate('/pdi/biblioteca')}>
                     <Plus size={18} />
                     Explorar Conteúdos
                   </Button>
+                </div>
+              ) : upcomingContents.length === 0 && completedContents.length === 0 && filteredActions.length === 0 && searchTerm ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Nenhum resultado encontrado para "{searchTerm}"</p>
                 </div>
               ) : (
               <>
@@ -381,18 +423,18 @@ export const MeuPDIPage = () => {
                   </div>
                 )}
 
-                {userActions.length > 0 && (
+                {filteredActions.length > 0 && (
                   <div className="mb-8">
                     <div className="flex justify-between items-center mb-4">
                       <h2 className="text-lg font-semibold text-gray-900">
-                        Minhas Ações ({userActions.length})
+                        Minhas Ações ({filteredActions.length})
                       </h2>
                       <Button variant="secondary" onClick={() => navigate('/pdi/acoes')}>
                         Gerenciar Ações
                       </Button>
                     </div>
                     <div className="bg-white rounded-lg border border-gray-200 divide-y">
-                      {userActions.slice(0, 5).map((action) => (
+                      {filteredActions.slice(0, 5).map((action) => (
                         <div key={action.id} className="p-4 flex items-center justify-between">
                           <div className="flex-1">
                             <p className="text-sm font-medium text-gray-900">{action.description}</p>
