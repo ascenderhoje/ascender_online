@@ -91,8 +91,8 @@ export const Sidebar = () => {
           className="hover:opacity-80 transition-opacity w-full"
         >
           <img
-            src="/image.png"
-            alt="Ascender RH"
+            src="/Aplicação 1 copy.png"
+            alt="Ascender Hoje"
             className="h-12 w-auto mx-auto"
           />
         </button>
