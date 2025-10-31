@@ -100,7 +100,7 @@ export const UserSidebar = () => {
           className="hover:opacity-80 transition-opacity w-full"
         >
           <img
-            src="/ascender-logo.png"
+            src="/image.png"
             alt="Ascender RH"
             className="h-14 w-auto mx-auto"
           />
