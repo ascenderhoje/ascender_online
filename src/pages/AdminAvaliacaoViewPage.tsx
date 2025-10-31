@@ -225,7 +225,7 @@ export function AdminAvaliacaoViewPage() {
 
       const { data: textosData } = await supabase
         .from('avaliacoes_textos')
-        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa, sugestoes_desenvolvimento')
+        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa')
         .eq('avaliacao_id', id)
         .eq('idioma_padrao', true)
         .maybeSingle();
@@ -248,12 +248,6 @@ export function AdminAvaliacaoViewPage() {
           textos.push({
             titulo: 'Análise da Psicóloga',
             conteudo: textosData.highlights_psicologa,
-          });
-        }
-        if (textosData.sugestoes_desenvolvimento) {
-          textos.push({
-            titulo: 'Sugestões de Desenvolvimento',
-            conteudo: textosData.sugestoes_desenvolvimento,
           });
         }
       }
