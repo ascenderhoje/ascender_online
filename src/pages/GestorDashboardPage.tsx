@@ -62,23 +62,27 @@ export function GestorDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Carregando...</p>
+      <div className="min-h-screen bg-ascender-neutral flex items-center justify-center">
+        <p className="text-gray-500 font-nunito">Carregando...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-              <User className="w-10 h-10 text-blue-600" />
+    <div className="min-h-screen bg-ascender-neutral">
+      <div className="gradient-purple text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 right-20 w-32 h-32 rounded-full bg-ascender-yellow"></div>
+          <div className="absolute bottom-10 left-20 w-24 h-24 rounded-full bg-ascender-purple-light"></div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <User className="w-12 h-12 text-ascender-purple" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Olá, {pessoa?.nome}!</h1>
-              <p className="text-blue-100 mt-1">Bem-vindo ao painel do gestor</p>
+              <h1 className="text-4xl font-poppins font-bold">Olá, {pessoa?.nome}!</h1>
+              <p className="text-ascender-purple-light mt-2 font-nunito text-lg">Bem-vindo ao painel do gestor</p>
             </div>
           </div>
         </div>
@@ -86,26 +90,26 @@ export function GestorDashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-md p-6 border border-ascender-purple-light/20 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <ClipboardList className="w-6 h-6 text-blue-600" />
+              <div className="w-14 h-14 bg-ascender-purple-light/20 rounded-xl flex items-center justify-center">
+                <ClipboardList className="w-7 h-7 text-ascender-purple" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total de Avaliações</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalAvaliacoes}</p>
+                <p className="text-sm text-gray-600 font-nunito">Total de Avaliações</p>
+                <p className="text-3xl font-poppins font-bold text-ascender-purple">{stats.totalAvaliacoes}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-md p-6 border border-ascender-yellow/20 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="w-14 h-14 bg-ascender-yellow/20 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-7 h-7 text-ascender-yellow-dark" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Média de Notas</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-gray-600 font-nunito">Média de Notas</p>
+                <p className="text-3xl font-poppins font-bold text-ascender-yellow-dark">
                   {stats.mediaNotas.toFixed(1)}
                 </p>
               </div>
@@ -113,38 +117,38 @@ export function GestorDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
+        <div className="bg-white rounded-2xl shadow-md p-6 border border-ascender-purple-light/20">
+          <h2 className="text-2xl font-poppins font-semibold text-ascender-purple mb-6">Ações Rápidas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               onClick={() => navigate('/gestor-pessoas')}
-              className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+              className="p-6 border-2 border-ascender-purple-light/30 rounded-2xl hover:border-ascender-purple hover:bg-ascender-purple-light/10 transition-all text-left group"
             >
-              <h3 className="font-semibold text-gray-900 group-hover:text-blue-600">
+              <h3 className="font-poppins font-semibold text-gray-900 group-hover:text-ascender-purple text-lg">
                 Ver Pessoas
               </h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm font-nunito text-gray-600 mt-2">
                 Acesse a lista de pessoas da sua equipe
               </p>
             </button>
 
             <button
               onClick={() => navigate('/gestor-avaliacoes')}
-              className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+              className="p-6 border-2 border-ascender-purple-light/30 rounded-2xl hover:border-ascender-purple hover:bg-ascender-purple-light/10 transition-all text-left group"
             >
-              <h3 className="font-semibold text-gray-900 group-hover:text-blue-600">
+              <h3 className="font-poppins font-semibold text-gray-900 group-hover:text-ascender-purple text-lg">
                 Minhas Avaliações
               </h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm font-nunito text-gray-600 mt-2">
                 Visualize suas avaliações pessoais
               </p>
             </button>
           </div>
         </div>
 
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Sobre o painel do gestor</h3>
-          <p className="text-blue-700">
+        <div className="mt-6 bg-ascender-purple-light/10 border border-ascender-purple-light/30 rounded-2xl p-6">
+          <h3 className="text-lg font-poppins font-semibold text-ascender-purple mb-3">Sobre o painel do gestor</h3>
+          <p className="text-gray-700 font-nunito leading-relaxed">
             Como gestor, você tem acesso à visualização das pessoas que pertencem aos grupos sob sua gestão
             e pode acompanhar o desenvolvimento profissional de cada membro da equipe através das avaliações.
           </p>

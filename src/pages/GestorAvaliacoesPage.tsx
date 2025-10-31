@@ -75,9 +75,9 @@ export function GestorAvaliacoesPage() {
       case 'finalizada':
         return 'bg-green-100 text-green-700';
       case 'em_andamento':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-ascender-purple-light/20 text-ascender-purple';
       case 'pendente':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-ascender-yellow/20 text-ascender-yellow-dark';
       case 'atrasada':
         return 'bg-red-100 text-red-700';
       case 'rascunho':

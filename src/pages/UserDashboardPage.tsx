@@ -108,23 +108,27 @@ export function UserDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Carregando...</p>
+      <div className="min-h-screen bg-ascender-neutral flex items-center justify-center">
+        <p className="text-gray-500 font-nunito">Carregando...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-              <User className="w-10 h-10 text-blue-600" />
+    <div className="min-h-screen bg-ascender-neutral">
+      <div className="gradient-purple text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 right-20 w-32 h-32 rounded-full bg-ascender-yellow"></div>
+          <div className="absolute bottom-10 left-20 w-24 h-24 rounded-full bg-ascender-purple-light"></div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <User className="w-12 h-12 text-ascender-purple" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Olá, {pessoa?.nome}!</h1>
-              <p className="text-blue-100 mt-1">Bem-vindo ao seu painel de desenvolvimento</p>
+              <h1 className="text-4xl font-poppins font-bold">Olá, {pessoa?.nome}!</h1>
+              <p className="text-ascender-purple-light mt-2 font-nunito text-lg">Bem-vindo ao seu painel de desenvolvimento</p>
             </div>
           </div>
         </div>
@@ -132,26 +136,26 @@ export function UserDashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-md p-6 border border-ascender-purple-light/20 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <ClipboardList className="w-6 h-6 text-blue-600" />
+              <div className="w-14 h-14 bg-ascender-purple-light/20 rounded-xl flex items-center justify-center">
+                <ClipboardList className="w-7 h-7 text-ascender-purple" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Avaliações Disponíveis</p>
-                <p className="text-2xl font-bold text-gray-900">{avaliacoes.length}</p>
+                <p className="text-sm text-gray-600 font-nunito">Avaliações Disponíveis</p>
+                <p className="text-3xl font-poppins font-bold text-ascender-purple">{avaliacoes.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-md p-6 border border-ascender-yellow/20 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="w-14 h-14 bg-ascender-yellow/20 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-7 h-7 text-ascender-yellow-dark" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Finalizadas</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-gray-600 font-nunito">Finalizadas</p>
+                <p className="text-3xl font-poppins font-bold text-ascender-yellow-dark">
                   {avaliacoes.length}
                 </p>
               </div>
@@ -159,45 +163,45 @@ export function UserDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Minhas Avaliações</h2>
+        <div className="bg-white rounded-2xl shadow-md border border-ascender-purple-light/20">
+          <div className="px-6 py-5 border-b border-ascender-purple-light/20">
+            <h2 className="text-2xl font-poppins font-semibold text-ascender-purple">Minhas Avaliações</h2>
           </div>
 
           {avaliacoes.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <ClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Você ainda não possui avaliações registradas.</p>
+              <p className="text-gray-500 font-nunito">Você ainda não possui avaliações registradas.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-ascender-purple-light/10">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-nunito font-semibold text-ascender-purple uppercase tracking-wider">
                       Data
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-nunito font-semibold text-ascender-purple uppercase tracking-wider">
                       Psicóloga
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-right text-xs font-nunito font-semibold text-ascender-purple uppercase tracking-wider">
                       Ações
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {avaliacoes.map((avaliacao) => (
-                    <tr key={avaliacao.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr key={avaliacao.id} className="hover:bg-ascender-purple-light/5 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-nunito text-gray-900">
                         {formatDate(avaliacao.data_avaliacao)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-nunito text-gray-900">
                         {avaliacao.psicologa?.nome || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <button
                           onClick={() => navigate(`/user-avaliacao/${avaliacao.id}`)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-ascender-purple text-white rounded-xl hover:bg-ascender-purple-dark transition-colors font-nunito font-medium"
                         >
                           <Eye className="w-4 h-4" />
                           Visualizar
@@ -211,9 +215,9 @@ export function UserDashboardPage() {
           )}
         </div>
 
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Sobre suas avaliações</h3>
-          <p className="text-blue-700">
+        <div className="mt-8 bg-ascender-purple-light/10 border border-ascender-purple-light/30 rounded-2xl p-6">
+          <h3 className="text-lg font-poppins font-semibold text-ascender-purple mb-3">Sobre suas avaliações</h3>
+          <p className="text-gray-700 font-nunito leading-relaxed">
             Este é o seu espaço para acompanhar todas as avaliações de competências realizadas.
             Aqui você pode visualizar seu histórico, verificar o status de avaliações em andamento
             e acompanhar seu desenvolvimento profissional ao longo do tempo.

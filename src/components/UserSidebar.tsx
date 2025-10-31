@@ -1,6 +1,7 @@
 import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, ListChecks } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
+import { AscenderIcon } from './AscenderIcon';
 
 interface NavItem {
   id: string;
@@ -67,13 +68,13 @@ export const UserSidebar = () => {
             <li key={item.id}>
               <button
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-nunito transition-all ${
                   active
-                    ? 'bg-blue-50 text-blue-700 font-medium border-r-2 border-blue-600'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-ascender-purple-light/20 text-ascender-purple font-semibold border-r-3 border-ascender-purple'
+                    : 'text-gray-700 hover:bg-ascender-purple-light/10'
                 }`}
               >
-                <Icon size={18} className={active ? 'text-blue-700' : 'text-gray-500'} />
+                <Icon size={18} className={active ? 'text-ascender-purple' : 'text-gray-500'} />
                 <span>{item.label}</span>
               </button>
             </li>
@@ -92,13 +93,16 @@ export const UserSidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col">
-      <div className="p-6 border-b border-gray-200">
+    <aside className="w-64 bg-white border-r border-ascender-purple-light/30 min-h-screen fixed left-0 top-0 flex flex-col shadow-sm">
+      <div className="p-6 border-b border-ascender-purple-light/30">
         <button
           onClick={handleLogoClick}
-          className="text-base font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          Ascender RH
+          <AscenderIcon size={28} className="text-ascender-purple" />
+          <span className="text-lg font-poppins font-semibold text-ascender-purple">
+            Ascender RH
+          </span>
         </button>
       </div>
 
@@ -106,16 +110,16 @@ export const UserSidebar = () => {
         <NavSection items={navItems} />
       </nav>
 
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-ascender-purple-light/30">
         {pessoa && (
           <div className="mb-3 px-2">
-            <p className="text-xs text-gray-500">Conectado como</p>
-            <p className="text-sm font-medium text-gray-900 truncate">{pessoa.nome}</p>
+            <p className="text-xs text-gray-500 font-nunito">Conectado como</p>
+            <p className="text-sm font-nunito font-medium text-gray-900 truncate">{pessoa.nome}</p>
           </div>
         )}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-nunito text-gray-700 hover:bg-ascender-purple-light/10 rounded-xl transition-colors"
         >
           <LogOut size={18} className="text-gray-500" />
           <span>Sair</span>

@@ -7,7 +7,7 @@ interface UserLayoutProps {
 
 export function UserLayout({ children }: UserLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-ascender-neutral">
       <UserSidebar />
       <main className="flex-1 ml-64">
         {children}

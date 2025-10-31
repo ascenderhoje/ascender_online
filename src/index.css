@@ -4,6 +4,31 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-ascender-neutral text-gray-900 font-nunito;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-poppins;
+  }
+}
+
+@layer utilities {
+  .gradient-purple {
+    background: linear-gradient(135deg, #4B0082 0%, #6B21A8 100%);
+  }
+
+  .gradient-purple-light {
+    background: linear-gradient(135deg, #C8A8E9 0%, #E9D5FF 100%);
+  }
+
+  .gradient-yellow {
+    background: linear-gradient(135deg, #FFC700 0%, #FFE07D 100%);
+  }
+
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #4B0082 0%, #6B21A8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
