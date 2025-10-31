@@ -70,11 +70,11 @@ export const UserSidebar = () => {
                 onClick={() => navigate(item.path)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-nunito transition-all ${
                   active
-                    ? 'bg-ascender-purple-light/20 text-ascender-purple font-semibold border-r-3 border-ascender-purple'
-                    : 'text-gray-700 hover:bg-ascender-purple-light/10'
+                    ? 'bg-white/60 text-ascender-purple-dark font-semibold border-r-4 border-ascender-yellow'
+                    : 'text-ascender-purple-dark hover:bg-white/40'
                 }`}
               >
-                <Icon size={18} className={active ? 'text-ascender-purple' : 'text-gray-500'} />
+                <Icon size={18} className={active ? 'text-ascender-yellow' : 'text-ascender-purple'} />
                 <span>{item.label}</span>
               </button>
             </li>
@@ -93,8 +93,8 @@ export const UserSidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-ascender-purple-light/30 min-h-screen fixed left-0 top-0 flex flex-col shadow-sm">
-      <div className="p-6 border-b border-ascender-purple-light/30">
+    <aside className="w-64 bg-ascender-purple-light border-r border-ascender-purple/20 min-h-screen fixed left-0 top-0 flex flex-col shadow-lg">
+      <div className="p-6 border-b border-ascender-purple/20">
         <button
           onClick={handleLogoClick}
           className="hover:opacity-80 transition-opacity w-full"
@@ -111,18 +111,18 @@ export const UserSidebar = () => {
         <NavSection items={navItems} />
       </nav>
 
-      <div className="p-4 border-t border-ascender-purple-light/30">
+      <div className="p-4 border-t border-ascender-purple/20">
         {pessoa && (
           <div className="mb-3 px-2">
-            <p className="text-xs text-gray-500 font-nunito">Conectado como</p>
-            <p className="text-sm font-nunito font-medium text-gray-900 truncate">{pessoa.nome}</p>
+            <p className="text-xs text-ascender-purple-dark/70 font-nunito">Conectado como</p>
+            <p className="text-sm font-nunito font-medium text-ascender-purple-dark truncate">{pessoa.nome}</p>
           </div>
         )}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-nunito text-gray-700 hover:bg-ascender-purple-light/10 rounded-xl transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-nunito text-ascender-purple-dark hover:bg-white/50 rounded-xl transition-colors"
         >
-          <LogOut size={18} className="text-gray-500" />
+          <LogOut size={18} className="text-ascender-purple" />
           <span>Sair</span>
         </button>
       </div>

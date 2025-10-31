@@ -312,7 +312,7 @@ export const MeuPDIPage = () => {
               onClick={() => setActiveTab('meu-pdi')}
               className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === 'meu-pdi'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-ascender-purple text-ascender-purple'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -322,14 +322,14 @@ export const MeuPDIPage = () => {
               onClick={() => setActiveTab('sugestoes')}
               className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
                 activeTab === 'sugestoes'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-ascender-purple text-ascender-purple'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Sparkles size={16} />
+              <Sparkles size={16} className={activeTab === 'sugestoes' ? 'text-ascender-yellow' : ''} />
               Sugestões para Você
               {recommendedContents.length > 0 && (
-                <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                <span className="bg-ascender-yellow text-ascender-purple text-xs font-semibold px-2 py-0.5 rounded-full">
                   {recommendedContents.length}
                 </span>
               )}
@@ -356,7 +356,7 @@ export const MeuPDIPage = () => {
                 placeholder="Buscar conteúdos e ações..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ascender-purple focus:border-transparent"
               />
             </div>
           </div>
@@ -516,14 +516,14 @@ export const MeuPDIPage = () => {
             </div>
           ) : (
             <>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="bg-ascender-purple-light border border-ascender-purple/30 rounded-lg p-4 mb-6">
                 <div className="flex items-start gap-3">
-                  <Sparkles className="text-blue-600 mt-0.5" size={20} />
+                  <Sparkles className="text-ascender-yellow mt-0.5" size={20} />
                   <div>
-                    <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                    <h3 className="text-sm font-semibold text-ascender-purple mb-1">
                       Conteúdos Personalizados para Você
                     </h3>
-                    <p className="text-sm text-blue-800">
+                    <p className="text-sm text-ascender-purple-dark">
                       Estas sugestões foram selecionadas com base nas tags identificadas em sua última avaliação.
                       Explore os conteúdos abaixo para continuar seu desenvolvimento.
                     </p>
