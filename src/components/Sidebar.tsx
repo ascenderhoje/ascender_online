@@ -88,9 +88,13 @@ export const Sidebar = () => {
       <div className="p-6 border-b border-gray-200">
         <button
           onClick={() => navigate('/')}
-          className="text-base font-semibold text-gray-900 hover:text-indigo-600 transition-colors"
+          className="hover:opacity-80 transition-opacity"
         >
-          Ascender RH
+          <img
+            src="/ascender-logo.png"
+            alt="Ascender RH"
+            className="h-8 w-auto"
+          />
         </button>
       </div>
 
