@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
 import { supabase } from '../lib/supabase';
-import { User, Eye } from 'lucide-react';
+import { Search, TrendingUp, ListChecks } from 'lucide-react';
 
 interface Pessoa {
   id: string;
@@ -10,17 +10,33 @@ interface Pessoa {
   email: string;
   funcao: string | null;
   avatar_url: string | null;
+  tipo_acesso: string;
 }
 
 export function GestorPessoasPage() {
   const { pessoa } = useAuth();
   const { navigate } = useRouter();
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
+  const [filteredPessoas, setFilteredPessoas] = useState<Pessoa[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPessoas();
   }, [pessoa]);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = pessoas.filter(p =>
+        p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.funcao && p.funcao.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredPessoas(filtered);
+    } else {
+      setFilteredPessoas(pessoas);
+    }
+  }, [searchTerm, pessoas]);
 
   const loadPessoas = async () => {
     if (!pessoa) return;
@@ -39,6 +55,7 @@ export function GestorPessoasPage() {
 
       if (gruposIds.length === 0) {
         setPessoas([]);
+        setFilteredPessoas([]);
         return;
       }
 
@@ -51,7 +68,8 @@ export function GestorPessoasPage() {
             nome,
             email,
             funcao,
-            avatar_url
+            avatar_url,
+            tipo_acesso
           )
         `)
         .in('grupo_id', gruposIds);
@@ -67,11 +85,14 @@ export function GestorPessoasPage() {
             email: item.pessoas.email,
             funcao: item.pessoas.funcao,
             avatar_url: item.pessoas.avatar_url,
+            tipo_acesso: item.pessoas.tipo_acesso,
           });
         }
       });
 
-      setPessoas(Array.from(pessoasSet.values()));
+      const pessoasList = Array.from(pessoasSet.values());
+      setPessoas(pessoasList);
+      setFilteredPessoas(pessoasList);
     } catch (error) {
       console.error('Erro ao carregar pessoas:', error);
     } finally {
@@ -87,80 +108,105 @@ export function GestorPessoasPage() {
     );
   }
 
+  const getInitials = (nome: string) => {
+    const names = nome.split(' ');
+    if (names.length >= 2) {
+      return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
+    }
+    return nome.charAt(0).toUpperCase();
+  };
+
+  const getTipoAcessoLabel = (tipo: string) => {
+    if (tipo === 'gestor') return 'Gestor';
+    if (tipo === 'colaborador') return 'Colaborador';
+    return tipo;
+  };
+
   return (
     <div className="min-h-screen bg-ascender-neutral">
-      <div className="gradient-purple text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-4xl font-poppins font-bold">Pessoas</h1>
-          <p className="text-ascender-purple-light mt-2 font-nunito text-lg">Membros da sua equipe</p>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {pessoas.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Nenhuma pessoa encontrada nos grupos que você gerencia.</p>
+        <div className="mb-6">
+          <h1 className="text-3xl font-poppins font-bold text-ascender-purple mb-6">Pessoas</h1>
+
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Buscar por nome, e-mail ou função..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ascender-purple focus:border-transparent font-nunito"
+            />
+          </div>
+        </div>
+
+        {filteredPessoas.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-md p-12 text-center border border-gray-200">
+            <p className="text-gray-500 font-nunito">
+              {searchTerm ? 'Nenhuma pessoa encontrada com esse critério de busca.' : 'Nenhuma pessoa encontrada nos grupos que você gerencia.'}
+            </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-ascender-purple text-white">
+                    <th className="px-6 py-4 text-left text-sm font-poppins font-semibold">
                       Nome
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Função
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ações
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {pessoas.map((pessoa) => (
-                    <tr key={pessoa.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            {pessoa.avatar_url ? (
-                              <img
-                                className="h-10 w-10 rounded-full object-cover"
-                                src={pessoa.avatar_url}
-                                alt={pessoa.nome}
-                              />
-                            ) : (
-                              <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                                <span className="text-white font-medium text-sm">
-                                  {pessoa.nome.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
+                <tbody className="divide-y divide-gray-100">
+                  {filteredPessoas.map((pessoaItem, index) => (
+                    <tr key={pessoaItem.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0">
+                              {pessoaItem.avatar_url ? (
+                                <img
+                                  className="h-12 w-12 rounded-full object-cover"
+                                  src={pessoaItem.avatar_url}
+                                  alt={pessoaItem.nome}
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-ascender-yellow to-yellow-500 flex items-center justify-center shadow-md">
+                                  <span className="text-white font-poppins font-bold text-sm">
+                                    {getInitials(pessoaItem.nome)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="text-base font-poppins font-semibold text-gray-900">{pessoaItem.nome}</div>
+                              <div className="text-sm font-nunito text-gray-600">{getTipoAcessoLabel(pessoaItem.tipo_acesso)}</div>
+                            </div>
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{pessoa.nome}</div>
+
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => navigate(`/gestor-pessoa/${pessoaItem.id}`)}
+                              className="px-4 py-2 text-sm font-nunito text-ascender-purple hover:bg-ascender-purple-light/10 rounded-lg transition-colors"
+                            >
+                              Avaliações
+                            </button>
+                            <button
+                              onClick={() => navigate(`/gestor-pessoa/${pessoaItem.id}?tab=pdi`)}
+                              className="px-4 py-2 text-sm font-nunito text-ascender-purple hover:bg-ascender-purple-light/10 rounded-lg transition-colors flex items-center gap-1"
+                            >
+                              <TrendingUp size={16} />
+                              Ver PDI
+                            </button>
+                            <button
+                              onClick={() => navigate(`/gestor-pessoa/${pessoaItem.id}?tab=acoes`)}
+                              className="px-4 py-2 text-sm font-nunito text-ascender-purple hover:bg-ascender-purple-light/10 rounded-lg transition-colors flex items-center gap-1"
+                            >
+                              <ListChecks size={16} />
+                              Ver Ações
+                            </button>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {pessoa.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {pessoa.funcao || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <button
-                          onClick={() => navigate(`/gestor-pessoa/${pessoa.id}`)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                          Ver Avaliações
-                        </button>
                       </td>
                     </tr>
                   ))}

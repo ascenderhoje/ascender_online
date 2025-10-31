@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, ListChecks } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
-import { AscenderIcon } from './AscenderIcon';
+import { supabase } from '../lib/supabase';
 
 interface NavItem {
   id: string;
@@ -10,14 +11,25 @@ interface NavItem {
   path: string;
 }
 
-const gestorNavItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/gestor-dashboard' },
-  { id: 'pessoas', label: 'Pessoas', icon: Users, path: '/gestor-pessoas' },
-  { id: 'avaliacoes', label: 'Minhas Avaliações', icon: ClipboardList, path: '/gestor-avaliacoes' },
-  { id: 'meu-pdi', label: 'Meu PDI', icon: TrendingUp, path: '/pdi/meu-pdi' },
-  { id: 'biblioteca', label: 'Biblioteca', icon: BookOpen, path: '/pdi/biblioteca' },
-  { id: 'acoes', label: 'Minhas Ações', icon: ListChecks, path: '/pdi/acoes' },
-];
+const getGestorNavItems = (hasAvaliacoes: boolean, hasPDI: boolean): NavItem[] => {
+  const items: NavItem[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/gestor-dashboard' },
+  ];
+
+  if (hasAvaliacoes) {
+    items.push({ id: 'avaliacoes', label: 'Minhas Avaliações', icon: ClipboardList, path: '/gestor-avaliacoes' });
+  }
+
+  items.push({ id: 'pessoas', label: 'Pessoas', icon: Users, path: '/gestor-pessoas' });
+
+  if (hasPDI) {
+    items.push({ id: 'meu-pdi', label: 'Meu PDI', icon: TrendingUp, path: '/pdi/meu-pdi' });
+    items.push({ id: 'acoes', label: 'Ações para meu PDI', icon: ListChecks, path: '/pdi/acoes' });
+    items.push({ id: 'biblioteca', label: 'Conteúdos para meu PDI', icon: BookOpen, path: '/pdi/biblioteca' });
+  }
+
+  return items;
+};
 
 const colaboradorNavItems: NavItem[] = [
   { id: 'avaliacoes', label: 'Minhas Avaliações', icon: ClipboardList, path: '/user-dashboard' },
@@ -29,9 +41,53 @@ const colaboradorNavItems: NavItem[] = [
 export const UserSidebar = () => {
   const { currentPath, navigate } = useRouter();
   const { signOut, pessoa } = useAuth();
+  const [hasAvaliacoes, setHasAvaliacoes] = useState(false);
+  const [hasPDI, setHasPDI] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const isGestor = pessoa?.tipo_acesso === 'gestor';
-  const navItems = isGestor ? gestorNavItems : colaboradorNavItems;
+
+  useEffect(() => {
+    if (isGestor && pessoa?.id) {
+      checkGestorData();
+    } else {
+      setLoading(false);
+    }
+  }, [isGestor, pessoa?.id]);
+
+  const checkGestorData = async () => {
+    if (!pessoa?.id) return;
+
+    try {
+      const [avaliacoesRes, pdiContentsRes, pdiActionsRes] = await Promise.all([
+        supabase
+          .from('avaliacoes')
+          .select('id')
+          .eq('colaborador_id', pessoa.id)
+          .eq('status', 'finalizada')
+          .limit(1),
+        supabase
+          .from('pdi_user_contents')
+          .select('id')
+          .eq('user_id', pessoa.id)
+          .limit(1),
+        supabase
+          .from('pdi_user_actions')
+          .select('id')
+          .eq('user_id', pessoa.id)
+          .limit(1),
+      ]);
+
+      setHasAvaliacoes((avaliacoesRes.data?.length || 0) > 0);
+      setHasPDI((pdiContentsRes.data?.length || 0) > 0 || (pdiActionsRes.data?.length || 0) > 0);
+    } catch (error) {
+      console.error('Erro ao verificar dados do gestor:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const navItems = isGestor ? getGestorNavItems(hasAvaliacoes, hasPDI) : colaboradorNavItems;
 
   const handleLogout = async () => {
     await signOut();

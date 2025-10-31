@@ -6,6 +6,7 @@ import { ToastProvider } from './components/Toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
 import { AdminRoute } from './components/AdminRoute';
+import { GestorRoute } from './components/GestorRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -128,35 +129,35 @@ function App() {
           </Route>
 
           <Route path="/gestor-dashboard">
-            <PrivateRoute>
+            <GestorRoute>
               <UserLayout>
                 <GestorDashboardPage />
               </UserLayout>
-            </PrivateRoute>
+            </GestorRoute>
           </Route>
 
           <Route path="/gestor-pessoas">
-            <PrivateRoute>
+            <GestorRoute>
               <UserLayout>
                 <GestorPessoasPage />
               </UserLayout>
-            </PrivateRoute>
+            </GestorRoute>
           </Route>
 
           <Route path="/gestor-pessoa/:id">
-            <PrivateRoute>
+            <GestorRoute>
               <UserLayout>
                 <GestorPessoaDetailPage />
               </UserLayout>
-            </PrivateRoute>
+            </GestorRoute>
           </Route>
 
           <Route path="/gestor-avaliacoes">
-            <PrivateRoute>
+            <GestorRoute>
               <UserLayout>
                 <GestorAvaliacoesPage />
               </UserLayout>
-            </PrivateRoute>
+            </GestorRoute>
           </Route>
 
           <Route path="/pdi/meu-pdi">
