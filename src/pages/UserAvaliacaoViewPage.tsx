@@ -229,29 +229,35 @@ export function UserAvaliacaoViewPage() {
 
       const { data: textosData } = await supabase
         .from('avaliacoes_textos')
-        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa')
+        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa, sugestoes_desenvolvimento')
         .eq('avaliacao_id', id)
         .eq('idioma_padrao', true)
         .maybeSingle();
 
       const textos = [];
       if (textosData) {
-        if (textosData.pontos_fortes) {
-          textos.push({
-            titulo: 'Pontos Fortes',
-            conteudo: textosData.pontos_fortes,
-          });
-        }
         if (textosData.oportunidades_melhoria) {
           textos.push({
             titulo: 'Oportunidades de Melhoria',
             conteudo: textosData.oportunidades_melhoria,
           });
         }
+        if (textosData.pontos_fortes) {
+          textos.push({
+            titulo: 'Pontos Fortes',
+            conteudo: textosData.pontos_fortes,
+          });
+        }
         if (textosData.highlights_psicologa) {
           textos.push({
-            titulo: 'Análise da Psicóloga',
+            titulo: 'Highlights da Psicóloga',
             conteudo: textosData.highlights_psicologa,
+          });
+        }
+        if (textosData.sugestoes_desenvolvimento) {
+          textos.push({
+            titulo: 'Sugestões de Desenvolvimento',
+            conteudo: textosData.sugestoes_desenvolvimento,
           });
         }
       }
@@ -392,6 +398,33 @@ export function UserAvaliacaoViewPage() {
           )}
         </div>
 
+        {avaliacao.textos.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 px-4 sm:px-0">
+              Dados Básicos da Avaliação
+            </h2>
+            <div className="space-y-6">
+              {avaliacao.textos.map((texto, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-8"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">{texto.titulo}</h3>
+                  </div>
+                  <div
+                    className="prose prose-sm max-w-none text-gray-700"
+                    dangerouslySetInnerHTML={{ __html: texto.conteudo }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {avaliacao.competencias.map((competencia, index) => (
           <div
             key={competencia.id}
@@ -465,7 +498,7 @@ export function UserAvaliacaoViewPage() {
 
         {avaliacao.perguntas.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Análise Observativa</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Perguntas Personalizadas</h3>
             <div className="space-y-6">
               {avaliacao.perguntas.map((pergunta) => (
                 <div key={pergunta.id} className="border-l-4 border-blue-500 pl-6">
@@ -483,28 +516,6 @@ export function UserAvaliacaoViewPage() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {avaliacao.textos.length > 0 && (
-          <div className="space-y-6">
-            {avaliacao.textos.map((texto, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-8"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">{texto.titulo}</h3>
-                </div>
-                <div
-                  className="prose prose-sm max-w-none text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: texto.conteudo }}
-                />
-              </div>
-            ))}
           </div>
         )}
 
