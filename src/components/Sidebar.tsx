@@ -88,12 +88,12 @@ export const Sidebar = () => {
       <div className="p-6 border-b border-gray-200">
         <button
           onClick={() => navigate('/')}
-          className="hover:opacity-80 transition-opacity"
+          className="hover:opacity-80 transition-opacity w-full"
         >
           <img
             src="/ascender-logo.png"
             alt="Ascender RH"
-            className="h-8 w-auto"
+            className="h-12 w-auto mx-auto"
           />
         </button>
       </div>

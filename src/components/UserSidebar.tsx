@@ -97,12 +97,12 @@ export const UserSidebar = () => {
       <div className="p-6 border-b border-ascender-purple-light/30">
         <button
           onClick={handleLogoClick}
-          className="hover:opacity-80 transition-opacity"
+          className="hover:opacity-80 transition-opacity w-full"
         >
           <img
             src="/ascender-logo.png"
             alt="Ascender RH"
-            className="h-10 w-auto"
+            className="h-14 w-auto mx-auto"
           />
         </button>
       </div>
