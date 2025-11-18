@@ -11,7 +11,7 @@ interface NavItem {
   path: string;
 }
 
-const getGestorNavItems = (hasAvaliacoes: boolean, hasPDI: boolean): NavItem[] => {
+const getGestorNavItems = (hasAvaliacoes: boolean): NavItem[] => {
   const items: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/gestor-dashboard' },
   ];
@@ -21,12 +21,9 @@ const getGestorNavItems = (hasAvaliacoes: boolean, hasPDI: boolean): NavItem[] =
   }
 
   items.push({ id: 'pessoas', label: 'Pessoas', icon: Users, path: '/gestor-pessoas' });
-
-  if (hasPDI) {
-    items.push({ id: 'meu-pdi', label: 'Meu PDI', icon: TrendingUp, path: '/pdi/meu-pdi' });
-    items.push({ id: 'acoes', label: 'Ações para meu PDI', icon: ListChecks, path: '/pdi/acoes' });
-    items.push({ id: 'biblioteca', label: 'Conteúdos para meu PDI', icon: BookOpen, path: '/pdi/biblioteca' });
-  }
+  items.push({ id: 'meu-pdi', label: 'Meu PDI', icon: TrendingUp, path: '/pdi/meu-pdi' });
+  items.push({ id: 'acoes', label: 'Ações para meu PDI', icon: ListChecks, path: '/pdi/acoes' });
+  items.push({ id: 'biblioteca', label: 'Conteúdos para meu PDI', icon: BookOpen, path: '/pdi/biblioteca' });
 
   return items;
 };
@@ -42,7 +39,6 @@ export const UserSidebar = () => {
   const { currentPath, navigate } = useRouter();
   const { signOut, pessoa } = useAuth();
   const [hasAvaliacoes, setHasAvaliacoes] = useState(false);
-  const [hasPDI, setHasPDI] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const isGestor = pessoa?.tipo_acesso === 'gestor';
@@ -59,27 +55,14 @@ export const UserSidebar = () => {
     if (!pessoa?.id) return;
 
     try {
-      const [avaliacoesRes, pdiContentsRes, pdiActionsRes] = await Promise.all([
-        supabase
-          .from('avaliacoes')
-          .select('id')
-          .eq('colaborador_id', pessoa.id)
-          .eq('status', 'finalizada')
-          .limit(1),
-        supabase
-          .from('pdi_user_contents')
-          .select('id')
-          .eq('user_id', pessoa.id)
-          .limit(1),
-        supabase
-          .from('pdi_user_actions')
-          .select('id')
-          .eq('user_id', pessoa.id)
-          .limit(1),
-      ]);
+      const avaliacoesRes = await supabase
+        .from('avaliacoes')
+        .select('id')
+        .eq('colaborador_id', pessoa.id)
+        .eq('status', 'finalizada')
+        .limit(1);
 
       setHasAvaliacoes((avaliacoesRes.data?.length || 0) > 0);
-      setHasPDI((pdiContentsRes.data?.length || 0) > 0 || (pdiActionsRes.data?.length || 0) > 0);
     } catch (error) {
       console.error('Erro ao verificar dados do gestor:', error);
     } finally {
@@ -87,7 +70,7 @@ export const UserSidebar = () => {
     }
   };
 
-  const navItems = isGestor ? getGestorNavItems(hasAvaliacoes, hasPDI) : colaboradorNavItems;
+  const navItems = isGestor ? getGestorNavItems(hasAvaliacoes) : colaboradorNavItems;
 
   const handleLogout = async () => {
     await signOut();
