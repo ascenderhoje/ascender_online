@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, ListChecks } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,13 +40,15 @@ export const UserSidebar = () => {
   const { signOut, pessoa } = useAuth();
   const [hasAvaliacoes, setHasAvaliacoes] = useState(false);
   const [loading, setLoading] = useState(true);
+  const hasCheckedRef = useRef(false);
 
   const isGestor = pessoa?.tipo_acesso === 'gestor';
 
   useEffect(() => {
-    if (isGestor && pessoa?.id) {
+    if (isGestor && pessoa?.id && !hasCheckedRef.current) {
+      hasCheckedRef.current = true;
       checkGestorData();
-    } else {
+    } else if (!isGestor) {
       setLoading(false);
     }
   }, [isGestor, pessoa?.id]);
