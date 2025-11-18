@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from '../utils/router';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, RefreshCw, Trash2, BarChart3 } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Trash2, BarChart3, ClipboardList } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useToast } from '../components/Toast';
 
@@ -54,13 +54,13 @@ export const ComparativoPage = () => {
   useEffect(() => {
     const selectedIdsStr = sessionStorage.getItem('comparativoIds');
     if (!selectedIdsStr) {
-      navigate('/avaliacoes');
+      setLoading(false);
       return;
     }
 
     const ids = JSON.parse(selectedIdsStr);
     if (ids.length === 0) {
-      navigate('/avaliacoes');
+      setLoading(false);
       return;
     }
 
@@ -253,6 +253,46 @@ export const ComparativoPage = () => {
       <div className="p-6">
         <div className="flex items-center justify-center py-12">
           <p className="text-gray-500">Carregando comparativo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (colaboradores.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="mb-6">
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/avaliacoes')}
+            className="mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar para Avaliações
+          </Button>
+          <h1 className="text-2xl font-bold text-gray-900">Comparativo de Avaliações</h1>
+        </div>
+
+        <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+              <BarChart3 className="w-8 h-8 text-gray-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Nenhuma avaliação selecionada
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Selecione avaliações na página de Avaliações para compará-las aqui.
+              </p>
+              <Button
+                onClick={() => navigate('/avaliacoes')}
+                icon={ClipboardList}
+              >
+                Ir para Avaliações
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );

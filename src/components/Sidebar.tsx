@@ -28,7 +28,7 @@ const secondaryItems: NavItem[] = [
 
 const tertiaryItems: NavItem[] = [
   { id: 'avaliacoes', label: 'Avaliações', icon: ClipboardList, path: '/avaliacoes' },
-  { id: 'avaliacoes', label: 'Comparativo', icon: BarChart3, path: '/avaliacoes/comparativo' },
+  { id: 'comparativo', label: 'Comparativo', icon: BarChart3, path: '/avaliacoes/comparativo' },
 ];
 
 const pdiItems = [
@@ -52,6 +52,12 @@ export const Sidebar = () => {
   const isActive = (path: string) => {
     if (path === '/dashboard') {
       return currentPath === '/dashboard';
+    }
+    if (path === '/avaliacoes/comparativo') {
+      return currentPath === '/avaliacoes/comparativo';
+    }
+    if (path === '/avaliacoes') {
+      return currentPath === '/avaliacoes' || (currentPath.startsWith('/avaliacoes/') && !currentPath.startsWith('/avaliacoes/comparativo'));
     }
     return currentPath.startsWith(path);
   };
