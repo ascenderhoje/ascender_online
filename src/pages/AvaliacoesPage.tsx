@@ -94,23 +94,38 @@ export const AvaliacoesPage = () => {
   };
 
   const toggleSelection = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]
-    );
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((selectedId) => selectedId !== id);
+      }
+      if (prev.length >= 10) {
+        showToast('warning', 'Você pode selecionar no máximo 10 avaliações para comparar');
+        return prev;
+      }
+      return [...prev, id];
+    });
   };
 
   const toggleAllSelection = () => {
     if (selectedIds.length === filteredAvaliacoes.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filteredAvaliacoes.map((a) => a.id));
+      const toSelect = filteredAvaliacoes.slice(0, 10).map((a) => a.id);
+      setSelectedIds(toSelect);
+      if (filteredAvaliacoes.length > 10) {
+        showToast('warning', 'Apenas as primeiras 10 avaliações foram selecionadas (limite máximo)');
+      }
     }
   };
 
   const adicionarComparativo = () => {
-    const novasAvaliacoes = avaliacoes.filter((a) => selectedIds.includes(a.id));
-    setComparativo(novasAvaliacoes);
-    showToast('success', `${novasAvaliacoes.length} avaliações adicionadas ao comparativo`);
+    if (selectedIds.length === 0) {
+      showToast('warning', 'Selecione pelo menos uma avaliação para comparar');
+      return;
+    }
+
+    sessionStorage.setItem('comparativoIds', JSON.stringify(selectedIds));
+    navigate('/avaliacoes/comparativo');
   };
 
   const limparComparativo = () => {
@@ -176,7 +191,7 @@ export const AvaliacoesPage = () => {
           />
           {selectedIds.length > 0 && (
             <Button variant="secondary" onClick={adicionarComparativo}>
-              Adicionar Comparativo ({selectedIds.length})
+              Adicionar Comparativo ({selectedIds.length}/10)
             </Button>
           )}
         </div>

@@ -38,6 +38,7 @@ import { PDIContentFormPage } from './pages/PDIContentFormPage';
 import { MeuPDIPage } from './pages/MeuPDIPage';
 import { PDIBibliotecaPage } from './pages/PDIBibliotecaPage';
 import { PDIAcoesPage } from './pages/PDIAcoesPage';
+import { ComparativoPage } from './pages/ComparativoPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -268,6 +269,11 @@ function App() {
             <Route path="/avaliacoes/:id/edit">
               <AdminRoute>
                 <AvaliacaoFormPageWrapper />
+              </AdminRoute>
+            </Route>
+            <Route path="/avaliacoes/comparativo">
+              <AdminRoute>
+                <ComparativoPage />
               </AdminRoute>
             </Route>
             <Route path="/pdi/tags">

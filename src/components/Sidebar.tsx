@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings, LogOut, Tag, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings, LogOut, Tag, BookOpen, BarChart3 } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { ModuleName } from '../types';
@@ -28,6 +28,7 @@ const secondaryItems: NavItem[] = [
 
 const tertiaryItems: NavItem[] = [
   { id: 'avaliacoes', label: 'Avaliações', icon: ClipboardList, path: '/avaliacoes' },
+  { id: 'avaliacoes', label: 'Comparativo', icon: BarChart3, path: '/avaliacoes/comparativo' },
 ];
 
 const pdiItems = [
