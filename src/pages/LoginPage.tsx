@@ -160,7 +160,7 @@ export function LoginPage() {
                 <circle cx="100" cy="60" r="20" fill="rgba(255,199,0,0.6)" />
                 <circle cx="90" cy="55" r="3" fill="white" />
                 <circle cx="110" cy="55" r="3" fill="white" />
-                <path d="M 85 70 Q 100 75 115 70" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 85 68 Q 100 73 115 68" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
               </g>
 
               <g className="animate-[float_7s_ease-in-out_infinite_1s]">
@@ -168,7 +168,7 @@ export function LoginPage() {
                 <ellipse cx="300" cy="95" rx="25" ry="30" fill="rgba(200,168,233,0.6)" />
                 <circle cx="290" cy="90" r="3" fill="white" />
                 <circle cx="310" cy="90" r="3" fill="white" />
-                <path d="M 285 105 Q 300 110 315 105" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 285 103 Q 300 108 315 103" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
               </g>
 
               <g className="animate-[float_8s_ease-in-out_infinite_2s]">
@@ -176,7 +176,7 @@ export function LoginPage() {
                 <circle cx="200" cy="185" r="25" fill="rgba(255,199,0,0.6)" />
                 <circle cx="188" cy="180" r="4" fill="white" />
                 <circle cx="212" cy="180" r="4" fill="white" />
-                <path d="M 185 200 Q 200 205 215 200" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 185 198 Q 200 203 215 198" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
               </g>
 
               <g className="animate-[float_7.5s_ease-in-out_infinite_1.5s]">
@@ -184,7 +184,7 @@ export function LoginPage() {
                 <circle cx="320" cy="270" r="22" fill="rgba(200,168,233,0.6)" />
                 <circle cx="310" cy="265" r="3" fill="white" />
                 <circle cx="330" cy="265" r="3" fill="white" />
-                <path d="M 305 280 Q 320 285 335 280" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 305 278 Q 320 283 335 278" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
               </g>
 
               <g className="animate-[float_6.5s_ease-in-out_infinite_0.5s]">
@@ -192,7 +192,7 @@ export function LoginPage() {
                 <circle cx="80" cy="290" r="20" fill="rgba(255,199,0,0.6)" />
                 <circle cx="72" cy="286" r="2.5" fill="white" />
                 <circle cx="88" cy="286" r="2.5" fill="white" />
-                <path d="M 68 300 Q 80 304 92 300" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M 68 298 Q 80 302 92 298" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
               </g>
             </svg>
           </div>
