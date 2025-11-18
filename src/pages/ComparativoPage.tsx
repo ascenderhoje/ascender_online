@@ -17,8 +17,15 @@ interface ColaboradorData {
   empresa: string;
   data: string;
   competencias: Record<string, number>;
-  media: number;
   cor: string;
+}
+
+interface BarraGrafico {
+  colaboradorNome: string;
+  competenciaNome: string;
+  valor: number;
+  cor: string;
+  isFirstInGroup: boolean;
 }
 
 const CORES_DISPONIVEIS = [
@@ -132,22 +139,16 @@ export const ComparativoPage = () => {
         });
 
         const competenciasMedias: Record<string, number> = {};
-        let somaTotal = 0;
-        let countTotal = 0;
 
         competenciaIds.forEach((compId: string) => {
           const pontuacoes = competenciasPontuacoes[compId] || [];
           if (pontuacoes.length > 0) {
             const media = pontuacoes.reduce((a, b) => a + b, 0) / pontuacoes.length;
             competenciasMedias[compId] = media;
-            somaTotal += media;
-            countTotal++;
           } else {
             competenciasMedias[compId] = 0;
           }
         });
-
-        const mediaGeral = countTotal > 0 ? somaTotal / countTotal : 0;
 
         colaboradoresProcessados.push({
           id: avaliacao.id,
@@ -156,7 +157,6 @@ export const ComparativoPage = () => {
           empresa: (avaliacao as any).empresa?.nome || 'N/A',
           data: avaliacao.data_avaliacao,
           competencias: competenciasMedias,
-          media: mediaGeral,
           cor: CORES_DISPONIVEIS[i % CORES_DISPONIVEIS.length],
         });
       }
@@ -289,9 +289,6 @@ export const ComparativoPage = () => {
                   </th>
                 ))}
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Média
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
@@ -321,11 +318,6 @@ export const ComparativoPage = () => {
                       </span>
                     </td>
                   ))}
-                  <td className="px-4 py-4 text-sm text-center">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
-                      {colab.media.toFixed(2)}
-                    </span>
-                  </td>
                   <td className="px-4 py-4 text-center">
                     <button
                       onClick={() => handleRemoverColaborador(colab.id)}
@@ -359,57 +351,77 @@ export const ComparativoPage = () => {
           ))}
         </div>
 
-        <div className="space-y-8">
-          {competencias.map((comp, compIdx) => (
-            <div key={compIdx}>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">{comp.nome}</h3>
-              <div className="space-y-2">
-                {colaboradores.map((colab) => {
-                  const valor = comp.valores[colab.id] || 0;
-                  const percentage = (valor / 5) * 100;
+        <div className="space-y-1">
+          {(() => {
+            const barras: BarraGrafico[] = [];
 
-                  return (
-                    <div key={colab.id} className="flex items-center gap-3">
-                      <div className="w-32 text-xs text-gray-600 truncate" title={colab.nome}>
-                        {colab.nome}
-                      </div>
-                      <div className="flex-1 relative">
-                        <div className="h-8 bg-gray-100 rounded-lg overflow-hidden relative">
-                          <div
-                            className="h-full rounded-lg transition-all duration-500 flex items-center justify-end pr-2"
-                            style={{
-                              width: `${percentage}%`,
-                              backgroundColor: colab.cor,
-                            }}
-                          >
-                            {valor > 0 && (
-                              <span className="text-xs font-bold text-white drop-shadow">
-                                {valor.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
+            competencias.forEach((comp) => {
+              colaboradores.forEach((colab, colabIdx) => {
+                barras.push({
+                  colaboradorNome: colab.nome,
+                  competenciaNome: comp.nome,
+                  valor: comp.valores[colab.id] || 0,
+                  cor: colab.cor,
+                  isFirstInGroup: colabIdx === 0,
+                });
+              });
+            });
+
+            return barras.map((barra, idx) => {
+              const percentage = (barra.valor / 5) * 100;
+
+              return (
+                <div key={idx}>
+                  {barra.isFirstInGroup && idx > 0 && (
+                    <div className="h-6" />
+                  )}
+                  {barra.isFirstInGroup && (
+                    <div className="mb-2 mt-4">
+                      <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
+                        {barra.competenciaNome}
+                      </h3>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="w-40 text-xs text-gray-700 truncate" title={`${barra.colaboradorNome} - ${barra.competenciaNome}`}>
+                      {barra.colaboradorNome}
+                    </div>
+                    <div className="flex-1 relative">
+                      <div className="h-8 bg-gray-100 rounded-lg overflow-hidden relative">
+                        <div
+                          className="h-full rounded-lg transition-all duration-500 flex items-center justify-end pr-2"
+                          style={{
+                            width: `${percentage}%`,
+                            backgroundColor: barra.cor,
+                          }}
+                        >
+                          {barra.valor > 0 && (
+                            <span className="text-xs font-bold text-white drop-shadow">
+                              {barra.valor.toFixed(2)}
+                            </span>
+                          )}
                         </div>
-                        <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none">
-                          <div className="h-full flex items-center">
-                            {[1, 2, 3, 4, 5].map((mark) => (
-                              <div
-                                key={mark}
-                                className="absolute h-full border-l border-gray-300 border-dashed"
-                                style={{ left: `${(mark / 5) * 100}%` }}
-                              />
-                            ))}
-                          </div>
-                        </div>
                       </div>
-                      <div className="w-12 text-right text-xs text-gray-500">
-                        {valor.toFixed(1)}
+                      <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none">
+                        <div className="h-full flex items-center">
+                          {[1, 2, 3, 4, 5].map((mark) => (
+                            <div
+                              key={mark}
+                              className="absolute h-full border-l border-gray-300 border-dashed"
+                              style={{ left: `${(mark / 5) * 100}%` }}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+                    <div className="w-12 text-right text-xs text-gray-500">
+                      {barra.valor.toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              );
+            });
+          })()}
         </div>
 
         <div className="mt-6 flex justify-between items-center text-xs text-gray-500 border-t pt-4">
