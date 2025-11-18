@@ -20,6 +20,8 @@ interface ColaboradorData {
   data: string;
   criterios: Record<string, number>;
   cor: string;
+  modeloId: string;
+  modeloNome: string;
 }
 
 interface BarraGrafico {
@@ -29,6 +31,13 @@ interface BarraGrafico {
   valor: number;
   cor: string;
   isFirstInGroup: boolean;
+}
+
+interface ModeloGroup {
+  modeloId: string;
+  modeloNome: string;
+  colaboradores: ColaboradorData[];
+  criterios: CriterioData[];
 }
 
 const CORES_DISPONIVEIS = [
@@ -48,8 +57,9 @@ export const ComparativoPage = () => {
   const { navigate } = useRouter();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [colaboradores, setColaboradores] = useState<ColaboradorData[]>([]);
-  const [criterios, setCriterios] = useState<CriterioData[]>([]);
+  const [modeloGroups, setModeloGroups] = useState<ModeloGroup[]>([]);
+  const [multipleModels, setMultipleModels] = useState(false);
+  const [activeModelTab, setActiveModelTab] = useState<string>('');
 
   useEffect(() => {
     const selectedIdsStr = sessionStorage.getItem('comparativoIds');
@@ -97,28 +107,47 @@ export const ComparativoPage = () => {
       }
 
       const modeloIds = [...new Set(avaliacoesData.map((a: any) => a.modelo_id))];
-      if (modeloIds.length > 1) {
-        showToast('warning', 'Avaliações de modelos diferentes. Os resultados podem não ser comparáveis.');
-      }
+      const hasMultipleModels = modeloIds.length > 1;
+      setMultipleModels(hasMultipleModels);
+
+      const { data: modelosData, error: modelosError } = await supabase
+        .from('modelos_avaliacao')
+        .select('id, nome')
+        .in('id', modeloIds);
+
+      if (modelosError) throw modelosError;
+
+      const modelosMap: Record<string, string> = {};
+      (modelosData || []).forEach((m: any) => {
+        modelosMap[m.id] = m.nome;
+      });
 
       const { data: competenciasModelo, error: compError } = await supabase
         .from('modelos_competencias')
         .select(`
+          modelo_id,
           competencia_id,
           competencias (
             id,
             nome
           )
         `)
-        .eq('modelo_id', modeloIds[0]);
+        .in('modelo_id', modeloIds);
 
       if (compError) throw compError;
 
-      const competenciaIds = (competenciasModelo || []).map((c: any) => c.competencias.id);
+      const competenciasByModelo: Record<string, any[]> = {};
       const competenciasMap: Record<string, string> = {};
+
       (competenciasModelo || []).forEach((c: any) => {
+        if (!competenciasByModelo[c.modelo_id]) {
+          competenciasByModelo[c.modelo_id] = [];
+        }
+        competenciasByModelo[c.modelo_id].push(c.competencias);
         competenciasMap[c.competencias.id] = c.competencias.nome;
       });
+
+      const allCompetenciaIds = [...new Set((competenciasModelo || []).map((c: any) => c.competencias.id))];
 
       const { data: criteriosData, error: criteriosError } = await supabase
         .from('criterios')
@@ -131,7 +160,7 @@ export const ComparativoPage = () => {
             nome
           )
         `)
-        .in('competencia_id', competenciaIds)
+        .in('competencia_id', allCompetenciaIds)
         .order('ordem');
 
       if (criteriosError) throw criteriosError;
@@ -172,27 +201,51 @@ export const ComparativoPage = () => {
           data: avaliacao.data_avaliacao,
           criterios: criteriosPontuacoes,
           cor: CORES_DISPONIVEIS[i % CORES_DISPONIVEIS.length],
+          modeloId: avaliacao.modelo_id,
+          modeloNome: modelosMap[avaliacao.modelo_id] || 'Modelo Desconhecido',
         });
       }
 
-      const criteriosIds = Object.keys(criteriosMap);
-      const criteriosArray: CriterioData[] = criteriosIds
-        .sort((a, b) => criteriosMap[a].ordem - criteriosMap[b].ordem)
-        .map((critId: string) => {
+      const grupos: ModeloGroup[] = modeloIds.map((modeloId) => {
+        const colaboradoresDoModelo = colaboradoresProcessados.filter(
+          (c) => c.modeloId === modeloId
+        );
+
+        const competenciasDoModelo = competenciasByModelo[modeloId] || [];
+        const competenciaIdsDoModelo = competenciasDoModelo.map((c: any) => c.id);
+
+        const criteriosDoModelo = (criteriosData || [])
+          .filter((crit: any) => competenciaIdsDoModelo.includes(crit.competencia_id))
+          .sort((a: any, b: any) => a.ordem - b.ordem);
+
+        const criteriosArray: CriterioData[] = criteriosDoModelo.map((crit: any) => {
+          const textoPtBr = (crit.criterios_textos || []).find((t: any) => t.idioma === 'pt-BR');
           const valores: Record<string, number> = {};
-          colaboradoresProcessados.forEach((colab) => {
-            valores[colab.id] = colab.criterios[critId] || 0;
+
+          colaboradoresDoModelo.forEach((colab) => {
+            valores[colab.id] = colab.criterios[crit.id] || 0;
           });
+
           return {
-            id: critId,
-            nome: criteriosMap[critId].nome,
-            competenciaNome: criteriosMap[critId].competenciaNome,
+            id: crit.id,
+            nome: textoPtBr?.nome || `Critério ${crit.ordem + 1}`,
+            competenciaNome: competenciasMap[crit.competencia_id] || 'N/A',
             valores,
           };
         });
 
-      setColaboradores(colaboradoresProcessados);
-      setCriterios(criteriosArray);
+        return {
+          modeloId,
+          modeloNome: modelosMap[modeloId] || 'Modelo Desconhecido',
+          colaboradores: colaboradoresDoModelo,
+          criterios: criteriosArray,
+        };
+      });
+
+      setModeloGroups(grupos);
+      if (grupos.length > 0) {
+        setActiveModelTab(grupos[0].modeloId);
+      }
     } catch (error: any) {
       console.error('Erro ao carregar comparativo:', error);
       showToast('error', error.message || 'Erro ao carregar dados do comparativo');
@@ -202,7 +255,8 @@ export const ComparativoPage = () => {
   };
 
   const handleRemoverColaborador = (id: string) => {
-    const novosColaboradores = colaboradores.filter((c) => c.id !== id);
+    const todosColaboradores = modeloGroups.flatMap((g) => g.colaboradores);
+    const novosColaboradores = todosColaboradores.filter((c) => c.id !== id);
 
     if (novosColaboradores.length === 0) {
       sessionStorage.removeItem('comparativoIds');
@@ -210,23 +264,10 @@ export const ComparativoPage = () => {
       return;
     }
 
-    setColaboradores(novosColaboradores);
-
     const novosIds = novosColaboradores.map((c) => c.id);
     sessionStorage.setItem('comparativoIds', JSON.stringify(novosIds));
 
-    const novosCriterios = criterios.map((crit) => {
-      const novosValores: Record<string, number> = {};
-      novosColaboradores.forEach((colab) => {
-        novosValores[colab.id] = crit.valores[colab.id];
-      });
-      return {
-        ...crit,
-        valores: novosValores,
-      };
-    });
-
-    setCriterios(novosCriterios);
+    loadComparativoData(novosIds);
     showToast('success', 'Colaborador removido do comparativo');
   };
 
@@ -258,7 +299,7 @@ export const ComparativoPage = () => {
     );
   }
 
-  if (colaboradores.length === 0) {
+  if (modeloGroups.length === 0) {
     return (
       <div className="p-6">
         <div className="mb-6">
@@ -311,9 +352,27 @@ export const ComparativoPage = () => {
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">Comparativo de Avaliações</h1>
         <p className="text-gray-600 mt-1">
-          Comparando {colaboradores.length} {colaboradores.length === 1 ? 'colaborador' : 'colaboradores'}
+          Comparando {modeloGroups.reduce((acc, g) => acc + g.colaboradores.length, 0)}{' '}
+          {modeloGroups.reduce((acc, g) => acc + g.colaboradores.length, 0) === 1 ? 'colaborador' : 'colaboradores'}
+          {multipleModels && ` em ${modeloGroups.length} modelos diferentes`}
         </p>
       </div>
+
+      {multipleModels && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <BarChart3 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="text-sm font-semibold text-blue-900 mb-1">
+              Comparando {modeloGroups.length} modelos diferentes
+            </h3>
+            <p className="text-sm text-blue-700">
+              As avaliações selecionadas utilizam modelos de avaliação diferentes. Cada modelo
+              possui critérios específicos e não podem ser comparados diretamente. Os gráficos
+              abaixo estão organizados por modelo.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2 mb-6">
         <Button
@@ -331,174 +390,217 @@ export const ComparativoPage = () => {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-8">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Colaborador
-                </th>
-                {criterios.map((crit, idx) => (
-                  <th key={idx} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <div>{crit.nome}</div>
-                    <div className="text-[10px] font-normal text-gray-400 mt-0.5 normal-case">
-                      {crit.competenciaNome}
-                    </div>
-                  </th>
-                ))}
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {colaboradores.map((colab, idx) => (
-                <tr key={colab.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
-                    {formatDate(colab.data)}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-900">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: colab.cor }}
-                      />
-                      <div>
-                        <div className="font-medium">{colab.nome}</div>
-                        <div className="text-xs text-gray-500">{colab.empresa}</div>
-                      </div>
-                    </div>
-                  </td>
-                  {criterios.map((crit, critIdx) => (
-                    <td key={critIdx} className="px-4 py-4 text-sm text-center">
-                      <span className="font-semibold text-gray-900">
-                        {crit.valores[colab.id]?.toFixed(2) || '0.00'}
-                      </span>
-                    </td>
-                  ))}
-                  <td className="px-4 py-4 text-center">
-                    <button
-                      onClick={() => handleRemoverColaborador(colab.id)}
-                      className="text-red-600 hover:text-red-900 text-sm font-medium"
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
+      {multipleModels && modeloGroups.length > 1 && (
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex gap-2 -mb-px">
+              {modeloGroups.map((grupo) => (
+                <button
+                  key={grupo.modeloId}
+                  onClick={() => setActiveModelTab(grupo.modeloId)}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    activeModelTab === grupo.modeloId
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {grupo.modeloNome}
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-gray-100">
+                    {grupo.colaboradores.length}
+                  </span>
+                </button>
               ))}
-            </tbody>
-          </table>
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="bg-white rounded-lg border border-gray-200 p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <BarChart3 className="w-6 h-6 text-blue-600" />
-          <h2 className="text-xl font-bold text-gray-900">Gráfico Comparativo</h2>
-        </div>
-
-        <div className="mb-6 flex flex-wrap gap-4">
-          {colaboradores.map((colab) => (
-            <div key={colab.id} className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: colab.cor }}
-              />
-              <span className="text-sm font-medium text-gray-700">{colab.nome}</span>
+      {modeloGroups.map((grupo) => (
+        <div
+          key={grupo.modeloId}
+          className={multipleModels ? (activeModelTab === grupo.modeloId ? 'block' : 'hidden') : 'block'}
+        >
+          {multipleModels && (
+            <div className="mb-4">
+              <h2 className="text-lg font-bold text-gray-900">{grupo.modeloNome}</h2>
+              <p className="text-sm text-gray-600">
+                {grupo.colaboradores.length} colaborador{grupo.colaboradores.length !== 1 ? 'es' : ''}
+              </p>
             </div>
-          ))}
-        </div>
+          )}
 
-        <div className="space-y-1">
-          {(() => {
-            const barras: BarraGrafico[] = [];
-
-            criterios.forEach((crit) => {
-              colaboradores.forEach((colab, colabIdx) => {
-                barras.push({
-                  colaboradorNome: colab.nome,
-                  criterioNome: crit.nome,
-                  competenciaNome: crit.competenciaNome,
-                  valor: crit.valores[colab.id] || 0,
-                  cor: colab.cor,
-                  isFirstInGroup: colabIdx === 0,
-                });
-              });
-            });
-
-            return barras.map((barra, idx) => {
-              const percentage = (barra.valor / 5) * 100;
-
-              return (
-                <div key={idx}>
-                  {barra.isFirstInGroup && idx > 0 && (
-                    <div className="h-6" />
-                  )}
-                  {barra.isFirstInGroup && (
-                    <div className="mb-2 mt-4">
-                      <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
-                        {barra.criterioNome}
-                      </h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {barra.competenciaNome}
-                      </p>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3">
-                    <div className="w-40 text-xs text-gray-700 truncate" title={`${barra.colaboradorNome} - ${barra.criterioNome}`}>
-                      {barra.colaboradorNome}
-                    </div>
-                    <div className="flex-1 relative">
-                      <div className="h-8 bg-gray-100 rounded-lg overflow-hidden relative">
-                        <div
-                          className="h-full rounded-lg transition-all duration-500 flex items-center justify-end pr-2"
-                          style={{
-                            width: `${percentage}%`,
-                            backgroundColor: barra.cor,
-                          }}
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-8">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Data
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Colaborador
+                    </th>
+                    {grupo.criterios.map((crit, idx) => (
+                      <th key={idx} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div>{crit.nome}</div>
+                        <div className="text-[10px] font-normal text-gray-400 mt-0.5 normal-case">
+                          {crit.competenciaNome}
+                        </div>
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {grupo.colaboradores.map((colab, idx) => (
+                    <tr key={colab.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                        {formatDate(colab.data)}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: colab.cor }}
+                          />
+                          <div>
+                            <div className="font-medium">{colab.nome}</div>
+                            <div className="text-xs text-gray-500">{colab.empresa}</div>
+                          </div>
+                        </div>
+                      </td>
+                      {grupo.criterios.map((crit, critIdx) => (
+                        <td key={critIdx} className="px-4 py-4 text-sm text-center">
+                          <span className="font-semibold text-gray-900">
+                            {crit.valores[colab.id]?.toFixed(2) || '0.00'}
+                          </span>
+                        </td>
+                      ))}
+                      <td className="px-4 py-4 text-center">
+                        <button
+                          onClick={() => handleRemoverColaborador(colab.id)}
+                          className="text-red-600 hover:text-red-900 text-sm font-medium"
                         >
-                          {barra.valor > 0 && (
-                            <span className="text-xs font-bold text-white drop-shadow">
-                              {barra.valor.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none">
-                        <div className="h-full flex items-center">
-                          {[1, 2, 3, 4, 5].map((mark) => (
-                            <div
-                              key={mark}
-                              className="absolute h-full border-l border-gray-300 border-dashed"
-                              style={{ left: `${(mark / 5) * 100}%` }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-12 text-right text-xs text-gray-500">
-                      {barra.valor.toFixed(1)}
-                    </div>
-                  </div>
-                </div>
-              );
-            });
-          })()}
-        </div>
+                          Excluir
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-        <div className="mt-6 flex justify-between items-center text-xs text-gray-500 border-t pt-4">
-          <span>0</span>
-          <span>1</span>
-          <span>2</span>
-          <span>3</span>
-          <span>4</span>
-          <span>5</span>
+          <div className="bg-white rounded-lg border border-gray-200 p-8 mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <BarChart3 className="w-6 h-6 text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-900">
+                Gráfico Comparativo{multipleModels ? ` - ${grupo.modeloNome}` : ''}
+              </h2>
+            </div>
+
+            <div className="mb-6 flex flex-wrap gap-4">
+              {grupo.colaboradores.map((colab) => (
+                <div key={colab.id} className="flex items-center gap-2">
+                  <div
+                    className="w-4 h-4 rounded"
+                    style={{ backgroundColor: colab.cor }}
+                  />
+                  <span className="text-sm font-medium text-gray-700">{colab.nome}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-1">
+              {(() => {
+                const barras: BarraGrafico[] = [];
+
+                grupo.criterios.forEach((crit) => {
+                  grupo.colaboradores.forEach((colab, colabIdx) => {
+                    barras.push({
+                      colaboradorNome: colab.nome,
+                      criterioNome: crit.nome,
+                      competenciaNome: crit.competenciaNome,
+                      valor: crit.valores[colab.id] || 0,
+                      cor: colab.cor,
+                      isFirstInGroup: colabIdx === 0,
+                    });
+                  });
+                });
+
+                return barras.map((barra, idx) => {
+                  const percentage = (barra.valor / 5) * 100;
+
+                  return (
+                    <div key={idx}>
+                      {barra.isFirstInGroup && idx > 0 && (
+                        <div className="h-6" />
+                      )}
+                      {barra.isFirstInGroup && (
+                        <div className="mb-2 mt-4">
+                          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
+                            {barra.criterioNome}
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {barra.competenciaNome}
+                          </p>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <div className="w-40 text-xs text-gray-700 truncate" title={`${barra.colaboradorNome} - ${barra.criterioNome}`}>
+                          {barra.colaboradorNome}
+                        </div>
+                        <div className="flex-1 relative">
+                          <div className="h-8 bg-gray-100 rounded-lg overflow-hidden relative">
+                            <div
+                              className="h-full rounded-lg transition-all duration-500 flex items-center justify-end pr-2"
+                              style={{
+                                width: `${percentage}%`,
+                                backgroundColor: barra.cor,
+                              }}
+                            >
+                              {barra.valor > 0 && (
+                                <span className="text-xs font-bold text-white drop-shadow">
+                                  {barra.valor.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none">
+                            <div className="h-full flex items-center">
+                              {[1, 2, 3, 4, 5].map((mark) => (
+                                <div
+                                  key={mark}
+                                  className="absolute h-full border-l border-gray-300 border-dashed"
+                                  style={{ left: `${(mark / 5) * 100}%` }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="w-12 text-right text-xs text-gray-500">
+                          {barra.valor.toFixed(1)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            <div className="mt-6 flex justify-between items-center text-xs text-gray-500 border-t pt-4">
+              <span>0</span>
+              <span>1</span>
+              <span>2</span>
+              <span>3</span>
+              <span>4</span>
+              <span>5</span>
+            </div>
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 };
