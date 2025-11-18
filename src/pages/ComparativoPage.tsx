@@ -5,8 +5,10 @@ import { ArrowLeft, RefreshCw, Trash2, BarChart3 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useToast } from '../components/Toast';
 
-interface CompetenciaData {
+interface CriterioData {
+  id: string;
   nome: string;
+  competenciaNome: string;
   valores: Record<string, number>;
 }
 
@@ -16,12 +18,13 @@ interface ColaboradorData {
   email: string;
   empresa: string;
   data: string;
-  competencias: Record<string, number>;
+  criterios: Record<string, number>;
   cor: string;
 }
 
 interface BarraGrafico {
   colaboradorNome: string;
+  criterioNome: string;
   competenciaNome: string;
   valor: number;
   cor: string;
@@ -46,7 +49,7 @@ export const ComparativoPage = () => {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [colaboradores, setColaboradores] = useState<ColaboradorData[]>([]);
-  const [competencias, setCompetencias] = useState<CompetenciaData[]>([]);
+  const [criterios, setCriterios] = useState<CriterioData[]>([]);
 
   useEffect(() => {
     const selectedIdsStr = sessionStorage.getItem('comparativoIds');
@@ -117,6 +120,32 @@ export const ComparativoPage = () => {
         competenciasMap[c.competencias.id] = c.competencias.nome;
       });
 
+      const { data: criteriosData, error: criteriosError } = await supabase
+        .from('criterios')
+        .select(`
+          id,
+          competencia_id,
+          ordem,
+          criterios_textos (
+            idioma,
+            nome
+          )
+        `)
+        .in('competencia_id', competenciaIds)
+        .order('ordem');
+
+      if (criteriosError) throw criteriosError;
+
+      const criteriosMap: Record<string, { nome: string; competenciaNome: string; ordem: number }> = {};
+      (criteriosData || []).forEach((c: any) => {
+        const textoPtBr = (c.criterios_textos || []).find((t: any) => t.idioma === 'pt-BR');
+        criteriosMap[c.id] = {
+          nome: textoPtBr?.nome || `Critério ${c.ordem + 1}`,
+          competenciaNome: competenciasMap[c.competencia_id] || 'N/A',
+          ordem: c.ordem,
+        };
+      });
+
       const colaboradoresProcessados: ColaboradorData[] = [];
 
       for (let i = 0; i < avaliacoesData.length; i++) {
@@ -127,26 +156,11 @@ export const ComparativoPage = () => {
           .select('competencia_id, criterio_id, pontuacao')
           .eq('avaliacao_id', avaliacao.id);
 
-        const competenciasPontuacoes: Record<string, number[]> = {};
+        const criteriosPontuacoes: Record<string, number> = {};
 
         (pontuacoesData || []).forEach((p: any) => {
-          if (!competenciasPontuacoes[p.competencia_id]) {
-            competenciasPontuacoes[p.competencia_id] = [];
-          }
           if (p.pontuacao !== null && p.pontuacao !== undefined) {
-            competenciasPontuacoes[p.competencia_id].push(Number(p.pontuacao));
-          }
-        });
-
-        const competenciasMedias: Record<string, number> = {};
-
-        competenciaIds.forEach((compId: string) => {
-          const pontuacoes = competenciasPontuacoes[compId] || [];
-          if (pontuacoes.length > 0) {
-            const media = pontuacoes.reduce((a, b) => a + b, 0) / pontuacoes.length;
-            competenciasMedias[compId] = media;
-          } else {
-            competenciasMedias[compId] = 0;
+            criteriosPontuacoes[p.criterio_id] = Number(p.pontuacao);
           }
         });
 
@@ -156,24 +170,29 @@ export const ComparativoPage = () => {
           email: (avaliacao as any).colaborador?.email || 'N/A',
           empresa: (avaliacao as any).empresa?.nome || 'N/A',
           data: avaliacao.data_avaliacao,
-          competencias: competenciasMedias,
+          criterios: criteriosPontuacoes,
           cor: CORES_DISPONIVEIS[i % CORES_DISPONIVEIS.length],
         });
       }
 
-      const competenciasArray: CompetenciaData[] = competenciaIds.map((compId: string) => {
-        const valores: Record<string, number> = {};
-        colaboradoresProcessados.forEach((colab) => {
-          valores[colab.id] = colab.competencias[compId] || 0;
+      const criteriosIds = Object.keys(criteriosMap);
+      const criteriosArray: CriterioData[] = criteriosIds
+        .sort((a, b) => criteriosMap[a].ordem - criteriosMap[b].ordem)
+        .map((critId: string) => {
+          const valores: Record<string, number> = {};
+          colaboradoresProcessados.forEach((colab) => {
+            valores[colab.id] = colab.criterios[critId] || 0;
+          });
+          return {
+            id: critId,
+            nome: criteriosMap[critId].nome,
+            competenciaNome: criteriosMap[critId].competenciaNome,
+            valores,
+          };
         });
-        return {
-          nome: competenciasMap[compId],
-          valores,
-        };
-      });
 
       setColaboradores(colaboradoresProcessados);
-      setCompetencias(competenciasArray);
+      setCriterios(criteriosArray);
     } catch (error: any) {
       console.error('Erro ao carregar comparativo:', error);
       showToast('error', error.message || 'Erro ao carregar dados do comparativo');
@@ -196,18 +215,18 @@ export const ComparativoPage = () => {
     const novosIds = novosColaboradores.map((c) => c.id);
     sessionStorage.setItem('comparativoIds', JSON.stringify(novosIds));
 
-    const novasCompetencias = competencias.map((comp) => {
+    const novosCriterios = criterios.map((crit) => {
       const novosValores: Record<string, number> = {};
       novosColaboradores.forEach((colab) => {
-        novosValores[colab.id] = comp.valores[colab.id];
+        novosValores[colab.id] = crit.valores[colab.id];
       });
       return {
-        ...comp,
+        ...crit,
         valores: novosValores,
       };
     });
 
-    setCompetencias(novasCompetencias);
+    setCriterios(novosCriterios);
     showToast('success', 'Colaborador removido do comparativo');
   };
 
@@ -283,9 +302,12 @@ export const ComparativoPage = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Colaborador
                 </th>
-                {competencias.map((comp, idx) => (
+                {criterios.map((crit, idx) => (
                   <th key={idx} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {comp.nome}
+                    <div>{crit.nome}</div>
+                    <div className="text-[10px] font-normal text-gray-400 mt-0.5 normal-case">
+                      {crit.competenciaNome}
+                    </div>
                   </th>
                 ))}
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -311,10 +333,10 @@ export const ComparativoPage = () => {
                       </div>
                     </div>
                   </td>
-                  {competencias.map((comp, compIdx) => (
-                    <td key={compIdx} className="px-4 py-4 text-sm text-center">
+                  {criterios.map((crit, critIdx) => (
+                    <td key={critIdx} className="px-4 py-4 text-sm text-center">
                       <span className="font-semibold text-gray-900">
-                        {comp.valores[colab.id]?.toFixed(2) || '0.00'}
+                        {crit.valores[colab.id]?.toFixed(2) || '0.00'}
                       </span>
                     </td>
                   ))}
@@ -355,12 +377,13 @@ export const ComparativoPage = () => {
           {(() => {
             const barras: BarraGrafico[] = [];
 
-            competencias.forEach((comp) => {
+            criterios.forEach((crit) => {
               colaboradores.forEach((colab, colabIdx) => {
                 barras.push({
                   colaboradorNome: colab.nome,
-                  competenciaNome: comp.nome,
-                  valor: comp.valores[colab.id] || 0,
+                  criterioNome: crit.nome,
+                  competenciaNome: crit.competenciaNome,
+                  valor: crit.valores[colab.id] || 0,
                   cor: colab.cor,
                   isFirstInGroup: colabIdx === 0,
                 });
@@ -378,12 +401,15 @@ export const ComparativoPage = () => {
                   {barra.isFirstInGroup && (
                     <div className="mb-2 mt-4">
                       <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
-                        {barra.competenciaNome}
+                        {barra.criterioNome}
                       </h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {barra.competenciaNome}
+                      </p>
                     </div>
                   )}
                   <div className="flex items-center gap-3">
-                    <div className="w-40 text-xs text-gray-700 truncate" title={`${barra.colaboradorNome} - ${barra.competenciaNome}`}>
+                    <div className="w-40 text-xs text-gray-700 truncate" title={`${barra.colaboradorNome} - ${barra.criterioNome}`}>
                       {barra.colaboradorNome}
                     </div>
                     <div className="flex-1 relative">
