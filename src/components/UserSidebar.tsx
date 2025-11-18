@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, ListChecks } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
 
 interface NavItem {
   id: string;
@@ -37,42 +36,13 @@ const colaboradorNavItems: NavItem[] = [
 
 export const UserSidebar = () => {
   const { currentPath, navigate } = useRouter();
-  const { signOut, pessoa } = useAuth();
-  const [hasAvaliacoes, setHasAvaliacoes] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const hasCheckedRef = useRef(false);
+  const { signOut, pessoa, hasAvaliacoes } = useAuth();
 
   const isGestor = pessoa?.tipo_acesso === 'gestor';
 
-  useEffect(() => {
-    if (isGestor && pessoa?.id && !hasCheckedRef.current) {
-      hasCheckedRef.current = true;
-      checkGestorData();
-    } else if (!isGestor) {
-      setLoading(false);
-    }
-  }, [isGestor, pessoa?.id]);
-
-  const checkGestorData = async () => {
-    if (!pessoa?.id) return;
-
-    try {
-      const avaliacoesRes = await supabase
-        .from('avaliacoes')
-        .select('id')
-        .eq('colaborador_id', pessoa.id)
-        .eq('status', 'finalizada')
-        .limit(1);
-
-      setHasAvaliacoes((avaliacoesRes.data?.length || 0) > 0);
-    } catch (error) {
-      console.error('Erro ao verificar dados do gestor:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const navItems = isGestor ? getGestorNavItems(hasAvaliacoes) : colaboradorNavItems;
+  const navItems = useMemo(() => {
+    return isGestor ? getGestorNavItems(hasAvaliacoes) : colaboradorNavItems;
+  }, [isGestor, hasAvaliacoes]);
 
   const handleLogout = async () => {
     await signOut();

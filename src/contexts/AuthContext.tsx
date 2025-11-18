@@ -32,6 +32,7 @@ interface AuthContextType {
   userType: UserType;
   session: Session | null;
   loading: boolean;
+  hasAvaliacoes: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; userType?: UserType }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userType, setUserType] = useState<UserType>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasAvaliacoes, setHasAvaliacoes] = useState(false);
 
   const loadAdministrador = async (userId: string) => {
     try {
@@ -105,6 +107,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const checkGestorAvaliacoes = async (pessoaId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('avaliacoes')
+        .select('id')
+        .eq('colaborador_id', pessoaId)
+        .eq('status', 'finalizada')
+        .limit(1);
+
+      if (error) throw error;
+
+      setHasAvaliacoes((data?.length || 0) > 0);
+    } catch (error) {
+      console.error('Erro ao verificar avaliações do gestor:', error);
+      setHasAvaliacoes(false);
+    }
+  };
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -120,12 +140,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setAdministrador(adminData);
             setPessoa(null);
             setUserType('admin');
+            setHasAvaliacoes(false);
           } else {
             const pessoaData = await loadPessoa(session.user.id);
             if (pessoaData) {
               setPessoa(pessoaData);
               setAdministrador(null);
               setUserType('pessoa');
+
+              if (pessoaData.tipo_acesso === 'gestor') {
+                await checkGestorAvaliacoes(pessoaData.id);
+              } else {
+                setHasAvaliacoes(false);
+              }
             } else {
               await supabase.auth.signOut();
             }
@@ -153,16 +180,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setAdministrador(adminData);
               setPessoa(null);
               setUserType('admin');
+              setHasAvaliacoes(false);
             } else {
               const pessoaData = await loadPessoa(session.user.id);
               if (pessoaData) {
                 setPessoa(pessoaData);
                 setAdministrador(null);
                 setUserType('pessoa');
+
+                if (pessoaData.tipo_acesso === 'gestor') {
+                  await checkGestorAvaliacoes(pessoaData.id);
+                } else {
+                  setHasAvaliacoes(false);
+                }
               } else {
                 setAdministrador(null);
                 setPessoa(null);
                 setUserType(null);
+                setHasAvaliacoes(false);
               }
             }
           } else {
@@ -196,6 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAdministrador(adminData);
           setPessoa(null);
           setUserType('admin');
+          setHasAvaliacoes(false);
           return { error: null, userType: 'admin' as UserType, pessoa: null };
         }
 
@@ -204,6 +240,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPessoa(pessoaData);
           setAdministrador(null);
           setUserType('pessoa');
+
+          if (pessoaData.tipo_acesso === 'gestor') {
+            await checkGestorAvaliacoes(pessoaData.id);
+          } else {
+            setHasAvaliacoes(false);
+          }
+
           return { error: null, userType: 'pessoa' as UserType, pessoa: pessoaData };
         }
 
@@ -225,6 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPessoa(null);
     setUserType(null);
     setSession(null);
+    setHasAvaliacoes(false);
   };
 
   const resetPassword = async (email: string) => {
@@ -248,6 +292,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userType,
     session,
     loading,
+    hasAvaliacoes,
     signIn,
     signOut,
     resetPassword,
