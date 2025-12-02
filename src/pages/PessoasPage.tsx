@@ -156,7 +156,76 @@ export const PessoasPage = () => {
         if (gruposTemAcessoError) throw gruposTemAcessoError;
       }
 
-      showToast('success', 'Pessoa criada com sucesso!');
+      let grupoNome = null;
+
+      if (formData.tipo_acesso === 'gestor') {
+        try {
+          let empresaNome = 'Sem Empresa';
+
+          if (formData.empresa_id) {
+            const { data: empresaData, error: empresaError } = await supabase
+              .from('empresas')
+              .select('nome')
+              .eq('id', formData.empresa_id)
+              .maybeSingle();
+
+            if (!empresaError && empresaData) {
+              empresaNome = empresaData.nome;
+            }
+          }
+
+          let nomeGrupoBase = `${empresaNome} - ${formData.nome.trim()}`;
+          let nomeGrupoFinal = nomeGrupoBase;
+          let contador = 1;
+
+          while (true) {
+            const { data: grupoExistente } = await supabase
+              .from('grupos')
+              .select('id')
+              .eq('nome', nomeGrupoFinal)
+              .maybeSingle();
+
+            if (!grupoExistente) break;
+
+            contador++;
+            nomeGrupoFinal = `${nomeGrupoBase} (${contador})`;
+          }
+
+          const { data: novoGrupo, error: grupoError } = await supabase
+            .from('grupos')
+            .insert([{
+              nome: nomeGrupoFinal,
+              empresa_id: formData.empresa_id || null,
+            }])
+            .select()
+            .single();
+
+          if (grupoError) throw grupoError;
+
+          if (novoGrupo) {
+            const { error: gestorError } = await supabase
+              .from('grupos_gestores')
+              .insert([{
+                pessoa_id: pessoaData.id,
+                grupo_id: novoGrupo.id,
+              }]);
+
+            if (gestorError) throw gestorError;
+
+            grupoNome = nomeGrupoFinal;
+          }
+        } catch (error: any) {
+          console.error('Error creating automatic grupo for gestor:', error);
+          showToast('warning', 'Pessoa criada, mas erro ao criar grupo automático. Você pode criar o grupo manualmente.');
+        }
+      }
+
+      if (grupoNome) {
+        showToast('success', `Pessoa criada com sucesso! Grupo "${grupoNome}" criado automaticamente.`);
+      } else {
+        showToast('success', 'Pessoa criada com sucesso!');
+      }
+
       setIsCreateModalOpen(false);
       loadPessoas();
     } catch (error: any) {
