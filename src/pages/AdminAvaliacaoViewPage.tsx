@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from '../utils/router';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, User, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, User, Calendar, FileText, Download } from 'lucide-react';
 import { Button } from '../components/Button';
+import { AvaliacaoPDFView } from '../components/AvaliacaoPDFView';
+import { generatePDF, formatDateForFilename, sanitizeFilename } from '../utils/pdfGenerator';
 
 interface Criterio {
   id: string;
@@ -64,6 +66,9 @@ export function AdminAvaliacaoViewPage() {
   const { params, navigate } = useRouter();
   const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     console.log('[AdminAvaliacaoViewPage] Params:', params);
@@ -337,6 +342,30 @@ export function AdminAvaliacaoViewPage() {
     return valores.reduce((acc, val) => acc + val, 0) / valores.length;
   };
 
+  const handleExportPDF = async () => {
+    if (!avaliacao || !pdfRef.current) return;
+
+    try {
+      setIsGeneratingPDF(true);
+      setPdfProgress(0);
+
+      const colaboradorNome = sanitizeFilename(avaliacao.colaborador?.nome || 'Colaborador');
+      const dataFormatada = formatDateForFilename(avaliacao.data_avaliacao);
+      const filename = `Avaliacao-${colaboradorNome}-${dataFormatada}.pdf`;
+
+      await generatePDF('pdf-content', {
+        filename,
+        onProgress: setPdfProgress,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setIsGeneratingPDF(false);
+      setPdfProgress(0);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -354,20 +383,29 @@ export function AdminAvaliacaoViewPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Button
+              variant="secondary"
+              onClick={() => navigate('/avaliacoes')}
+              className="mb-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar para Avaliações
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900">Visualizar Avaliação</h1>
+          </div>
           <Button
-            variant="secondary"
-            onClick={() => navigate('/avaliacoes')}
-            className="mb-4"
+            onClick={handleExportPDF}
+            disabled={isGeneratingPDF}
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Avaliações
+            <Download className="w-4 h-4 mr-2" />
+            {isGeneratingPDF ? `Gerando PDF... ${pdfProgress}%` : 'Exportar PDF'}
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">Visualizar Avaliação</h1>
         </div>
-      </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="flex items-start gap-6 mb-6">
@@ -562,6 +600,13 @@ export function AdminAvaliacaoViewPage() {
           <p className="text-yellow-800 leading-relaxed">{avaliacao.observacoes}</p>
         </div>
       )}
-    </div>
+      </div>
+
+      <div className="fixed left-[-9999px] top-0">
+        <div id="pdf-content" ref={pdfRef}>
+          {avaliacao && <AvaliacaoPDFView avaliacao={avaliacao} />}
+        </div>
+      </div>
+    </>
   );
 }

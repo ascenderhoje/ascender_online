@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, User, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, User, Calendar, FileText, Download } from 'lucide-react';
 import { Button } from '../components/Button';
+import { AvaliacaoPDFView } from '../components/AvaliacaoPDFView';
+import { generatePDF, formatDateForFilename, sanitizeFilename } from '../utils/pdfGenerator';
 
 interface Criterio {
   id: string;
@@ -66,6 +68,9 @@ export function UserAvaliacaoViewPage() {
   const { pessoa } = useAuth();
   const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -332,6 +337,30 @@ export function UserAvaliacaoViewPage() {
     return valores.reduce((acc, val) => acc + val, 0) / valores.length;
   };
 
+  const handleExportPDF = async () => {
+    if (!avaliacao || !pdfRef.current) return;
+
+    try {
+      setIsGeneratingPDF(true);
+      setPdfProgress(0);
+
+      const colaboradorNome = sanitizeFilename(avaliacao.colaborador?.nome || 'Colaborador');
+      const dataFormatada = formatDateForFilename(avaliacao.data_avaliacao);
+      const filename = `Avaliacao-${colaboradorNome}-${dataFormatada}.pdf`;
+
+      await generatePDF('pdf-content', {
+        filename,
+        onProgress: setPdfProgress,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setIsGeneratingPDF(false);
+      setPdfProgress(0);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-ascender-neutral flex items-center justify-center">
@@ -349,24 +378,35 @@ export function UserAvaliacaoViewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-ascender-neutral pb-12">
-      <div className="gradient-purple text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-5 right-10 w-20 h-20 rounded-full bg-ascender-yellow"></div>
-          <div className="absolute bottom-5 left-10 w-16 h-16 rounded-full bg-ascender-purple-light"></div>
+    <>
+      <div className="min-h-screen bg-ascender-neutral pb-12">
+        <div className="gradient-purple text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-5 right-10 w-20 h-20 rounded-full bg-ascender-yellow"></div>
+            <div className="absolute bottom-5 left-10 w-16 h-16 rounded-full bg-ascender-purple-light"></div>
+          </div>
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/user-dashboard')}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar
+              </Button>
+              <Button
+                onClick={handleExportPDF}
+                disabled={isGeneratingPDF}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {isGeneratingPDF ? `${pdfProgress}%` : 'Exportar PDF'}
+              </Button>
+            </div>
+            <h1 className="text-4xl font-poppins font-bold">Avaliação de Competências</h1>
+          </div>
         </div>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/user-dashboard')}
-            className="mb-4 bg-white/20 hover:bg-white/30 text-white border-white/30"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-          <h1 className="text-4xl font-poppins font-bold">Avaliação de Competências</h1>
-        </div>
-      </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-2xl shadow-md border border-ascender-purple-light/20 p-8 mb-6">
@@ -567,7 +607,14 @@ export function UserAvaliacaoViewPage() {
             <p className="text-gray-800 font-nunito leading-relaxed">{avaliacao.observacoes}</p>
           </div>
         )}
+        </div>
       </div>
-    </div>
+
+      <div className="fixed left-[-9999px] top-0">
+        <div id="pdf-content" ref={pdfRef}>
+          {avaliacao && <AvaliacaoPDFView avaliacao={avaliacao} />}
+        </div>
+      </div>
+    </>
   );
 }
