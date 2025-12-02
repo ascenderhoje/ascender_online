@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Search, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Table } from '../components/Table';
 import { Button } from '../components/Button';
@@ -28,6 +28,11 @@ export const PessoasPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [pessoaToEdit, setPessoaToEdit] = useState<Pessoa | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [tipoAcessoFilter, setTipoAcessoFilter] = useState<'todos' | 'admin' | 'gestor' | 'colaborador'>('todos');
+  const [idiomaFilter, setIdiomaFilter] = useState<'todos' | 'pt-BR' | 'en-US'>('todos');
+  const [sortBy, setSortBy] = useState<'nome' | 'email' | 'funcao' | 'tipo_acesso'>('nome');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const loadPessoas = async () => {
     try {
@@ -50,6 +55,55 @@ export const PessoasPage = () => {
   useEffect(() => {
     loadPessoas();
   }, []);
+
+  const handleSort = (column: 'nome' | 'email' | 'funcao' | 'tipo_acesso') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setTipoAcessoFilter('todos');
+    setIdiomaFilter('todos');
+    setSortBy('nome');
+    setSortOrder('asc');
+  };
+
+  const hasActiveFilters = searchTerm !== '' || tipoAcessoFilter !== 'todos' || idiomaFilter !== 'todos';
+
+  const filteredPessoas = pessoas
+    .filter((p) => {
+      const matchesSearch =
+        p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTipoAcesso = tipoAcessoFilter === 'todos' || p.tipo_acesso === tipoAcessoFilter;
+      const matchesIdioma = idiomaFilter === 'todos' || p.idioma === idiomaFilter;
+      return matchesSearch && matchesTipoAcesso && matchesIdioma;
+    })
+    .sort((a, b) => {
+      let compareValue = 0;
+
+      if (sortBy === 'nome') {
+        compareValue = a.nome.localeCompare(b.nome);
+      } else if (sortBy === 'email') {
+        compareValue = a.email.localeCompare(b.email);
+      } else if (sortBy === 'funcao') {
+        const funcaoA = a.funcao || '';
+        const funcaoB = b.funcao || '';
+        if (!a.funcao && b.funcao) return sortOrder === 'asc' ? 1 : -1;
+        if (a.funcao && !b.funcao) return sortOrder === 'asc' ? -1 : 1;
+        compareValue = funcaoA.localeCompare(funcaoB);
+      } else if (sortBy === 'tipo_acesso') {
+        const tipoOrder = { admin: 1, gestor: 2, colaborador: 3 };
+        compareValue = tipoOrder[a.tipo_acesso] - tipoOrder[b.tipo_acesso];
+      }
+
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    });
 
   const handleCreate = async (formData: any) => {
     try {
@@ -360,6 +414,15 @@ export const PessoasPage = () => {
     }
   };
 
+  const renderSortIcon = (column: 'nome' | 'email' | 'funcao' | 'tipo_acesso') => {
+    if (sortBy !== column) return null;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="w-4 h-4 inline-block ml-1" />
+    ) : (
+      <ArrowDown className="w-4 h-4 inline-block ml-1" />
+    );
+  };
+
   const columns = [
     {
       key: 'idioma',
@@ -370,16 +433,63 @@ export const PessoasPage = () => {
         </span>
       ),
     },
-    { key: 'nome', label: 'Nome', sortable: true },
-    { key: 'email', label: 'E-mail' },
+    {
+      key: 'nome',
+      label: (
+        <button
+          onClick={() => handleSort('nome')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'nome' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Nome
+          {renderSortIcon('nome')}
+        </button>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'email',
+      label: (
+        <button
+          onClick={() => handleSort('email')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'email' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          E-mail
+          {renderSortIcon('email')}
+        </button>
+      ),
+    },
     {
       key: 'funcao',
-      label: 'Função',
+      label: (
+        <button
+          onClick={() => handleSort('funcao')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'funcao' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Função
+          {renderSortIcon('funcao')}
+        </button>
+      ),
       render: (pessoa: Pessoa) => pessoa.funcao || '-',
     },
     {
       key: 'tipo_acesso',
-      label: 'Tipo de Acesso',
+      label: (
+        <button
+          onClick={() => handleSort('tipo_acesso')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'tipo_acesso' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Tipo de Acesso
+          {renderSortIcon('tipo_acesso')}
+        </button>
+      ),
       render: (pessoa: Pessoa) => (
         <span
           className={`px-3 py-1 text-xs font-medium rounded-full ${
@@ -419,8 +529,58 @@ export const PessoasPage = () => {
       />
 
       <div className="p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex-1 min-w-[250px] relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou e-mail..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1]"
+              />
+            </div>
+
+            <select
+              value={tipoAcessoFilter}
+              onChange={(e) => setTipoAcessoFilter(e.target.value as 'todos' | 'admin' | 'gestor' | 'colaborador')}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1] bg-white"
+            >
+              <option value="todos">Todos os Tipos</option>
+              <option value="admin">Admin</option>
+              <option value="gestor">Gestor</option>
+              <option value="colaborador">Colaborador</option>
+            </select>
+
+            <select
+              value={idiomaFilter}
+              onChange={(e) => setIdiomaFilter(e.target.value as 'todos' | 'pt-BR' | 'en-US')}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1] bg-white"
+            >
+              <option value="todos">Todos os Idiomas</option>
+              <option value="pt-BR">🇧🇷 Português</option>
+              <option value="en-US">🇺🇸 English</option>
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#6B46C1] border border-[#6B46C1] rounded-md hover:bg-[#6B46C1] hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Limpar Filtros
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-600 mb-3">
+          Mostrando {filteredPessoas.length} de {pessoas.length} pessoas
+        </div>
+
         <Table
-          data={pessoas}
+          data={filteredPessoas}
           columns={columns}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -428,7 +588,7 @@ export const PessoasPage = () => {
           selectedItems={selectedItems}
           onSelectionChange={setSelectedItems}
           emptyMessage="Nenhuma pessoa cadastrada."
-          totalItems={pessoas.length}
+          totalItems={filteredPessoas.length}
         />
       </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Lock } from 'lucide-react';
+import { Plus, Lock, Search, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Table } from '../components/Table';
 import { Button } from '../components/Button';
@@ -23,6 +23,9 @@ export const CompetenciasPage = () => {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [fixoFilter, setFixoFilter] = useState<'todos' | 'sim' | 'nao'>('todos');
+  const [sortBy, setSortBy] = useState<'nome' | 'fixo'>('nome');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const loadCompetencias = async () => {
     try {
@@ -83,14 +86,68 @@ export const CompetenciasPage = () => {
     }
   };
 
-  const filteredCompetencias = competencias.filter((c) =>
-    c.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSort = (column: 'nome' | 'fixo') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFixoFilter('todos');
+    setSortBy('nome');
+    setSortOrder('asc');
+  };
+
+  const hasActiveFilters = searchTerm !== '' || fixoFilter !== 'todos';
+
+  const filteredCompetencias = competencias
+    .filter((c) => {
+      const matchesSearch = c.nome.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFixo =
+        fixoFilter === 'todos' ||
+        (fixoFilter === 'sim' && c.fixo) ||
+        (fixoFilter === 'nao' && !c.fixo);
+      return matchesSearch && matchesFixo;
+    })
+    .sort((a, b) => {
+      let compareValue = 0;
+
+      if (sortBy === 'nome') {
+        compareValue = a.nome.localeCompare(b.nome);
+      } else if (sortBy === 'fixo') {
+        compareValue = (a.fixo ? 1 : 0) - (b.fixo ? 1 : 0);
+      }
+
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    });
+
+  const renderSortIcon = (column: 'nome' | 'fixo') => {
+    if (sortBy !== column) return null;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="w-4 h-4 inline-block ml-1" />
+    ) : (
+      <ArrowDown className="w-4 h-4 inline-block ml-1" />
+    );
+  };
 
   const columns = [
     {
       key: 'nome',
-      label: 'Nome',
+      label: (
+        <button
+          onClick={() => handleSort('nome')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'nome' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Nome
+          {renderSortIcon('nome')}
+        </button>
+      ),
       sortable: true,
       render: (c: Competencia) => (
         <div className="flex items-center gap-2">
@@ -101,7 +158,17 @@ export const CompetenciasPage = () => {
     },
     {
       key: 'fixo',
-      label: 'Fixo',
+      label: (
+        <button
+          onClick={() => handleSort('fixo')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'fixo' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Fixo
+          {renderSortIcon('fixo')}
+        </button>
+      ),
       render: (c: Competencia) => (
         <button
           onClick={(e) => {
@@ -141,14 +208,43 @@ export const CompetenciasPage = () => {
       />
 
       <div className="p-6">
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Buscar por nome..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex-1 min-w-[250px] relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar por nome..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1]"
+              />
+            </div>
+
+            <select
+              value={fixoFilter}
+              onChange={(e) => setFixoFilter(e.target.value as 'todos' | 'sim' | 'nao')}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1] bg-white"
+            >
+              <option value="todos">Todas</option>
+              <option value="sim">Fixas</option>
+              <option value="nao">Não Fixas</option>
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#6B46C1] border border-[#6B46C1] rounded-md hover:bg-[#6B46C1] hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Limpar Filtros
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-600 mb-3">
+          Mostrando {filteredCompetencias.length} de {competencias.length} competências
         </div>
 
         <Table
