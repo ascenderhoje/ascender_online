@@ -39,6 +39,7 @@ import { MeuPDIPage } from './pages/MeuPDIPage';
 import { PDIBibliotecaPage } from './pages/PDIBibliotecaPage';
 import { PDIAcoesPage } from './pages/PDIAcoesPage';
 import { ComparativoPage } from './pages/ComparativoPage';
+import { GestorComparativoPage } from './pages/GestorComparativoPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -157,6 +158,14 @@ function App() {
             <GestorRoute>
               <UserLayout>
                 <GestorAvaliacoesPage />
+              </UserLayout>
+            </GestorRoute>
+          </Route>
+
+          <Route path="/gestor-comparativo">
+            <GestorRoute>
+              <UserLayout>
+                <GestorComparativoPage />
               </UserLayout>
             </GestorRoute>
           </Route>

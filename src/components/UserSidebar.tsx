@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, ListChecks } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, ListChecks, BarChart3 } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -10,7 +10,7 @@ interface NavItem {
   path: string;
 }
 
-const getGestorNavItems = (hasAvaliacoes: boolean): NavItem[] => {
+const getGestorNavItems = (hasAvaliacoes: boolean, hasComparativo: boolean): NavItem[] => {
   const items: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/gestor-dashboard' },
   ];
@@ -20,6 +20,11 @@ const getGestorNavItems = (hasAvaliacoes: boolean): NavItem[] => {
   }
 
   items.push({ id: 'pessoas', label: 'Pessoas', icon: Users, path: '/gestor-pessoas' });
+
+  if (hasComparativo) {
+    items.push({ id: 'comparativo', label: 'Comparativo', icon: BarChart3, path: '/gestor-comparativo' });
+  }
+
   items.push({ id: 'meu-pdi', label: 'Meu PDI', icon: TrendingUp, path: '/pdi/meu-pdi' });
   items.push({ id: 'acoes', label: 'Ações para meu PDI', icon: ListChecks, path: '/pdi/acoes' });
   items.push({ id: 'biblioteca', label: 'Conteúdos para meu PDI', icon: BookOpen, path: '/pdi/biblioteca' });
@@ -36,13 +41,13 @@ const colaboradorNavItems: NavItem[] = [
 
 export const UserSidebar = () => {
   const { currentPath, navigate } = useRouter();
-  const { signOut, pessoa, hasAvaliacoes } = useAuth();
+  const { signOut, pessoa, hasAvaliacoes, hasComparativo } = useAuth();
 
   const isGestor = pessoa?.tipo_acesso === 'gestor';
 
   const navItems = useMemo(() => {
-    return isGestor ? getGestorNavItems(hasAvaliacoes) : colaboradorNavItems;
-  }, [isGestor, hasAvaliacoes]);
+    return isGestor ? getGestorNavItems(hasAvaliacoes, hasComparativo) : colaboradorNavItems;
+  }, [isGestor, hasAvaliacoes, hasComparativo]);
 
   const handleLogout = async () => {
     await signOut();
@@ -61,6 +66,9 @@ export const UserSidebar = () => {
     }
     if (path === '/gestor-avaliacoes') {
       return currentPath === '/gestor-avaliacoes' || currentPath.startsWith('/user-avaliacao');
+    }
+    if (path === '/gestor-comparativo') {
+      return currentPath === '/gestor-comparativo';
     }
     if (path.startsWith('/pdi/')) {
       return currentPath.startsWith(path) || currentPath === path;
