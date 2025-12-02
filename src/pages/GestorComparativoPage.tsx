@@ -353,10 +353,10 @@ export const GestorComparativoPage = () => {
               </div>
               <div>
                 <h3 className="text-lg font-poppins font-semibold text-gray-900 mb-2">
-                  Nenhuma avaliação selecionada
+                  Nenhuma pessoa selecionada para comparação
                 </h3>
                 <p className="text-gray-600 font-nunito mb-6">
-                  Selecione avaliações das pessoas que você gerencia para compará-las aqui.
+                  Vá para a página Pessoas, selecione as pessoas que deseja comparar e clique em "Adicionar Comparativo".
                 </p>
                 <Button
                   onClick={() => navigate('/gestor-pessoas')}
