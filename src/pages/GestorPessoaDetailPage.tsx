@@ -118,6 +118,7 @@ export function GestorPessoaDetailPage() {
           )
         `)
         .eq('colaborador_id', pessoaId)
+        .eq('status', 'finalizada')
         .order('data_avaliacao', { ascending: false });
 
       if (avaliacoesError) throw avaliacoesError;

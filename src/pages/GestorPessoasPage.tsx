@@ -117,8 +117,10 @@ export function GestorPessoasPage() {
         });
       }
 
-      setPessoas(pessoasList);
-      setFilteredPessoas(pessoasList);
+      const pessoasComAvaliacoes = pessoasList.filter(p => p.avaliacoes_count > 0);
+
+      setPessoas(pessoasComAvaliacoes);
+      setFilteredPessoas(pessoasComAvaliacoes);
     } catch (error) {
       console.error('Erro ao carregar pessoas:', error);
     } finally {
