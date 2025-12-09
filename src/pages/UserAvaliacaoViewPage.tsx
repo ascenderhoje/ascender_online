@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { ArrowLeft, User, Calendar, FileText, Download } from 'lucide-react';
 import { Button } from '../components/Button';
-import { AvaliacaoPDFView } from '../components/AvaliacaoPDFView';
-import { generatePDF, formatDateForFilename, sanitizeFilename } from '../utils/pdfGenerator';
+import { AvaliacaoPDFDocument } from '../components/AvaliacaoPDFDocument';
+import { generatePDFFromReactElement, formatDateForFilename, sanitizeFilename } from '../utils/pdfGenerator';
 
 interface Criterio {
   id: string;
@@ -70,7 +70,6 @@ export function UserAvaliacaoViewPage() {
   const [loading, setLoading] = useState(true);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
-  const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -338,7 +337,7 @@ export function UserAvaliacaoViewPage() {
   };
 
   const handleExportPDF = async () => {
-    if (!avaliacao || !pdfRef.current) return;
+    if (!avaliacao) return;
 
     try {
       setIsGeneratingPDF(true);
@@ -348,7 +347,7 @@ export function UserAvaliacaoViewPage() {
       const dataFormatada = formatDateForFilename(avaliacao.data_avaliacao);
       const filename = `Avaliacao-${colaboradorNome}-${dataFormatada}.pdf`;
 
-      await generatePDF('pdf-content', {
+      await generatePDFFromReactElement(<AvaliacaoPDFDocument avaliacao={avaliacao} />, {
         filename,
         onProgress: setPdfProgress,
       });
@@ -607,12 +606,6 @@ export function UserAvaliacaoViewPage() {
             <p className="text-gray-800 font-nunito leading-relaxed">{avaliacao.observacoes}</p>
           </div>
         )}
-        </div>
-      </div>
-
-      <div className="fixed left-[-9999px] top-0">
-        <div id="pdf-content" ref={pdfRef}>
-          {avaliacao && <AvaliacaoPDFView avaliacao={avaliacao} />}
         </div>
       </div>
     </>

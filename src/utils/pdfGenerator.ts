@@ -1,5 +1,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { pdf } from '@react-pdf/renderer';
+import { ReactElement } from 'react';
 
 interface PDFGeneratorOptions {
   filename: string;
@@ -117,4 +119,34 @@ export function sanitizeFilename(text: string): string {
     .replace(/[^a-zA-Z0-9-_]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+export async function generatePDFFromReactElement(
+  pdfDocument: ReactElement,
+  options: PDFGeneratorOptions
+): Promise<void> {
+  const { filename, onProgress } = options;
+
+  try {
+    if (onProgress) onProgress(10);
+
+    if (onProgress) onProgress(30);
+
+    const blob = await pdf(pdfDocument).toBlob();
+
+    if (onProgress) onProgress(80);
+
+    const url = URL.createObjectURL(blob);
+    const link = window.document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+
+    URL.revokeObjectURL(url);
+
+    if (onProgress) onProgress(100);
+  } catch (error) {
+    console.error('Erro ao gerar PDF:', error);
+    throw error;
+  }
 }
