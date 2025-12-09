@@ -393,8 +393,27 @@ const calculateMedia = (pontuacoes: Record<string, number>) => {
   return valores.reduce((acc, val) => acc + val, 0) / valores.length;
 };
 
+const removeEmojis = (text: string): string => {
+  if (!text) return '';
+  return text
+    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
+    .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
+    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')
+    .replace(/[\u{2600}-\u{26FF}]/gu, '')
+    .replace(/[\u{2700}-\u{27BF}]/gu, '')
+    .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
+    .replace(/[\u{1FA00}-\u{1FA6F}]/gu, '')
+    .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '')
+    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+    .replace(/[\u{200D}]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 const stripHtml = (html: string): string => {
-  return html
+  if (!html) return '';
+  const stripped = html
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n\n')
     .replace(/<li>/gi, '• ')
@@ -406,6 +425,7 @@ const stripHtml = (html: string): string => {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .trim();
+  return removeEmojis(stripped);
 };
 
 export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
@@ -422,10 +442,10 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
           <View style={styles.headerTop}>
             <View style={styles.headerLeft}>
               <Text style={styles.colaboradorNome}>
-                {avaliacao.colaborador?.nome || 'Colaborador'}
+                {removeEmojis(avaliacao.colaborador?.nome || 'Colaborador')}
               </Text>
               <Text style={styles.modeloNome}>
-                {avaliacao.modelo?.nome || 'Modelo de Avaliação'}
+                {removeEmojis(avaliacao.modelo?.nome || 'Modelo de Avaliação')}
               </Text>
               <View style={styles.headerInfo}>
                 <Text style={styles.infoItem}>
@@ -445,7 +465,7 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
           {avaliacao.psicologa && (
             <View style={styles.psicologaBox}>
               <Text style={styles.psicologaText}>
-                Psicóloga Responsável: {avaliacao.psicologa.nome}
+                Psicóloga Responsável: {removeEmojis(avaliacao.psicologa.nome)}
               </Text>
             </View>
           )}
@@ -458,9 +478,9 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
               <View key={index} style={styles.textoCard} wrap={false}>
                 <View style={styles.textoHeader}>
                   <View style={styles.textoIconBox}>
-                    <Text style={{ color: '#FFFFFF', fontSize: 12 }}>📄</Text>
+                    <Text style={{ color: '#FFFFFF', fontSize: 12 }}>A</Text>
                   </View>
-                  <Text style={styles.textoTitulo}>{texto.titulo}</Text>
+                  <Text style={styles.textoTitulo}>{removeEmojis(texto.titulo)}</Text>
                 </View>
                 <Text style={styles.textoConteudo}>
                   {stripHtml(texto.conteudo)}
@@ -473,7 +493,7 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
                       <View style={styles.tagsContainer}>
                         {avaliacao.pdiTagsDetails.map((tag) => (
                           <View key={tag.id} style={styles.tag}>
-                            <Text style={styles.tagText}>{tag.nome}</Text>
+                            <Text style={styles.tagText}>{removeEmojis(tag.nome)}</Text>
                           </View>
                         ))}
                       </View>
@@ -491,10 +511,10 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
                 <Text style={styles.competenciaNumeroText}>{index + 1}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.competenciaNome}>{competencia.nome}</Text>
+                <Text style={styles.competenciaNome}>{removeEmojis(competencia.nome)}</Text>
                 {competencia.descricao && (
                   <Text style={styles.competenciaDescricao}>
-                    {competencia.descricao}
+                    {removeEmojis(competencia.descricao)}
                   </Text>
                 )}
               </View>
@@ -507,10 +527,10 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
 
               return (
                 <View key={criterio.id} style={styles.criterioContainer}>
-                  <Text style={styles.criterioNome}>{criterio.nome}</Text>
+                  <Text style={styles.criterioNome}>{removeEmojis(criterio.nome)}</Text>
                   {criterio.descricao && (
                     <Text style={styles.criterioDescricao}>
-                      {criterio.descricao}
+                      {removeEmojis(criterio.descricao)}
                     </Text>
                   )}
 
@@ -533,7 +553,7 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
 
                   {observacoes && (
                     <View style={styles.observacoesBox}>
-                      <Text style={styles.observacoesText}>{observacoes}</Text>
+                      <Text style={styles.observacoesText}>{removeEmojis(observacoes)}</Text>
                     </View>
                   )}
                 </View>
@@ -547,16 +567,16 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
             <Text style={styles.sectionTitle}>Análise Observativa</Text>
             {avaliacao.perguntas.map((pergunta) => (
               <View key={pergunta.id} style={styles.perguntaCard}>
-                <Text style={styles.perguntaTitulo}>{pergunta.titulo}</Text>
+                <Text style={styles.perguntaTitulo}>{removeEmojis(pergunta.titulo)}</Text>
                 {pergunta.descricao && (
                   <Text style={styles.perguntaDescricao}>
-                    {pergunta.descricao}
+                    {removeEmojis(pergunta.descricao)}
                   </Text>
                 )}
                 {pergunta.resposta && (
                   <View style={styles.respostaBox}>
                     <Text style={styles.respostaText}>
-                      {pergunta.resposta.texto || '-'}
+                      {removeEmojis(pergunta.resposta.texto || '-')}
                     </Text>
                   </View>
                 )}
@@ -571,7 +591,7 @@ export function AvaliacaoPDFDocument({ avaliacao }: AvaliacaoPDFDocumentProps) {
               Observações Gerais
             </Text>
             <Text style={styles.observacoesGeraisText}>
-              {avaliacao.observacoes}
+              {removeEmojis(avaliacao.observacoes)}
             </Text>
           </View>
         )}
