@@ -320,26 +320,13 @@ export const AvaliacoesPage = () => {
                   </th>
                   <th className="px-4 py-3 text-left">
                     <button
-                      onClick={() => handleSort('data_avaliacao')}
+                      onClick={() => handleSort('colaborador')}
                       className={`flex items-center text-xs font-medium uppercase tracking-wider transition-colors ${
-                        sortBy === 'data_avaliacao' ? 'text-[#6B46C1]' : 'text-gray-500 hover:text-gray-700'
+                        sortBy === 'colaborador' ? 'text-[#6B46C1]' : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
-                      Data da Avaliação
-                      {sortBy === 'data_avaliacao' && (
-                        sortOrder === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort('status')}
-                      className={`flex items-center text-xs font-medium uppercase tracking-wider transition-colors ${
-                        sortBy === 'status' ? 'text-[#6B46C1]' : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      Status
-                      {sortBy === 'status' && (
+                      Colaborador
+                      {sortBy === 'colaborador' && (
                         sortOrder === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
                       )}
                     </button>
@@ -357,27 +344,40 @@ export const AvaliacoesPage = () => {
                       )}
                     </button>
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    E-Mail
+                  </th>
                   <th className="px-4 py-3 text-left">
                     <button
-                      onClick={() => handleSort('colaborador')}
+                      onClick={() => handleSort('data_avaliacao')}
                       className={`flex items-center text-xs font-medium uppercase tracking-wider transition-colors ${
-                        sortBy === 'colaborador' ? 'text-[#6B46C1]' : 'text-gray-500 hover:text-gray-700'
+                        sortBy === 'data_avaliacao' ? 'text-[#6B46C1]' : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
-                      Colaborador
-                      {sortBy === 'colaborador' && (
+                      Data da Avaliação
+                      {sortBy === 'data_avaliacao' && (
                         sortOrder === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
                       )}
                     </button>
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    E-Mail
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Psicóloga responsável
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Usuário editando
+                  </th>
+                  <th className="px-4 py-3 text-left">
+                    <button
+                      onClick={() => handleSort('status')}
+                      className={`flex items-center text-xs font-medium uppercase tracking-wider transition-colors ${
+                        sortBy === 'status' ? 'text-[#6B46C1]' : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      Status
+                      {sortBy === 'status' && (
+                        sortOrder === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
+                      )}
+                    </button>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
@@ -408,20 +408,20 @@ export const AvaliacoesPage = () => {
                           className="rounded"
                         />
                       </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.colaborador.nome}</td>
+                      <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.empresa.nome}</td>
+                      <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.colaborador_email}</td>
                       <td className="px-4 py-4 text-sm text-gray-900">
                         {formatDate(avaliacao.data_avaliacao)}
                       </td>
-                      <td className="px-4 py-4 text-sm">
-                        {getStatusBadge(avaliacao.status)}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.empresa.nome}</td>
-                      <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.colaborador.nome}</td>
-                      <td className="px-4 py-4 text-sm text-gray-900">{avaliacao.colaborador_email}</td>
                       <td className="px-4 py-4 text-sm text-gray-900">
                         {avaliacao.psicologa_responsavel?.nome || '-'}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900">
                         {avaliacao.status === 'rascunho' && avaliacao.editing_user_name ? avaliacao.editing_user_name : '-'}
+                      </td>
+                      <td className="px-4 py-4 text-sm">
+                        {getStatusBadge(avaliacao.status)}
                       </td>
                       <td className="px-4 py-4 text-sm text-right space-x-2">
                         <button
