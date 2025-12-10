@@ -1,7 +1,8 @@
-import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings, LogOut, Tag, BookOpen, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText, ClipboardList, TrendingUp, Settings, LogOut, Tag, BookOpen, BarChart3, ChevronLeft } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { ModuleName } from '../types';
+import { useSidebarState } from '../hooks/useSidebarState';
 
 interface NavItem {
   id: ModuleName | 'dashboard';
@@ -43,6 +44,7 @@ const adminItems: NavItem[] = [
 export const Sidebar = () => {
   const { currentPath, navigate } = useRouter();
   const { signOut, administrador } = useAuth();
+  const { isCollapsed, toggleSidebar } = useSidebarState();
 
   const handleLogout = async () => {
     await signOut();
@@ -64,7 +66,7 @@ export const Sidebar = () => {
 
   const NavSection = ({ items, title }: { items: NavItem[], title?: string }) => (
     <div className="mb-4">
-      {title && <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{title}</p>}
+      {title && !isCollapsed && <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{title}</p>}
       <ul className="space-y-0.5">
         {items.map((item) => {
           const Icon = item.icon;
@@ -74,14 +76,17 @@ export const Sidebar = () => {
             <li key={item.id}>
               <button
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                title={isCollapsed ? item.label : undefined}
+                className={`w-full flex items-center transition-colors ${
+                  isCollapsed ? 'justify-center px-4 py-2.5' : 'gap-3 px-4 py-2.5'
+                } text-sm ${
                   active
                     ? 'bg-indigo-50 text-indigo-700 font-medium border-r-2 border-indigo-600'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 <Icon size={18} className={active ? 'text-indigo-700' : 'text-gray-500'} />
-                <span>{item.label}</span>
+                {!isCollapsed && <span>{item.label}</span>}
               </button>
             </li>
           );
@@ -91,49 +96,65 @@ export const Sidebar = () => {
   );
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col">
-      <div className="p-6 border-b border-gray-200">
-        <button
-          onClick={() => navigate('/')}
-          className="hover:opacity-80 transition-opacity w-full"
-        >
-          <img
-            src="/Aplicação 1 copy.png"
-            alt="Ascender Hoje"
-            className="h-12 w-auto mx-auto"
-          />
-        </button>
-      </div>
+    <div className="relative">
+      <aside className={`bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col transition-all duration-300 ease-in-out ${
+        isCollapsed ? 'w-20' : 'w-64'
+      }`}>
+        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-gray-200 transition-all duration-300`}>
+          <button
+            onClick={() => navigate('/')}
+            className="hover:opacity-80 transition-opacity w-full"
+          >
+            <img
+              src="/Aplicação 1 copy.png"
+              alt="Ascender Hoje"
+              className={`${isCollapsed ? 'h-8' : 'h-12'} w-auto mx-auto transition-all duration-300`}
+            />
+          </button>
+        </div>
 
-      <nav className="flex-1 py-4 overflow-y-auto">
-        <NavSection items={dashboardItems} />
-        <div className="border-t border-gray-200 my-2"></div>
-        <NavSection items={navItems} />
-        <div className="border-t border-gray-200 my-2"></div>
-        <NavSection items={secondaryItems} />
-        <div className="border-t border-gray-200 my-2"></div>
-        <NavSection items={tertiaryItems} />
-        <div className="border-t border-gray-200 my-2"></div>
-        <NavSection items={pdiItems} title="PDI" />
-        <div className="border-t border-gray-200 my-2"></div>
-        <NavSection items={adminItems} />
-      </nav>
+        <nav className="flex-1 py-4 overflow-y-auto">
+          <NavSection items={dashboardItems} />
+          {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
+          <NavSection items={navItems} />
+          {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
+          <NavSection items={secondaryItems} />
+          {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
+          <NavSection items={tertiaryItems} />
+          {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
+          <NavSection items={pdiItems} title="PDI" />
+          {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
+          <NavSection items={adminItems} />
+        </nav>
 
-      <div className="p-4 border-t border-gray-200">
-        {administrador && (
-          <div className="mb-3 px-2">
-            <p className="text-xs text-gray-500">Conectado como</p>
-            <p className="text-sm font-medium text-gray-900 truncate">{administrador.nome}</p>
-          </div>
-        )}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-        >
-          <LogOut size={18} className="text-gray-500" />
-          <span>Sair</span>
-        </button>
-      </div>
-    </aside>
+        <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t border-gray-200 transition-all duration-300`}>
+          {!isCollapsed && administrador && (
+            <div className="mb-3 px-2">
+              <p className="text-xs text-gray-500">Conectado como</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{administrador.nome}</p>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            title={isCollapsed ? 'Sair' : undefined}
+            className={`w-full flex items-center transition-colors ${
+              isCollapsed ? 'justify-center px-4 py-2.5' : 'gap-3 px-4 py-2.5'
+            } text-sm text-gray-700 hover:bg-gray-50 rounded-lg`}
+          >
+            <LogOut size={18} className="text-gray-500" />
+            {!isCollapsed && <span>Sair</span>}
+          </button>
+        </div>
+      </aside>
+
+      <button
+        onClick={toggleSidebar}
+        className={`fixed top-0 h-screen w-1 hover:w-1.5 bg-gradient-to-r from-gray-200 to-gray-100 hover:from-gray-300 hover:to-gray-200 transition-all duration-300 cursor-col-resize ${
+          isCollapsed ? 'left-20' : 'left-64'
+        }`}
+        title={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
+        aria-label={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
+      />
+    </div>
   );
 };
