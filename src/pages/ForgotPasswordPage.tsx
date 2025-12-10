@@ -29,7 +29,7 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
         <div className="p-8">
           <div className="mb-8">
@@ -124,6 +124,16 @@ export function ForgotPasswordPage() {
           )}
         </div>
       </div>
+
+      <footer className="mt-8 text-center max-w-md">
+        <p className="text-gray-400 text-sm font-sans mb-2">
+          Você está no portal online de desenvolvimento de pessoas e gestão de times da Ascender. Chegou aqui por engano? Aproveita e vem{' '}
+          <a href="#" className="text-blue-400 hover:text-blue-300 underline">conhecer um pouco mais sobre nós. Clique aqui.</a>
+        </p>
+        <p className="text-gray-500 text-xs font-sans">
+          © Todos os Direitos Reservados 2021 | Ascender Hoje ✨
+        </p>
+      </footer>
     </div>
   );
 }
