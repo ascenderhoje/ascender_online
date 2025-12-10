@@ -157,7 +157,7 @@ export function RegisterPage() {
       <footer className="mt-8 text-center max-w-6xl">
         <p className="text-gray-400 text-sm font-sans mb-2">
           Você está no portal online de desenvolvimento de pessoas e gestão de times da Ascender. Chegou aqui por engano? Aproveita e vem{' '}
-          <a href="#" className="text-blue-400 hover:text-blue-300 underline">conhecer um pouco mais sobre nós. Clique aqui.</a>
+          <a href="https://www.ascenderhoje.com.br/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">conhecer um pouco mais sobre nós. Clique aqui.</a>
         </p>
         <p className="text-gray-500 text-xs font-sans">
           © Todos os Direitos Reservados 2021 | Ascender Hoje ✨
