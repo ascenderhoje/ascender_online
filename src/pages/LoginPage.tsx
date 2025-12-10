@@ -44,8 +44,8 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden flex">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-blue-900 flex items-center justify-center p-6 lg:p-8">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex">
         <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-2">
