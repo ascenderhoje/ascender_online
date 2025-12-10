@@ -132,69 +132,11 @@ export function LoginPage() {
 
         <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-ascender-purple to-ascender-purple-dark relative overflow-hidden">
           <div className="absolute inset-0 flex items-center justify-center p-12">
-            <svg
-              viewBox="0 0 400 400"
-              className="w-full h-full"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <pattern
-                  id="grid"
-                  width="40"
-                  height="40"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M 40 0 L 0 0 0 40"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.05)"
-                    strokeWidth="1"
-                  />
-                </pattern>
-              </defs>
-
-              <rect width="400" height="400" fill="url(#grid)" />
-
-              <g className="animate-[float_6s_ease-in-out_infinite]">
-                <circle cx="100" cy="80" r="30" fill="rgba(255,255,255,0.2)" />
-                <circle cx="100" cy="60" r="20" fill="rgba(255,199,0,0.6)" />
-                <circle cx="90" cy="55" r="3" fill="white" />
-                <circle cx="110" cy="55" r="3" fill="white" />
-                <path d="M 85 68 Q 100 73 115 68" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-
-              <g className="animate-[float_7s_ease-in-out_infinite_1s]">
-                <circle cx="300" cy="100" r="35" fill="rgba(255,255,255,0.2)" />
-                <ellipse cx="300" cy="95" rx="25" ry="30" fill="rgba(200,168,233,0.6)" />
-                <circle cx="290" cy="90" r="3" fill="white" />
-                <circle cx="310" cy="90" r="3" fill="white" />
-                <path d="M 285 103 Q 300 108 315 103" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-
-              <g className="animate-[float_8s_ease-in-out_infinite_2s]">
-                <circle cx="200" cy="200" r="40" fill="rgba(255,255,255,0.2)" />
-                <circle cx="200" cy="185" r="25" fill="rgba(255,199,0,0.6)" />
-                <circle cx="188" cy="180" r="4" fill="white" />
-                <circle cx="212" cy="180" r="4" fill="white" />
-                <path d="M 185 198 Q 200 203 215 198" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-
-              <g className="animate-[float_7.5s_ease-in-out_infinite_1.5s]">
-                <circle cx="320" cy="280" r="32" fill="rgba(255,255,255,0.2)" />
-                <circle cx="320" cy="270" r="22" fill="rgba(200,168,233,0.6)" />
-                <circle cx="310" cy="265" r="3" fill="white" />
-                <circle cx="330" cy="265" r="3" fill="white" />
-                <path d="M 305 278 Q 320 283 335 278" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-
-              <g className="animate-[float_6.5s_ease-in-out_infinite_0.5s]">
-                <circle cx="80" cy="300" r="28" fill="rgba(255,255,255,0.2)" />
-                <circle cx="80" cy="290" r="20" fill="rgba(255,199,0,0.6)" />
-                <circle cx="72" cy="286" r="2.5" fill="white" />
-                <circle cx="88" cy="286" r="2.5" fill="white" />
-                <path d="M 68 298 Q 80 302 92 298" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-              </g>
-            </svg>
+            <img
+              src="/whatsapp_image_2025-12-09_at_15.57.40.jpeg"
+              alt="Ascender Brand"
+              className="max-w-full max-h-full object-contain animate-fade-in"
+            />
           </div>
         </div>
       </div>
@@ -203,6 +145,13 @@ export function LoginPage() {
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.8s ease-in;
         }
       `}</style>
     </div>
