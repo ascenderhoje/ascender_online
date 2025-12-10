@@ -3,6 +3,7 @@ import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, Li
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { useSidebarState } from '../hooks/useSidebarState';
+import { AscenderIcon } from './AscenderIcon';
 
 interface NavItem {
   id: string;
@@ -121,16 +122,20 @@ export const UserSidebar = () => {
       <aside className={`bg-ascender-purple-light border-r border-ascender-purple/20 min-h-screen fixed left-0 top-0 flex flex-col shadow-lg transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}>
-        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-ascender-purple/20 transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-ascender-purple/20 transition-all duration-300 flex items-center justify-center`}>
           <button
             onClick={handleLogoClick}
-            className="hover:opacity-80 transition-opacity w-full"
+            className="hover:opacity-80 transition-opacity w-full flex justify-center"
           >
-            <img
-              src="/Aplicação 1 copy.png"
-              alt="Ascender Hoje"
-              className={`${isCollapsed ? 'h-8' : 'h-14'} w-auto mx-auto transition-all duration-300`}
-            />
+            {isCollapsed ? (
+              <AscenderIcon className="text-ascender-purple-dark" size={28} />
+            ) : (
+              <img
+                src="/Aplicação 1 copy.png"
+                alt="Ascender Hoje"
+                className="h-14 w-auto transition-all duration-300"
+              />
+            )}
           </button>
         </div>
 

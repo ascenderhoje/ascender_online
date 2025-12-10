@@ -3,6 +3,7 @@ import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { ModuleName } from '../types';
 import { useSidebarState } from '../hooks/useSidebarState';
+import { AscenderIcon } from './AscenderIcon';
 
 interface NavItem {
   id: ModuleName | 'dashboard';
@@ -100,16 +101,20 @@ export const Sidebar = () => {
       <aside className={`bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}>
-        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-gray-200 transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-gray-200 transition-all duration-300 flex items-center justify-center`}>
           <button
             onClick={() => navigate('/')}
-            className="hover:opacity-80 transition-opacity w-full"
+            className="hover:opacity-80 transition-opacity w-full flex justify-center"
           >
-            <img
-              src="/Aplicação 1 copy.png"
-              alt="Ascender Hoje"
-              className={`${isCollapsed ? 'h-8' : 'h-12'} w-auto mx-auto transition-all duration-300`}
-            />
+            {isCollapsed ? (
+              <AscenderIcon className="text-gray-700" size={28} />
+            ) : (
+              <img
+                src="/Aplicação 1 copy.png"
+                alt="Ascender Hoje"
+                className="h-12 w-auto transition-all duration-300"
+              />
+            )}
           </button>
         </div>
 
