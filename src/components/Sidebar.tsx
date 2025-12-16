@@ -19,7 +19,6 @@ const navItems: NavItem[] = [
   { id: 'empresas', label: 'Empresas', icon: Building2, path: '/empresas' },
   { id: 'pessoas', label: 'Pessoas', icon: Users, path: '/pessoas' },
   { id: 'grupos', label: 'Grupos', icon: UsersRound, path: '/grupos' },
-  { id: 'perfis', label: 'Perfis', icon: Shield, path: '/perfis' },
 ];
 
 const secondaryItems: NavItem[] = [
@@ -39,6 +38,7 @@ const pdiItems = [
 
 const adminItems: NavItem[] = [
   { id: 'administradores', label: 'Administradores', icon: Settings, path: '/administradores' },
+  { id: 'perfis', label: 'Perfis', icon: Shield, path: '/perfis' },
 ];
 
 export const Sidebar = () => {
