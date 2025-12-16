@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, User, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, User, Calendar, FileText, Download } from 'lucide-react';
 import { Button } from '../components/Button';
+import { AvaliacaoPDFDocument } from '../components/AvaliacaoPDFDocument';
+import { generatePDFFromReactElement, formatDateForFilename, sanitizeFilename } from '../utils/pdfGenerator';
 
 interface Criterio {
   id: string;
@@ -30,11 +32,17 @@ interface PerguntaPersonalizada {
   resposta: any;
 }
 
+interface PDITag {
+  id: string;
+  nome: string;
+}
+
 interface Avaliacao {
   id: string;
   data_avaliacao: string;
   status: string;
   observacoes: string | null;
+  pdi_tags: string[];
   colaborador: {
     nome: string;
     email: string;
@@ -52,6 +60,7 @@ interface Avaliacao {
     titulo: string;
     conteudo: string;
   }>;
+  pdiTagsDetails: PDITag[];
 }
 
 export function UserAvaliacaoViewPage() {
@@ -59,6 +68,8 @@ export function UserAvaliacaoViewPage() {
   const { pessoa } = useAuth();
   const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
 
   useEffect(() => {
     if (params.id) {
@@ -80,6 +91,7 @@ export function UserAvaliacaoViewPage() {
           status,
           observacoes,
           modelo_id,
+          pdi_tags,
           colaborador:pessoas!colaborador_id (
             nome,
             email,
@@ -229,30 +241,48 @@ export function UserAvaliacaoViewPage() {
 
       const { data: textosData } = await supabase
         .from('avaliacoes_textos')
-        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa')
+        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa, sugestoes_desenvolvimento')
         .eq('avaliacao_id', id)
         .eq('idioma_padrao', true)
         .maybeSingle();
 
       const textos = [];
       if (textosData) {
-        if (textosData.pontos_fortes) {
-          textos.push({
-            titulo: 'Pontos Fortes',
-            conteudo: textosData.pontos_fortes,
-          });
-        }
         if (textosData.oportunidades_melhoria) {
           textos.push({
             titulo: 'Oportunidades de Melhoria',
             conteudo: textosData.oportunidades_melhoria,
           });
         }
+        if (textosData.pontos_fortes) {
+          textos.push({
+            titulo: 'Pontos Fortes',
+            conteudo: textosData.pontos_fortes,
+          });
+        }
         if (textosData.highlights_psicologa) {
           textos.push({
-            titulo: 'Análise da Psicóloga',
+            titulo: 'Highlights da Psicóloga',
             conteudo: textosData.highlights_psicologa,
           });
+        }
+        if (textosData.sugestoes_desenvolvimento) {
+          textos.push({
+            titulo: 'Sugestões de Desenvolvimento',
+            conteudo: textosData.sugestoes_desenvolvimento,
+          });
+        }
+      }
+
+      let pdiTagsDetails: PDITag[] = [];
+      if (avaliacaoData.pdi_tags && Array.isArray(avaliacaoData.pdi_tags) && avaliacaoData.pdi_tags.length > 0) {
+        const { data: tagsData } = await supabase
+          .from('pdi_tags')
+          .select('id, nome')
+          .in('id', avaliacaoData.pdi_tags);
+
+        if (tagsData) {
+          pdiTagsDetails = tagsData;
         }
       }
 
@@ -261,6 +291,7 @@ export function UserAvaliacaoViewPage() {
         competencias,
         perguntas,
         textos,
+        pdiTagsDetails,
       } as Avaliacao);
     } catch (error: any) {
       console.error('[UserAvaliacaoViewPage] Erro ao carregar avaliação:', error);
@@ -305,42 +336,81 @@ export function UserAvaliacaoViewPage() {
     return valores.reduce((acc, val) => acc + val, 0) / valores.length;
   };
 
+  const handleExportPDF = async () => {
+    if (!avaliacao) return;
+
+    try {
+      setIsGeneratingPDF(true);
+      setPdfProgress(0);
+
+      const colaboradorNome = sanitizeFilename(avaliacao.colaborador?.nome || 'Colaborador');
+      const dataFormatada = formatDateForFilename(avaliacao.data_avaliacao);
+      const filename = `Avaliacao-${colaboradorNome}-${dataFormatada}.pdf`;
+
+      await generatePDFFromReactElement(<AvaliacaoPDFDocument avaliacao={avaliacao} />, {
+        filename,
+        onProgress: setPdfProgress,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setIsGeneratingPDF(false);
+      setPdfProgress(0);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Carregando avaliação...</p>
+      <div className="min-h-screen bg-ascender-neutral flex items-center justify-center">
+        <p className="text-gray-500 font-nunito">Carregando avaliação...</p>
       </div>
     );
   }
 
   if (!avaliacao) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Avaliação não encontrada</p>
+      <div className="min-h-screen bg-ascender-neutral flex items-center justify-center">
+        <p className="text-gray-500 font-nunito">Avaliação não encontrada</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/user-dashboard')}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
-          <h1 className="text-3xl font-bold text-gray-900">Avaliação</h1>
+    <>
+      <div className="min-h-screen bg-ascender-neutral pb-12">
+        <div className="gradient-purple text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-5 right-10 w-20 h-20 rounded-full bg-ascender-yellow"></div>
+            <div className="absolute bottom-5 left-10 w-16 h-16 rounded-full bg-ascender-purple-light"></div>
+          </div>
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/user-dashboard')}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar
+              </Button>
+              <Button
+                onClick={handleExportPDF}
+                disabled={isGeneratingPDF}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {isGeneratingPDF ? `${pdfProgress}%` : 'Exportar PDF'}
+              </Button>
+            </div>
+            <h1 className="text-4xl font-poppins font-bold">Avaliação de Competências</h1>
+          </div>
         </div>
-      </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
+        <div className="bg-white rounded-2xl shadow-md border border-ascender-purple-light/20 p-8 mb-6">
           <div className="flex items-start gap-6 mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-24 h-24 gradient-purple rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
               {avaliacao.colaborador?.avatar_url ? (
                 <img
                   src={avaliacao.colaborador.avatar_url}
@@ -348,27 +418,27 @@ export function UserAvaliacaoViewPage() {
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <User className="w-10 h-10 text-white" />
+                <User className="w-12 h-12 text-white" />
               )}
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              <h2 className="text-3xl font-poppins font-bold text-ascender-purple mb-2">
                 {avaliacao.colaborador?.nome}
               </h2>
-              <p className="text-gray-600 mb-4">{avaliacao.modelo?.nome}</p>
-              <div className="flex items-center gap-6 text-sm text-gray-500">
+              <p className="text-gray-600 font-nunito text-lg mb-4">{avaliacao.modelo?.nome}</p>
+              <div className="flex items-center gap-6 text-sm text-gray-600 font-nunito">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="w-4 h-4 text-ascender-purple" />
                   <span>Data: {formatDate(avaliacao.data_avaliacao)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-4 h-4 text-ascender-purple" />
                   <span>Status: {getStatusLabel(avaliacao.status)}</span>
                 </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg">
+              <div className="inline-flex items-center justify-center w-24 h-24 gradient-yellow rounded-2xl shadow-md">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">
                     {calculateMedia(
@@ -384,30 +454,72 @@ export function UserAvaliacaoViewPage() {
           </div>
 
           {avaliacao.psicologa && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Psicóloga Responsável:</span> {avaliacao.psicologa.nome}
+            <div className="bg-ascender-purple-light/10 border border-ascender-purple-light/30 rounded-xl p-4 mb-6">
+              <p className="text-sm font-nunito text-gray-700">
+                <span className="font-semibold text-ascender-purple">Psicóloga Responsável:</span> {avaliacao.psicologa.nome}
               </p>
             </div>
           )}
         </div>
 
+        {avaliacao.textos.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-3xl font-poppins font-bold text-ascender-purple mb-6 px-4 sm:px-0">
+              Dados Básicos da Avaliação
+            </h2>
+            <div className="space-y-6">
+              {avaliacao.textos.map((texto, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl shadow-md border border-ascender-purple-light/20 p-8"
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-ascender-purple text-white rounded-xl flex items-center justify-center">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-2xl font-poppins font-bold text-ascender-purple">{texto.titulo}</h3>
+                  </div>
+                  <div
+                    className="prose prose-sm max-w-none text-gray-700 font-nunito"
+                    dangerouslySetInnerHTML={{ __html: texto.conteudo }}
+                  />
+                  {texto.titulo === 'Sugestões de Desenvolvimento' && avaliacao.pdiTagsDetails && avaliacao.pdiTagsDetails.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-ascender-purple-light/20">
+                      <h4 className="text-sm font-poppins font-semibold text-ascender-purple mb-3">Áreas de Desenvolvimento Identificadas</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {avaliacao.pdiTagsDetails.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center px-4 py-2 rounded-full text-sm font-nunito font-medium bg-ascender-purple-light/20 text-ascender-purple border border-ascender-purple-light/40"
+                          >
+                            {tag.nome}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {avaliacao.competencias.map((competencia, index) => (
           <div
             key={competencia.id}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6"
+            className="bg-white rounded-2xl shadow-md border border-ascender-purple-light/20 p-8 mb-6"
           >
             <div className="mb-6">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold text-lg">
+                <div className="flex-shrink-0 w-14 h-14 bg-ascender-purple text-white rounded-xl flex items-center justify-center font-poppins font-bold text-xl">
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-2xl font-poppins font-bold text-ascender-purple mb-2">
                     {competencia.nome}
                   </h3>
                   {competencia.descricao && (
-                    <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    <p className="text-gray-600 font-nunito text-base leading-relaxed mb-4">
                       {competencia.descricao}
                     </p>
                   )}
@@ -422,11 +534,11 @@ export function UserAvaliacaoViewPage() {
                 const percentage = (pontuacao / 5) * 100;
 
                 return (
-                  <div key={criterio.id} className="border-l-4 border-gray-200 pl-6">
+                  <div key={criterio.id} className="border-l-4 border-ascender-purple-light pl-6">
                     <div className="mb-3">
-                      <h4 className="font-semibold text-gray-900 mb-1">{criterio.nome}</h4>
+                      <h4 className="font-poppins font-semibold text-gray-900 mb-1 text-lg">{criterio.nome}</h4>
                       {criterio.descricao && (
-                        <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                        <p className="text-sm font-nunito text-gray-600 mb-3 leading-relaxed">
                           {criterio.descricao}
                         </p>
                       )}
@@ -434,26 +546,26 @@ export function UserAvaliacaoViewPage() {
 
                     <div className="mb-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Resultado</span>
-                        <span className="text-lg font-bold text-gray-900">
+                        <span className="text-sm font-nunito font-medium text-gray-700">Resultado</span>
+                        <span className="text-xl font-poppins font-bold text-ascender-purple">
                           {pontuacao.toFixed(1)}
                         </span>
                       </div>
-                      <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 via-yellow-500 via-green-400 to-blue-500 rounded-full transition-all duration-300"
+                          className="absolute top-0 left-0 h-full gradient-purple rounded-full transition-all duration-300"
                           style={{ width: `${percentage}%` }}
                         />
                         <div
-                          className="absolute top-0 h-full w-1 bg-gray-800"
+                          className="absolute top-0 h-full w-1 bg-ascender-yellow shadow-md"
                           style={{ left: `${percentage}%` }}
                         />
                       </div>
                     </div>
 
                     {observacoes && (
-                      <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <p className="text-sm text-gray-700 leading-relaxed">{observacoes}</p>
+                      <div className="mt-3 bg-ascender-purple-light/10 border border-ascender-purple-light/30 rounded-xl p-4">
+                        <p className="text-sm font-nunito text-gray-700 leading-relaxed">{observacoes}</p>
                       </div>
                     )}
                   </div>
@@ -464,18 +576,18 @@ export function UserAvaliacaoViewPage() {
         ))}
 
         {avaliacao.perguntas.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Análise Observativa</h3>
+          <div className="bg-white rounded-2xl shadow-md border border-ascender-purple-light/20 p-8 mb-6">
+            <h3 className="text-2xl font-poppins font-bold text-ascender-purple mb-6">Perguntas Personalizadas</h3>
             <div className="space-y-6">
               {avaliacao.perguntas.map((pergunta) => (
-                <div key={pergunta.id} className="border-l-4 border-blue-500 pl-6">
-                  <h4 className="font-semibold text-gray-900 mb-2">{pergunta.titulo}</h4>
+                <div key={pergunta.id} className="border-l-4 border-ascender-purple pl-6">
+                  <h4 className="font-poppins font-semibold text-gray-900 mb-2 text-lg">{pergunta.titulo}</h4>
                   {pergunta.descricao && (
-                    <p className="text-sm text-gray-600 mb-3">{pergunta.descricao}</p>
+                    <p className="text-sm font-nunito text-gray-600 mb-3">{pergunta.descricao}</p>
                   )}
                   {pergunta.resposta && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    <div className="bg-ascender-purple-light/10 border border-ascender-purple-light/30 rounded-xl p-4">
+                      <p className="text-sm font-nunito text-gray-700 leading-relaxed whitespace-pre-wrap">
                         {pergunta.resposta.texto || '-'}
                       </p>
                     </div>
@@ -486,37 +598,16 @@ export function UserAvaliacaoViewPage() {
           </div>
         )}
 
-        {avaliacao.textos.length > 0 && (
-          <div className="space-y-6">
-            {avaliacao.textos.map((texto, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-8"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">{texto.titulo}</h3>
-                </div>
-                <div
-                  className="prose prose-sm max-w-none text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: texto.conteudo }}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
         {avaliacao.observacoes && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
-            <h3 className="text-lg font-semibold text-yellow-900 mb-2">
+          <div className="bg-ascender-yellow/10 border border-ascender-yellow/30 rounded-2xl p-6 mt-6">
+            <h3 className="text-xl font-poppins font-semibold text-ascender-yellow-dark mb-3">
               Observações Gerais
             </h3>
-            <p className="text-yellow-800 leading-relaxed">{avaliacao.observacoes}</p>
+            <p className="text-gray-800 font-nunito leading-relaxed">{avaliacao.observacoes}</p>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

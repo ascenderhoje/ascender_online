@@ -91,6 +91,7 @@ interface AvaliacaoTexto {
   oportunidades_melhoria: string;
   pontos_fortes: string;
   highlights_psicologa: string;
+  sugestoes_desenvolvimento: string;
   idioma_padrao: boolean;
 }
 
@@ -125,9 +126,9 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const [loadingModelo, setLoadingModelo] = useState(false);
 
   const [textosPorIdioma, setTextosPorIdioma] = useState<Record<Idioma, AvaliacaoTexto>>({
-    'pt-BR': { idioma: 'pt-BR', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', idioma_padrao: true },
-    'en-US': { idioma: 'en-US', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', idioma_padrao: false },
-    'es-ES': { idioma: 'es-ES', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', idioma_padrao: false },
+    'pt-BR': { idioma: 'pt-BR', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', sugestoes_desenvolvimento: '', idioma_padrao: true },
+    'en-US': { idioma: 'en-US', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', sugestoes_desenvolvimento: '', idioma_padrao: false },
+    'es-ES': { idioma: 'es-ES', oportunidades_melhoria: '', pontos_fortes: '', highlights_psicologa: '', sugestoes_desenvolvimento: '', idioma_padrao: false },
   });
   const [idiomaAtivo, setIdiomaAtivo] = useState<Idioma>('pt-BR');
 
@@ -137,6 +138,8 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
   const [avaliacaoStatus, setAvaliacaoStatus] = useState<string>('rascunho');
   const [showFinalizarConfirm, setShowFinalizarConfirm] = useState(false);
   const [finalizandoAvaliacao, setFinalizandoAvaliacao] = useState(false);
+  const [selectedPDITags, setSelectedPDITags] = useState<string[]>([]);
+  const [availablePDITags, setAvailablePDITags] = useState<Array<{id: string; nome: string}>>([]);
 
   const isEditMode = !!avaliacaoId;
 
@@ -144,6 +147,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     loadEmpresas();
     loadModelos();
     loadPsicologas();
+    loadPDITags();
 
     const initializeEdit = async () => {
       if (!administrador) return;
@@ -354,6 +358,20 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
     }
   };
 
+  const loadPDITags = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pdi_tags')
+        .select('id, nome')
+        .order('nome');
+
+      if (error) throw error;
+      setAvailablePDITags(data || []);
+    } catch (error: any) {
+      console.error('Error loading PDI tags:', error);
+    }
+  };
+
   const loadAvaliacao = async () => {
     if (!avaliacaoId) return;
 
@@ -378,6 +396,10 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       setModeloId(data.modelo_id || '');
       setPsicologaId(data.psicologa_responsavel_id || '');
       setAvaliacaoStatus(data.status || 'rascunho');
+
+      if (data.pdi_tags && Array.isArray(data.pdi_tags)) {
+        setSelectedPDITags(data.pdi_tags);
+      }
 
       await loadColaboradores(data.empresa_id);
 
@@ -522,6 +544,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
             oportunidades_melhoria: texto.oportunidades_melhoria || '',
             pontos_fortes: texto.pontos_fortes || '',
             highlights_psicologa: texto.highlights_psicologa || '',
+            sugestoes_desenvolvimento: texto.sugestoes_desenvolvimento || '',
             idioma_padrao: texto.idioma_padrao,
           };
         });
@@ -556,6 +579,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         psicologa_responsavel_id: psicologaId || null,
         colaborador_email: colaboradorSelecionado?.email || '',
         status: newStatus,
+        pdi_tags: selectedPDITags,
       };
 
       let savedAvaliacaoId = avaliacaoId;
@@ -697,6 +721,7 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
       oportunidades_melhoria: texto.oportunidades_melhoria,
       pontos_fortes: texto.pontos_fortes,
       highlights_psicologa: texto.highlights_psicologa,
+      sugestoes_desenvolvimento: texto.sugestoes_desenvolvimento,
       idioma_padrao: texto.idioma === 'pt-BR',
     }));
 
@@ -714,6 +739,15 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
         [field]: value,
       },
     }));
+  };
+
+  const togglePDITag = (tagId: string) => {
+    setSelectedPDITags((prev) => {
+      if (prev.includes(tagId)) {
+        return prev.filter((id) => id !== tagId);
+      }
+      return [...prev, tagId];
+    });
   };
 
   return (
@@ -905,6 +939,49 @@ export const AvaliacaoFormPage = ({ avaliacaoId }: AvaliacaoFormPageProps) => {
                   placeholder="Digite os highlights da psicóloga..."
                   rows={6}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sugestões de Desenvolvimento
+                </label>
+                <RichTextEditor
+                  value={textosPorIdioma[idiomaAtivo].sugestoes_desenvolvimento}
+                  onChange={(value) => updateTexto(idiomaAtivo, 'sugestoes_desenvolvimento', value)}
+                  placeholder="Digite as sugestões de desenvolvimento..."
+                  rows={6}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tags PDI
+                </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Selecione as tags relacionadas às sugestões de desenvolvimento
+                </p>
+                {availablePDITags.length === 0 ? (
+                  <div className="text-sm text-gray-500 py-4 px-4 bg-gray-50 rounded-lg border border-gray-200">
+                    Nenhuma tag PDI cadastrada. Cadastre tags na seção PDI para poder selecioná-las aqui.
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {availablePDITags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => togglePDITag(tag.id)}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                          selectedPDITags.includes(tag.id)
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                        }`}
+                      >
+                        {tag.nome}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

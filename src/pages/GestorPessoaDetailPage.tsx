@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, User, ClipboardList, Eye, Calendar } from 'lucide-react';
+import { ArrowLeft, User, ClipboardList, Eye, Calendar, TrendingUp, ListChecks } from 'lucide-react';
 import { Button } from '../components/Button';
+import { PDIContentCard } from '../components/PDIContentCard';
+import { PDIRatingStars } from '../components/PDIRatingStars';
+import { PDIContent, PDIUserContent, PDIUserAction } from '../types';
 
 interface Pessoa {
   id: string;
@@ -26,18 +29,29 @@ interface Avaliacao {
 }
 
 export function GestorPessoaDetailPage() {
-  const { params, navigate } = useRouter();
+  const { params, navigate, currentPath } = useRouter();
   const { pessoa: gestorPessoa } = useAuth();
   const [pessoa, setPessoa] = useState<Pessoa | null>(null);
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
+  const [userContents, setUserContents] = useState<PDIUserContent[]>([]);
+  const [userActions, setUserActions] = useState<PDIUserAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<'avaliacoes' | 'pdi' | 'acoes'>('avaliacoes');
 
   useEffect(() => {
     if (params.id) {
       checkAccessAndLoadData(params.id);
     }
   }, [params.id, gestorPessoa]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab === 'pdi' || tab === 'acoes') {
+      setActiveTab(tab);
+    }
+  }, [currentPath]);
 
   const checkAccessAndLoadData = async (pessoaId: string) => {
     if (!gestorPessoa) return;
@@ -104,6 +118,7 @@ export function GestorPessoaDetailPage() {
           )
         `)
         .eq('colaborador_id', pessoaId)
+        .eq('status', 'finalizada')
         .order('data_avaliacao', { ascending: false });
 
       if (avaliacoesError) throw avaliacoesError;
@@ -117,6 +132,55 @@ export function GestorPessoaDetailPage() {
       }));
 
       setAvaliacoes(formattedAvaliacoes);
+
+      const [contentsRes, actionsRes] = await Promise.all([
+        supabase
+          .from('pdi_user_contents')
+          .select(`
+            *,
+            content:pdi_contents(*)
+          `)
+          .eq('user_id', pessoaId)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('pdi_user_actions')
+          .select('*')
+          .eq('user_id', pessoaId)
+          .order('planned_due_date', { ascending: true }),
+      ]);
+
+      if (contentsRes.data) {
+        const contentsWithDetails = await Promise.all(
+          contentsRes.data.map(async (uc) => {
+            const [tagsRes, mediaTypeRes] = await Promise.all([
+              supabase
+                .from('pdi_content_tags')
+                .select('tag:pdi_tags(*)')
+                .eq('content_id', uc.content_id),
+              supabase
+                .from('pdi_media_types')
+                .select('*')
+                .eq('id', uc.content.media_type_id)
+                .single(),
+            ]);
+
+            return {
+              ...uc,
+              content: {
+                ...uc.content,
+                tags: tagsRes.data?.map((t: any) => t.tag) || [],
+                media_type: mediaTypeRes.data,
+              },
+            };
+          })
+        );
+
+        setUserContents(contentsWithDetails);
+      }
+
+      if (actionsRes.data) {
+        setUserActions(actionsRes.data);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -183,18 +247,22 @@ export function GestorPessoaDetailPage() {
     );
   }
 
+  const upcomingContents = userContents.filter((uc) => uc.status === 'em_andamento');
+  const completedContents = userContents.filter((uc) => uc.status === 'concluido');
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/gestor-pessoas')}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
+    <div className="min-h-screen bg-ascender-neutral">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Button
+          variant="secondary"
+          onClick={() => navigate('/gestor-pessoas')}
+          className="mb-4 bg-white hover:bg-gray-50 text-ascender-purple border-gray-300"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-6">
           <div className="flex items-center gap-4">
             <div className="flex-shrink-0 h-16 w-16">
               {pessoa.avatar_url ? (
@@ -204,34 +272,79 @@ export function GestorPessoaDetailPage() {
                   alt={pessoa.nome}
                 />
               ) : (
-                <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-ascender-purple to-ascender-purple-dark flex items-center justify-center shadow-md">
                   <User className="w-8 h-8 text-white" />
                 </div>
               )}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{pessoa.nome}</h1>
-              <p className="text-gray-600 mt-1">{pessoa.email}</p>
+              <h1 className="text-3xl font-poppins font-bold text-ascender-purple">{pessoa.nome}</h1>
+              <p className="text-gray-600 font-nunito mt-1">{pessoa.email}</p>
               {pessoa.funcao && (
-                <p className="text-sm text-gray-500 mt-1">{pessoa.funcao}</p>
+                <p className="text-sm text-gray-500 font-nunito mt-1">{pessoa.funcao}</p>
               )}
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Avaliações</h2>
-          </div>
+        <div className="flex gap-2 border-b border-gray-200 mb-6">
+          <button
+            onClick={() => setActiveTab('avaliacoes')}
+            className={`px-4 py-3 text-sm font-nunito font-medium transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === 'avaliacoes'
+                ? 'border-ascender-purple text-ascender-purple'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ClipboardList size={18} />
+            Avaliações
+          </button>
+          <button
+            onClick={() => setActiveTab('pdi')}
+            className={`px-4 py-3 text-sm font-nunito font-medium transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === 'pdi'
+                ? 'border-ascender-purple text-ascender-purple'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <TrendingUp size={18} />
+            PDI
+            {userContents.length > 0 && (
+              <span className="bg-ascender-purple text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                {userContents.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('acoes')}
+            className={`px-4 py-3 text-sm font-nunito font-medium transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === 'acoes'
+                ? 'border-ascender-purple text-ascender-purple'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ListChecks size={18} />
+            Ações
+            {userActions.length > 0 && (
+              <span className="bg-ascender-purple text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                {userActions.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-          {avaliacoes.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <ClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhuma avaliação registrada para esta pessoa.</p>
+        {activeTab === 'avaliacoes' && (
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-poppins font-semibold text-ascender-purple">Avaliações</h2>
             </div>
-          ) : (
+
+            {avaliacoes.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <ClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 font-nunito">Nenhuma avaliação registrada para esta pessoa.</p>
+              </div>
+            ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -276,7 +389,7 @@ export function GestorPessoaDetailPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <button
                           onClick={() => navigate(`/user-avaliacao/${avaliacao.id}`)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-ascender-purple text-white rounded-lg hover:bg-ascender-purple-dark transition-colors font-nunito"
                         >
                           <Eye className="w-4 h-4" />
                           Visualizar
@@ -287,8 +400,112 @@ export function GestorPessoaDetailPage() {
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'pdi' && (
+          <div>
+            {userContents.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-12 text-center">
+                <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 font-nunito">Nenhum conteúdo PDI registrado para esta pessoa.</p>
+              </div>
+            ) : (
+              <>
+                {upcomingContents.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-poppins font-semibold text-ascender-purple mb-4">
+                      Em Andamento ({upcomingContents.length})
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {upcomingContents.map((uc) => (
+                        <PDIContentCard
+                          key={uc.id}
+                          content={uc.content as PDIContent}
+                          plannedDate={uc.planned_due_date}
+                          status={uc.status}
+                          showActions={false}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {completedContents.length > 0 && (
+                  <div>
+                    <h2 className="text-lg font-poppins font-semibold text-ascender-purple mb-4">
+                      Concluídos ({completedContents.length})
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {completedContents.map((uc) => (
+                        <div key={uc.id}>
+                          <PDIContentCard
+                            content={uc.content as PDIContent}
+                            status={uc.status}
+                            showActions={false}
+                          />
+                          {uc.rating_stars && (
+                            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs text-gray-600 font-nunito">Avaliação:</span>
+                                <PDIRatingStars rating={uc.rating_stars} size={14} />
+                              </div>
+                              {uc.rating_comment && (
+                                <p className="text-xs text-gray-600 font-nunito mt-1">{uc.rating_comment}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'acoes' && (
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200">
+            {userActions.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <ListChecks className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 font-nunito">Nenhuma ação registrada para esta pessoa.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {userActions.map((action) => (
+                  <div key={action.id} className="p-4 flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-nunito font-medium text-gray-900">{action.description}</p>
+                      <div className="flex items-center gap-4 mt-1 text-xs text-gray-500 font-nunito">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={12} />
+                          {new Date(action.planned_due_date).toLocaleDateString('pt-BR')}
+                        </span>
+                        {action.investment_cents && (
+                          <span>
+                            R$ {(action.investment_cents / 100).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={`px-2 py-1 text-xs font-nunito font-medium rounded ${
+                        action.status === 'concluido'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
+                      {action.status === 'concluido' ? 'Concluído' : 'Em Andamento'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

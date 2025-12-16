@@ -397,6 +397,11 @@ export const PessoaForm = ({ pessoa, onSubmit, onCancel }: PessoaFormProps) => {
           <option value="colaborador">Colaborador</option>
           <option value="gestor">Gestor da Empresa</option>
         </select>
+        {formData.tipo_acesso === 'gestor' && !pessoa && (
+          <p className="mt-2 text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+            💡 Um grupo será criado automaticamente com o nome da empresa e nome completo do gestor.
+          </p>
+        )}
       </div>
 
       <div>

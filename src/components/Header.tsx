@@ -1,4 +1,4 @@
-import { Search, User, LogOut, ChevronDown, Settings } from 'lucide-react';
+import { User, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
@@ -6,10 +6,10 @@ import { useRouter } from '../utils/router';
 interface HeaderProps {
   title?: string;
   action?: React.ReactNode;
+  subtitle?: string;
 }
 
-export const Header = ({ title, action }: HeaderProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
+export const Header = ({ title, action, subtitle }: HeaderProps) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { administrador, signOut } = useAuth();
   const { navigate } = useRouter();
@@ -33,20 +33,7 @@ export const Header = ({ title, action }: HeaderProps) => {
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-      <div className="px-6 py-3 flex items-center justify-between gap-6">
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="text"
-              placeholder="Pesquisar"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-            />
-          </div>
-        </div>
-
+      <div className="px-6 py-3 flex items-center justify-end gap-6">
         <div className="flex items-center gap-3">
           <div className="relative" ref={menuRef}>
             <button
@@ -105,9 +92,12 @@ export const Header = ({ title, action }: HeaderProps) => {
         </div>
       </div>
 
-      {(title || action) && (
+      {(title || action || subtitle) && (
         <div className="px-6 py-4 flex items-center justify-between border-t border-gray-100">
-          {title && <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>}
+          <div>
+            {title && <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>}
+            {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+          </div>
           {action && <div>{action}</div>}
         </div>
       )}

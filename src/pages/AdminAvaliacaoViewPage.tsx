@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from '../utils/router';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, User, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, User, Calendar, FileText, Download } from 'lucide-react';
 import { Button } from '../components/Button';
+import { AvaliacaoPDFDocument } from '../components/AvaliacaoPDFDocument';
+import { generatePDFFromReactElement, formatDateForFilename, sanitizeFilename } from '../utils/pdfGenerator';
 
 interface Criterio {
   id: string;
@@ -29,11 +31,17 @@ interface PerguntaPersonalizada {
   resposta: any;
 }
 
+interface PDITag {
+  id: string;
+  nome: string;
+}
+
 interface Avaliacao {
   id: string;
   data_avaliacao: string;
   status: string;
   observacoes: string | null;
+  pdi_tags: string[];
   colaborador: {
     nome: string;
     email: string;
@@ -51,12 +59,15 @@ interface Avaliacao {
     titulo: string;
     conteudo: string;
   }>;
+  pdiTagsDetails: PDITag[];
 }
 
 export function AdminAvaliacaoViewPage() {
   const { params, navigate } = useRouter();
   const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
 
   useEffect(() => {
     console.log('[AdminAvaliacaoViewPage] Params:', params);
@@ -80,6 +91,7 @@ export function AdminAvaliacaoViewPage() {
           status,
           observacoes,
           modelo_id,
+          pdi_tags,
           colaborador:pessoas!colaborador_id (
             nome,
             email,
@@ -225,7 +237,7 @@ export function AdminAvaliacaoViewPage() {
 
       const { data: textosData } = await supabase
         .from('avaliacoes_textos')
-        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa')
+        .select('pontos_fortes, oportunidades_melhoria, highlights_psicologa, sugestoes_desenvolvimento')
         .eq('avaliacao_id', id)
         .eq('idioma_padrao', true)
         .maybeSingle();
@@ -250,6 +262,24 @@ export function AdminAvaliacaoViewPage() {
             conteudo: textosData.highlights_psicologa,
           });
         }
+        if (textosData.sugestoes_desenvolvimento) {
+          textos.push({
+            titulo: 'Sugestões de Desenvolvimento',
+            conteudo: textosData.sugestoes_desenvolvimento,
+          });
+        }
+      }
+
+      let pdiTagsDetails: PDITag[] = [];
+      if (avaliacaoData.pdi_tags && Array.isArray(avaliacaoData.pdi_tags) && avaliacaoData.pdi_tags.length > 0) {
+        const { data: tagsData } = await supabase
+          .from('pdi_tags')
+          .select('id, nome')
+          .in('id', avaliacaoData.pdi_tags);
+
+        if (tagsData) {
+          pdiTagsDetails = tagsData;
+        }
       }
 
       setAvaliacao({
@@ -257,6 +287,7 @@ export function AdminAvaliacaoViewPage() {
         competencias,
         perguntas,
         textos,
+        pdiTagsDetails,
       } as Avaliacao);
     } catch (error: any) {
       console.error('Erro ao carregar avaliação:', error);
@@ -310,6 +341,30 @@ export function AdminAvaliacaoViewPage() {
     return valores.reduce((acc, val) => acc + val, 0) / valores.length;
   };
 
+  const handleExportPDF = async () => {
+    if (!avaliacao) return;
+
+    try {
+      setIsGeneratingPDF(true);
+      setPdfProgress(0);
+
+      const colaboradorNome = sanitizeFilename(avaliacao.colaborador?.nome || 'Colaborador');
+      const dataFormatada = formatDateForFilename(avaliacao.data_avaliacao);
+      const filename = `Avaliacao-${colaboradorNome}-${dataFormatada}.pdf`;
+
+      await generatePDFFromReactElement(<AvaliacaoPDFDocument avaliacao={avaliacao} />, {
+        filename,
+        onProgress: setPdfProgress,
+      });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setIsGeneratingPDF(false);
+      setPdfProgress(0);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -327,20 +382,29 @@ export function AdminAvaliacaoViewPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Button
+              variant="secondary"
+              onClick={() => navigate('/avaliacoes')}
+              className="mb-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar para Avaliações
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900">Visualizar Avaliação</h1>
+          </div>
           <Button
-            variant="secondary"
-            onClick={() => navigate('/avaliacoes')}
-            className="mb-4"
+            onClick={handleExportPDF}
+            disabled={isGeneratingPDF}
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Avaliações
+            <Download className="w-4 h-4 mr-2" />
+            {isGeneratingPDF ? `Gerando PDF... ${pdfProgress}%` : 'Exportar PDF'}
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">Visualizar Avaliação</h1>
         </div>
-      </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="flex items-start gap-6 mb-6">
@@ -507,6 +571,21 @@ export function AdminAvaliacaoViewPage() {
                 className="prose prose-sm max-w-none text-gray-700"
                 dangerouslySetInnerHTML={{ __html: texto.conteudo }}
               />
+              {texto.titulo === 'Sugestões de Desenvolvimento' && avaliacao.pdiTagsDetails && avaliacao.pdiTagsDetails.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Tags PDI Relacionadas</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {avaliacao.pdiTagsDetails.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                      >
+                        {tag.nome}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -520,6 +599,7 @@ export function AdminAvaliacaoViewPage() {
           <p className="text-yellow-800 leading-relaxed">{avaliacao.observacoes}</p>
         </div>
       )}
+      </div>
     </div>
   );
 }

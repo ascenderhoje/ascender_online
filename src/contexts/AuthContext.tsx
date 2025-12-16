@@ -32,6 +32,8 @@ interface AuthContextType {
   userType: UserType;
   session: Session | null;
   loading: boolean;
+  hasAvaliacoes: boolean;
+  hasComparativo: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; userType?: UserType }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -46,6 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userType, setUserType] = useState<UserType>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasAvaliacoes, setHasAvaliacoes] = useState(false);
+  const [hasComparativo, setHasComparativo] = useState(false);
 
   const loadAdministrador = async (userId: string) => {
     try {
@@ -105,6 +109,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const checkGestorAvaliacoes = async (pessoaId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('avaliacoes')
+        .select('id')
+        .eq('colaborador_id', pessoaId)
+        .eq('status', 'finalizada')
+        .limit(1);
+
+      if (error) throw error;
+
+      setHasAvaliacoes((data?.length || 0) > 0);
+    } catch (error) {
+      console.error('Erro ao verificar avaliações do gestor:', error);
+      setHasAvaliacoes(false);
+    }
+  };
+
+  const checkGestorComparativo = async (pessoaId: string) => {
+    try {
+      const { data: gruposGestorData, error: gruposError } = await supabase
+        .from('grupos_gestores')
+        .select('grupo_id')
+        .eq('pessoa_id', pessoaId);
+
+      if (gruposError) throw gruposError;
+
+      const gruposIds = (gruposGestorData || []).map(g => g.grupo_id);
+
+      if (gruposIds.length === 0) {
+        setHasComparativo(false);
+        return;
+      }
+
+      const { data: pessoasGruposData, error: pessoasGruposError } = await supabase
+        .from('pessoas_grupos')
+        .select('pessoa_id')
+        .in('grupo_id', gruposIds);
+
+      if (pessoasGruposError) throw pessoasGruposError;
+
+      const pessoasIds = [...new Set((pessoasGruposData || []).map(pg => pg.pessoa_id))];
+
+      if (pessoasIds.length === 0) {
+        setHasComparativo(false);
+        return;
+      }
+
+      const { data: avaliacoesData, error: avaliacoesError } = await supabase
+        .from('avaliacoes')
+        .select('id')
+        .eq('status', 'finalizada')
+        .in('colaborador_id', pessoasIds)
+        .limit(1);
+
+      if (avaliacoesError) throw avaliacoesError;
+
+      setHasComparativo((avaliacoesData?.length || 0) > 0);
+    } catch (error) {
+      console.error('Erro ao verificar comparativo do gestor:', error);
+      setHasComparativo(false);
+    }
+  };
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -120,12 +188,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setAdministrador(adminData);
             setPessoa(null);
             setUserType('admin');
+            setHasAvaliacoes(false);
+            setHasComparativo(false);
           } else {
             const pessoaData = await loadPessoa(session.user.id);
             if (pessoaData) {
               setPessoa(pessoaData);
               setAdministrador(null);
               setUserType('pessoa');
+
+              if (pessoaData.tipo_acesso === 'gestor') {
+                await Promise.all([
+                  checkGestorAvaliacoes(pessoaData.id),
+                  checkGestorComparativo(pessoaData.id)
+                ]);
+              } else {
+                setHasAvaliacoes(false);
+                setHasComparativo(false);
+              }
             } else {
               await supabase.auth.signOut();
             }
@@ -153,16 +233,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setAdministrador(adminData);
               setPessoa(null);
               setUserType('admin');
+              setHasAvaliacoes(false);
             } else {
               const pessoaData = await loadPessoa(session.user.id);
               if (pessoaData) {
                 setPessoa(pessoaData);
                 setAdministrador(null);
                 setUserType('pessoa');
+
+                if (pessoaData.tipo_acesso === 'gestor') {
+                  await Promise.all([
+                    checkGestorAvaliacoes(pessoaData.id),
+                    checkGestorComparativo(pessoaData.id)
+                  ]);
+                } else {
+                  setHasAvaliacoes(false);
+                  setHasComparativo(false);
+                }
               } else {
                 setAdministrador(null);
                 setPessoa(null);
                 setUserType(null);
+                setHasAvaliacoes(false);
+                setHasComparativo(false);
               }
             }
           } else {
@@ -196,6 +289,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAdministrador(adminData);
           setPessoa(null);
           setUserType('admin');
+          setHasAvaliacoes(false);
+          setHasComparativo(false);
           return { error: null, userType: 'admin' as UserType, pessoa: null };
         }
 
@@ -204,6 +299,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPessoa(pessoaData);
           setAdministrador(null);
           setUserType('pessoa');
+
+          if (pessoaData.tipo_acesso === 'gestor') {
+            await Promise.all([
+              checkGestorAvaliacoes(pessoaData.id),
+              checkGestorComparativo(pessoaData.id)
+            ]);
+          } else {
+            setHasAvaliacoes(false);
+            setHasComparativo(false);
+          }
+
           return { error: null, userType: 'pessoa' as UserType, pessoa: pessoaData };
         }
 
@@ -225,6 +331,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPessoa(null);
     setUserType(null);
     setSession(null);
+    setHasAvaliacoes(false);
+    setHasComparativo(false);
   };
 
   const resetPassword = async (email: string) => {
@@ -248,6 +356,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userType,
     session,
     loading,
+    hasAvaliacoes,
+    hasComparativo,
     signIn,
     signOut,
     resetPassword,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Search, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Table } from '../components/Table';
 import { Button } from '../components/Button';
@@ -19,6 +19,11 @@ interface GrupoWithEmpresa extends Grupo {
   empresa?: { id: string; nome: string } | null;
 }
 
+interface Empresa {
+  id: string;
+  nome: string;
+}
+
 export const GruposPage = () => {
   const { showToast } = useToast();
   const [grupos, setGrupos] = useState<GrupoWithEmpresa[]>([]);
@@ -27,6 +32,11 @@ export const GruposPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [grupoToEdit, setGrupoToEdit] = useState<GrupoWithEmpresa | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [empresaFilter, setEmpresaFilter] = useState<string>('todos');
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [sortBy, setSortBy] = useState<'nome' | 'empresa' | 'created_at'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const loadGrupos = async () => {
     try {
@@ -50,9 +60,69 @@ export const GruposPage = () => {
     }
   };
 
+  const loadEmpresas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('empresas')
+        .select('id, nome')
+        .order('nome');
+
+      if (error) throw error;
+      setEmpresas(data || []);
+    } catch (error) {
+      console.error('Error loading empresas:', error);
+    }
+  };
+
   useEffect(() => {
     loadGrupos();
+    loadEmpresas();
   }, []);
+
+  const handleSort = (column: 'nome' | 'empresa' | 'created_at') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setEmpresaFilter('todos');
+    setSortBy('created_at');
+    setSortOrder('desc');
+  };
+
+  const hasActiveFilters = searchTerm !== '' || empresaFilter !== 'todos';
+
+  const filteredGrupos = grupos
+    .filter((g) => {
+      const matchesSearch = g.nome.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesEmpresa =
+        empresaFilter === 'todos' ||
+        (empresaFilter === 'sem-empresa' && !g.empresa_id) ||
+        g.empresa_id === empresaFilter;
+      return matchesSearch && matchesEmpresa;
+    })
+    .sort((a, b) => {
+      let compareValue = 0;
+
+      if (sortBy === 'nome') {
+        compareValue = a.nome.localeCompare(b.nome);
+      } else if (sortBy === 'empresa') {
+        const empresaA = a.empresa?.nome || '';
+        const empresaB = b.empresa?.nome || '';
+        if (!a.empresa_id && b.empresa_id) return sortOrder === 'asc' ? 1 : -1;
+        if (a.empresa_id && !b.empresa_id) return sortOrder === 'asc' ? -1 : 1;
+        compareValue = empresaA.localeCompare(empresaB);
+      } else if (sortBy === 'created_at') {
+        compareValue = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    });
 
   const handleCreate = async (formData: any) => {
     try {
@@ -188,11 +258,44 @@ export const GruposPage = () => {
     }
   };
 
+  const renderSortIcon = (column: 'nome' | 'empresa' | 'created_at') => {
+    if (sortBy !== column) return null;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="w-4 h-4 inline-block ml-1" />
+    ) : (
+      <ArrowDown className="w-4 h-4 inline-block ml-1" />
+    );
+  };
+
   const columns = [
-    { key: 'nome', label: 'Nome do Grupo', sortable: true },
+    {
+      key: 'nome',
+      label: (
+        <button
+          onClick={() => handleSort('nome')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'nome' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Nome do Grupo
+          {renderSortIcon('nome')}
+        </button>
+      ),
+      sortable: true,
+    },
     {
       key: 'empresa',
-      label: 'Empresa',
+      label: (
+        <button
+          onClick={() => handleSort('empresa')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'empresa' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Empresa
+          {renderSortIcon('empresa')}
+        </button>
+      ),
       render: (grupo: GrupoWithEmpresa) => (
         <div>
           {!grupo.empresa ? (
@@ -207,7 +310,17 @@ export const GruposPage = () => {
     },
     {
       key: 'created_at',
-      label: 'Criado em',
+      label: (
+        <button
+          onClick={() => handleSort('created_at')}
+          className={`flex items-center font-medium transition-colors ${
+            sortBy === 'created_at' ? 'text-[#6B46C1]' : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Criado em
+          {renderSortIcon('created_at')}
+        </button>
+      ),
       render: (grupo: Grupo) => {
         const date = new Date(grupo.created_at);
         return <span className="text-sm text-gray-600">{date.toLocaleDateString('pt-BR')}</span>;
@@ -238,8 +351,51 @@ export const GruposPage = () => {
       />
 
       <div className="p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex-1 min-w-[250px] relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar por nome do grupo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1]"
+              />
+            </div>
+
+            <select
+              value={empresaFilter}
+              onChange={(e) => setEmpresaFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1] bg-white"
+            >
+              <option value="todos">Todas as Empresas</option>
+              <option value="sem-empresa">Sem Empresa</option>
+              {empresas.map((empresa) => (
+                <option key={empresa.id} value={empresa.id}>
+                  {empresa.nome}
+                </option>
+              ))}
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#6B46C1] border border-[#6B46C1] rounded-md hover:bg-[#6B46C1] hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Limpar Filtros
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-600 mb-3">
+          Mostrando {filteredGrupos.length} de {grupos.length} grupos
+        </div>
+
         <Table
-          data={grupos}
+          data={filteredGrupos}
           columns={columns}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -247,7 +403,7 @@ export const GruposPage = () => {
           selectedItems={selectedItems}
           onSelectionChange={setSelectedItems}
           emptyMessage="Nenhum grupo cadastrado."
-          totalItems={grupos.length}
+          totalItems={filteredGrupos.length}
         />
       </div>
 

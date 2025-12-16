@@ -6,6 +6,7 @@ import { ToastProvider } from './components/Toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './components/PrivateRoute';
 import { AdminRoute } from './components/AdminRoute';
+import { GestorRoute } from './components/GestorRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -31,6 +32,14 @@ import { GestorPessoasPage } from './pages/GestorPessoasPage';
 import { GestorPessoaDetailPage } from './pages/GestorPessoaDetailPage';
 import { GestorAvaliacoesPage } from './pages/GestorAvaliacoesPage';
 import { AdminAvaliacaoViewPage } from './pages/AdminAvaliacaoViewPage';
+import { PDITagsPage } from './pages/PDITagsPage';
+import { PDIContentsPage } from './pages/PDIContentsPage';
+import { PDIContentFormPage } from './pages/PDIContentFormPage';
+import { MeuPDIPage } from './pages/MeuPDIPage';
+import { PDIBibliotecaPage } from './pages/PDIBibliotecaPage';
+import { PDIAcoesPage } from './pages/PDIAcoesPage';
+import { ComparativoPage } from './pages/ComparativoPage';
+import { GestorComparativoPage } from './pages/GestorComparativoPage';
 
 const CompetenciaFormPageWrapper = () => {
   const { params } = useRouter();
@@ -52,6 +61,11 @@ const AdministradorFormPageWrapper = () => {
   return <AdministradorFormPage administradorId={params.id} />;
 };
 
+const PDIContentFormPageWrapper = () => {
+  const { params } = useRouter();
+  return <PDIContentFormPage contentId={params.id} />;
+};
+
 const AdminLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const { currentPath } = useRouter();
 
@@ -67,7 +81,8 @@ const AdminLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
     '/competencias',
     '/modelos',
     '/avaliacoes',
-    '/pdi',
+    '/pdi/tags',
+    '/pdi/conteudos',
     '/administradores',
   ];
 
@@ -116,33 +131,65 @@ function App() {
           </Route>
 
           <Route path="/gestor-dashboard">
-            <PrivateRoute>
+            <GestorRoute>
               <UserLayout>
                 <GestorDashboardPage />
               </UserLayout>
-            </PrivateRoute>
+            </GestorRoute>
           </Route>
 
           <Route path="/gestor-pessoas">
-            <PrivateRoute>
+            <GestorRoute>
               <UserLayout>
                 <GestorPessoasPage />
               </UserLayout>
-            </PrivateRoute>
+            </GestorRoute>
           </Route>
 
           <Route path="/gestor-pessoa/:id">
-            <PrivateRoute>
+            <GestorRoute>
               <UserLayout>
                 <GestorPessoaDetailPage />
+              </UserLayout>
+            </GestorRoute>
+          </Route>
+
+          <Route path="/gestor-avaliacoes">
+            <GestorRoute>
+              <UserLayout>
+                <GestorAvaliacoesPage />
+              </UserLayout>
+            </GestorRoute>
+          </Route>
+
+          <Route path="/gestor-comparativo">
+            <GestorRoute>
+              <UserLayout>
+                <GestorComparativoPage />
+              </UserLayout>
+            </GestorRoute>
+          </Route>
+
+          <Route path="/pdi/meu-pdi">
+            <PrivateRoute>
+              <UserLayout>
+                <MeuPDIPage />
               </UserLayout>
             </PrivateRoute>
           </Route>
 
-          <Route path="/gestor-avaliacoes">
+          <Route path="/pdi/biblioteca">
             <PrivateRoute>
               <UserLayout>
-                <GestorAvaliacoesPage />
+                <PDIBibliotecaPage />
+              </UserLayout>
+            </PrivateRoute>
+          </Route>
+
+          <Route path="/pdi/acoes">
+            <PrivateRoute>
+              <UserLayout>
+                <PDIAcoesPage />
               </UserLayout>
             </PrivateRoute>
           </Route>
@@ -233,12 +280,29 @@ function App() {
                 <AvaliacaoFormPageWrapper />
               </AdminRoute>
             </Route>
-            <Route path="/pdi">
+            <Route path="/avaliacoes/comparativo">
               <AdminRoute>
-                <PlaceholderPage
-                  title="PDI"
-                  description="Módulo de Plano de Desenvolvimento Individual em desenvolvimento"
-                />
+                <ComparativoPage />
+              </AdminRoute>
+            </Route>
+            <Route path="/pdi/tags">
+              <AdminRoute>
+                <PDITagsPage />
+              </AdminRoute>
+            </Route>
+            <Route path="/pdi/conteudos">
+              <AdminRoute>
+                <PDIContentsPage />
+              </AdminRoute>
+            </Route>
+            <Route path="/pdi/conteudos/new">
+              <AdminRoute>
+                <PDIContentFormPage />
+              </AdminRoute>
+            </Route>
+            <Route path="/pdi/conteudos/:id/edit">
+              <AdminRoute>
+                <PDIContentFormPageWrapper />
               </AdminRoute>
             </Route>
             <Route path="/administradores">
