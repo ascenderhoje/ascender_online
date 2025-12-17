@@ -121,7 +121,7 @@ export const UserSidebar = () => {
       <aside className={`bg-ascender-purple-light border-r border-ascender-purple/20 min-h-screen fixed left-0 top-0 flex flex-col shadow-lg transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}>
-        <div className={`${isCollapsed ? 'p-2' : 'p-3'} border-b border-ascender-purple/20 transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'p-4' : 'p-5'} border-b border-ascender-purple/20 transition-all duration-300`}>
           <button
             onClick={handleLogoClick}
             className="hover:opacity-80 transition-opacity w-full flex items-center justify-center"
@@ -129,7 +129,7 @@ export const UserSidebar = () => {
             <img
               src={isCollapsed ? "/estrela_roxa_ascender.png" : "/Aplicação 1 copy.png"}
               alt="Ascender Hoje"
-              className={`${isCollapsed ? 'h-8 max-w-[3rem]' : 'h-8 max-w-full'} object-contain ${isCollapsed ? 'object-center' : 'object-left'} transition-all duration-300`}
+              className={`${isCollapsed ? 'h-12 max-w-[4rem]' : 'h-12 max-w-full'} object-contain ${isCollapsed ? 'object-center' : 'object-left'} transition-all duration-300`}
             />
           </button>
         </div>
