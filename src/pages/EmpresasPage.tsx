@@ -6,7 +6,9 @@ import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { EmpresaForm } from '../components/EmpresaForm';
 import { useToast } from '../components/Toast';
+import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { logAdminActivity, buildActivityDescription } from '../utils/activityLogger';
 
 interface Empresa {
   id: string;
@@ -19,6 +21,7 @@ interface Empresa {
 
 export const EmpresasPage = () => {
   const { showToast } = useToast();
+  const { administrador } = useAuth();
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -51,7 +54,7 @@ export const EmpresasPage = () => {
 
   const handleCreate = async (formData: any) => {
     try {
-      const { error } = await supabase.from('empresas').insert([
+      const { data: insertedData, error } = await supabase.from('empresas').insert([
         {
           nome: formData.nome,
           cidade: formData.cidade || null,
@@ -59,9 +62,26 @@ export const EmpresasPage = () => {
           valido_ate: formData.valido_ate || null,
           avatar_url: formData.avatar_url || null,
         },
-      ]);
+      ]).select('id').maybeSingle();
 
       if (error) throw error;
+
+      if (administrador && insertedData) {
+        const description = buildActivityDescription(
+          'empresa_created',
+          formData.nome,
+          administrador.nome
+        );
+        logAdminActivity({
+          adminId: administrador.id,
+          adminName: administrador.nome,
+          actionType: 'empresa_created',
+          description,
+          entityType: 'empresa',
+          entityId: insertedData.id,
+          entityName: formData.nome,
+        });
+      }
 
       showToast('success', 'Empresa criada com sucesso!');
       setIsCreateModalOpen(false);
@@ -93,6 +113,23 @@ export const EmpresasPage = () => {
         .eq('id', empresaToEdit.id);
 
       if (error) throw error;
+
+      if (administrador) {
+        const description = buildActivityDescription(
+          'empresa_updated',
+          formData.nome,
+          administrador.nome
+        );
+        logAdminActivity({
+          adminId: administrador.id,
+          adminName: administrador.nome,
+          actionType: 'empresa_updated',
+          description,
+          entityType: 'empresa',
+          entityId: empresaToEdit.id,
+          entityName: formData.nome,
+        });
+      }
 
       showToast('success', 'Empresa atualizada com sucesso!');
       setIsEditModalOpen(false);

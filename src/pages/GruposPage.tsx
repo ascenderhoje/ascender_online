@@ -6,7 +6,9 @@ import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
 import { GrupoForm } from '../components/GrupoForm';
 import { useToast } from '../components/Toast';
+import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { logAdminActivity, buildActivityDescription } from '../utils/activityLogger';
 
 interface Grupo {
   id: string;
@@ -26,6 +28,7 @@ interface Empresa {
 
 export const GruposPage = () => {
   const { showToast } = useToast();
+  const { administrador } = useAuth();
   const [grupos, setGrupos] = useState<GrupoWithEmpresa[]>([]);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -161,6 +164,23 @@ export const GruposPage = () => {
           .insert(gestoresInsert);
 
         if (gestoresError) throw gestoresError;
+      }
+
+      if (administrador && grupoData) {
+        const description = buildActivityDescription(
+          'grupo_created',
+          formData.nome,
+          administrador.nome
+        );
+        logAdminActivity({
+          adminId: administrador.id,
+          adminName: administrador.nome,
+          actionType: 'grupo_created',
+          description,
+          entityType: 'grupo',
+          entityId: grupoData.id,
+          entityName: formData.nome,
+        });
       }
 
       showToast('success', 'Grupo criado com sucesso!');
