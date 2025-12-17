@@ -113,7 +113,7 @@ export const Sidebar = () => {
           </button>
         </div>
 
-        <nav className="flex-1 py-4 overflow-y-auto pb-20">
+        <nav className="flex-1 py-4 overflow-y-auto">
           <NavSection items={dashboardItems} />
           {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
           <NavSection items={navItems} />
@@ -124,7 +124,7 @@ export const Sidebar = () => {
           {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
           <NavSection items={pdiItems} title="PDI" />
           {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
-          <NavSection items={adminItems} title="Administração" />
+          <NavSection items={adminItems} />
         </nav>
 
         <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t border-gray-200 transition-all duration-300`}>
