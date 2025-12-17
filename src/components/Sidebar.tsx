@@ -97,10 +97,10 @@ export const Sidebar = () => {
 
   return (
     <div className="relative">
-      <aside className={`bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col transition-all duration-300 ease-in-out z-50 ${
+      <aside className={`bg-white border-r border-gray-200 h-screen fixed left-0 top-0 flex flex-col transition-all duration-300 ease-in-out z-50 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}>
-        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-gray-200 transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-gray-200 transition-all duration-300 flex-shrink-0`}>
           <button
             onClick={() => navigate('/')}
             className="hover:opacity-80 transition-opacity w-full flex items-center justify-center"
@@ -113,7 +113,7 @@ export const Sidebar = () => {
           </button>
         </div>
 
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav className="flex-1 py-4 overflow-y-auto min-h-0">
           <NavSection items={dashboardItems} />
           {!isCollapsed && <div className="border-t border-gray-200 my-2"></div>}
           <NavSection items={navItems} />
@@ -127,7 +127,7 @@ export const Sidebar = () => {
           <NavSection items={adminItems} />
         </nav>
 
-        <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t border-gray-200 transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-t border-gray-200 transition-all duration-300 flex-shrink-0`}>
           {!isCollapsed && administrador && (
             <div className="mb-3 px-2">
               <p className="text-xs text-gray-500">Conectado como</p>
