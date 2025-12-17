@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
 import { supabase } from '../lib/supabase';
-import { Search, TrendingUp, ListChecks, BarChart3 } from 'lucide-react';
+import { Search, TrendingUp, ListChecks, BarChart3, X } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useToast } from '../components/Toast';
 
@@ -23,25 +23,45 @@ export function GestorPessoasPage() {
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [filteredPessoas, setFilteredPessoas] = useState<Pessoa[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [funcaoFilter, setFuncaoFilter] = useState<string>('todos');
   const [loading, setLoading] = useState(true);
   const [selectedPessoaIds, setSelectedPessoaIds] = useState<string[]>([]);
+
+  const uniqueFuncoes = useMemo(() => {
+    const funcoes = pessoas
+      .map(p => p.funcao)
+      .filter((f): f is string => f !== null && f.trim() !== '');
+    return [...new Set(funcoes)].sort((a, b) => a.localeCompare(b));
+  }, [pessoas]);
 
   useEffect(() => {
     loadPessoas();
   }, [pessoa]);
 
   useEffect(() => {
+    let filtered = pessoas;
+
     if (searchTerm) {
-      const filtered = pessoas.filter(p =>
+      filtered = filtered.filter(p =>
         p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.funcao && p.funcao.toLowerCase().includes(searchTerm.toLowerCase()))
       );
-      setFilteredPessoas(filtered);
-    } else {
-      setFilteredPessoas(pessoas);
     }
-  }, [searchTerm, pessoas]);
+
+    if (funcaoFilter !== 'todos') {
+      filtered = filtered.filter(p => p.funcao === funcaoFilter);
+    }
+
+    setFilteredPessoas(filtered);
+  }, [searchTerm, funcaoFilter, pessoas]);
+
+  const hasActiveFilters = searchTerm !== '' || funcaoFilter !== 'todos';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFuncaoFilter('todos');
+  };
 
   const loadPessoas = async () => {
     if (!pessoa) return;
@@ -227,17 +247,41 @@ export function GestorPessoasPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-poppins font-bold text-ascender-purple mb-6">Pessoas</h1>
 
-          <div className="flex gap-4 mb-4">
-            <div className="relative flex-1">
+          <div className="flex flex-wrap gap-4 mb-4 items-center">
+            <div className="relative flex-1 min-w-[250px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Buscar por nome, e-mail ou função..."
+                placeholder="Buscar por nome, e-mail ou funcao..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ascender-purple focus:border-transparent font-nunito"
               />
             </div>
+
+            <select
+              value={funcaoFilter}
+              onChange={(e) => setFuncaoFilter(e.target.value)}
+              className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ascender-purple focus:border-transparent font-nunito bg-white"
+            >
+              <option value="todos">Todas as Funcoes</option>
+              {uniqueFuncoes.map((funcao) => (
+                <option key={funcao} value={funcao}>
+                  {funcao}
+                </option>
+              ))}
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-ascender-purple border border-ascender-purple rounded-xl hover:bg-ascender-purple hover:text-white transition-colors font-nunito"
+              >
+                <X className="w-4 h-4" />
+                Limpar Filtros
+              </button>
+            )}
+
             {selectedPessoaIds.length > 0 && (
               <div className="flex gap-2">
                 <Button

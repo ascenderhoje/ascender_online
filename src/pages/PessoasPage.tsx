@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Table } from '../components/Table';
@@ -31,8 +31,16 @@ export const PessoasPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoAcessoFilter, setTipoAcessoFilter] = useState<'todos' | 'admin' | 'gestor' | 'colaborador'>('todos');
   const [idiomaFilter, setIdiomaFilter] = useState<'todos' | 'pt-BR' | 'en-US'>('todos');
+  const [funcaoFilter, setFuncaoFilter] = useState<string>('todos');
   const [sortBy, setSortBy] = useState<'nome' | 'email' | 'funcao' | 'tipo_acesso'>('nome');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const uniqueFuncoes = useMemo(() => {
+    const funcoes = pessoas
+      .map(p => p.funcao)
+      .filter((f): f is string => f !== null && f.trim() !== '');
+    return [...new Set(funcoes)].sort((a, b) => a.localeCompare(b));
+  }, [pessoas]);
 
   const loadPessoas = async () => {
     try {
@@ -69,11 +77,12 @@ export const PessoasPage = () => {
     setSearchTerm('');
     setTipoAcessoFilter('todos');
     setIdiomaFilter('todos');
+    setFuncaoFilter('todos');
     setSortBy('nome');
     setSortOrder('asc');
   };
 
-  const hasActiveFilters = searchTerm !== '' || tipoAcessoFilter !== 'todos' || idiomaFilter !== 'todos';
+  const hasActiveFilters = searchTerm !== '' || tipoAcessoFilter !== 'todos' || idiomaFilter !== 'todos' || funcaoFilter !== 'todos';
 
   const filteredPessoas = pessoas
     .filter((p) => {
@@ -82,7 +91,8 @@ export const PessoasPage = () => {
         p.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesTipoAcesso = tipoAcessoFilter === 'todos' || p.tipo_acesso === tipoAcessoFilter;
       const matchesIdioma = idiomaFilter === 'todos' || p.idioma === idiomaFilter;
-      return matchesSearch && matchesTipoAcesso && matchesIdioma;
+      const matchesFuncao = funcaoFilter === 'todos' || p.funcao === funcaoFilter;
+      return matchesSearch && matchesTipoAcesso && matchesIdioma && matchesFuncao;
     })
     .sort((a, b) => {
       let compareValue = 0;
@@ -559,8 +569,21 @@ export const PessoasPage = () => {
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1] bg-white"
             >
               <option value="todos">Todos os Idiomas</option>
-              <option value="pt-BR">🇧🇷 Português</option>
-              <option value="en-US">🇺🇸 English</option>
+              <option value="pt-BR">Portugues</option>
+              <option value="en-US">English</option>
+            </select>
+
+            <select
+              value={funcaoFilter}
+              onChange={(e) => setFuncaoFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1] bg-white"
+            >
+              <option value="todos">Todas as Funcoes</option>
+              {uniqueFuncoes.map((funcao) => (
+                <option key={funcao} value={funcao}>
+                  {funcao}
+                </option>
+              ))}
             </select>
 
             {hasActiveFilters && (
