@@ -2,7 +2,7 @@ import { LayoutDashboard, Building2, Users, UsersRound, Shield, Award, FileText,
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { ModuleName } from '../types';
-import { useSidebarState } from '../hooks/useSidebarState';
+import { useSidebar } from '../contexts/SidebarContext';
 
 interface NavItem {
   id: ModuleName | 'dashboard';
@@ -44,7 +44,7 @@ const adminItems: NavItem[] = [
 export const Sidebar = () => {
   const { currentPath, navigate } = useRouter();
   const { signOut, administrador } = useAuth();
-  const { isCollapsed, toggleSidebar } = useSidebarState();
+  const { isCollapsed, toggleSidebar } = useSidebar();
 
   const handleLogout = async () => {
     await signOut();

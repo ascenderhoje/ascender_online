@@ -1,13 +1,13 @@
 import { ReactNode } from 'react';
 import { UserSidebar } from './UserSidebar';
-import { useSidebarState } from '../hooks/useSidebarState';
+import { useSidebar } from '../contexts/SidebarContext';
 
 interface UserLayoutProps {
   children: ReactNode;
 }
 
 export function UserLayout({ children }: UserLayoutProps) {
-  const { isCollapsed } = useSidebarState();
+  const { isCollapsed } = useSidebar();
 
   return (
     <div className="min-h-screen bg-ascender-neutral">

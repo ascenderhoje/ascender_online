@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { useRouter } from '../utils/router';
-import { useSidebarState } from '../hooks/useSidebarState';
+import { useSidebar } from '../contexts/SidebarContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,7 +11,7 @@ const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-passwor
 
 export const Layout = ({ children }: LayoutProps) => {
   const { currentPath } = useRouter();
-  const { isCollapsed } = useSidebarState();
+  const { isCollapsed } = useSidebar();
   const isPublicRoute = publicRoutes.includes(currentPath);
 
   if (isPublicRoute) {

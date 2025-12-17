@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { LayoutDashboard, ClipboardList, LogOut, Users, TrendingUp, BookOpen, ListChecks, BarChart3 } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
-import { useSidebarState } from '../hooks/useSidebarState';
+import { useSidebar } from '../contexts/SidebarContext';
 
 interface NavItem {
   id: string;
@@ -43,7 +43,7 @@ const colaboradorNavItems: NavItem[] = [
 export const UserSidebar = () => {
   const { currentPath, navigate } = useRouter();
   const { signOut, pessoa, hasAvaliacoes, hasComparativo } = useAuth();
-  const { isCollapsed, toggleSidebar } = useSidebarState();
+  const { isCollapsed, toggleSidebar } = useSidebar();
 
   const isGestor = pessoa?.tipo_acesso === 'gestor';
 

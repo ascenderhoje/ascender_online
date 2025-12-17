@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { UserLayout } from './components/UserLayout';
 import { ToastProvider } from './components/Toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { SidebarProvider } from './contexts/SidebarContext';
 import { PrivateRoute } from './components/PrivateRoute';
 import { AdminRoute } from './components/AdminRoute';
 import { GestorRoute } from './components/GestorRoute';
@@ -103,7 +104,8 @@ function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <RouterProvider>
+        <SidebarProvider>
+          <RouterProvider>
           <Route path="/login">
             <LoginPage />
           </Route>
@@ -321,7 +323,8 @@ function App() {
               </AdminRoute>
             </Route>
           </AdminLayoutWrapper>
-        </RouterProvider>
+          </RouterProvider>
+        </SidebarProvider>
       </AuthProvider>
     </ToastProvider>
   );
