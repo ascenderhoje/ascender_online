@@ -284,7 +284,7 @@ export function GestorPessoasPage() {
                       Nome
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wider">
-                      Tipo
+                      Função
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wider">
                       Avaliações
@@ -342,7 +342,7 @@ export function GestorPessoasPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm font-nunito text-gray-900">
-                          {getTipoAcessoLabel(pessoaItem.tipo_acesso)}
+                          {pessoaItem.funcao || '-'}
                         </td>
                         <td className="px-6 py-4 text-center">
                           {hasAvaliacoes ? (
