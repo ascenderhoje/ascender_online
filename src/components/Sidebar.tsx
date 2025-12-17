@@ -106,9 +106,9 @@ export const Sidebar = () => {
             className="hover:opacity-80 transition-opacity w-full flex items-center justify-center"
           >
             <img
-              src="/Aplicação 1 copy.png"
+              src={isCollapsed ? "/estrela_roxa_ascender.png" : "/Aplicação 1 copy.png"}
               alt="Ascender Hoje"
-              className={`${isCollapsed ? 'h-8 max-w-[3rem]' : 'h-8 max-w-full'} object-contain object-left transition-all duration-300`}
+              className={`${isCollapsed ? 'h-8 max-w-[3rem]' : 'h-8 max-w-full'} object-contain ${isCollapsed ? 'object-center' : 'object-left'} transition-all duration-300`}
             />
           </button>
         </div>
