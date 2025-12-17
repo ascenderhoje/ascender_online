@@ -578,7 +578,7 @@ export const PessoasPage = () => {
               onChange={(e) => setFuncaoFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#6B46C1] bg-white"
             >
-              <option value="todos">Todas as Funcoes</option>
+              <option value="todos">Todas as Funções</option>
               {uniqueFuncoes.map((funcao) => (
                 <option key={funcao} value={funcao}>
                   {funcao}

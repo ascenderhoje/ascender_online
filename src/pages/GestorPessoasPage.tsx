@@ -252,7 +252,7 @@ export function GestorPessoasPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Buscar por nome, e-mail ou funcao..."
+                placeholder="Buscar por nome, e-mail ou função..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ascender-purple focus:border-transparent font-nunito"
@@ -264,7 +264,7 @@ export function GestorPessoasPage() {
               onChange={(e) => setFuncaoFilter(e.target.value)}
               className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ascender-purple focus:border-transparent font-nunito bg-white"
             >
-              <option value="todos">Todas as Funcoes</option>
+              <option value="todos">Todas as Funções</option>
               {uniqueFuncoes.map((funcao) => (
                 <option key={funcao} value={funcao}>
                   {funcao}

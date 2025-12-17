@@ -499,28 +499,28 @@ export const HomePage = () => {
 
   const psicologaStatsCards = [
     {
-      label: 'Avaliacoes Atribuidas a Mim',
+      label: 'Avaliações Atribuídas a Mim',
       value: psicologaStats.avaliacoesAtribuidas.toString(),
       icon: ClipboardList,
       bgColor: 'bg-blue-100',
       textColor: 'text-blue-600',
     },
     {
-      label: 'Avaliacoes em Rascunho',
+      label: 'Avaliações em Rascunho',
       value: psicologaStats.avaliacoesRascunho.toString(),
       icon: Clock,
       bgColor: 'bg-amber-100',
       textColor: 'text-amber-600',
     },
     {
-      label: 'Avaliacoes Finalizadas',
+      label: 'Avaliações Finalizadas',
       value: psicologaStats.avaliacoesFinalizadas.toString(),
       icon: CheckCircle2,
       bgColor: 'bg-green-100',
       textColor: 'text-green-600',
     },
     {
-      label: 'Finalizadas no Mes',
+      label: 'Finalizadas no Mês',
       value: psicologaStats.avaliacoesFinalizadasMes.toString(),
       icon: Calendar,
       bgColor: 'bg-teal-100',
@@ -535,14 +535,14 @@ export const HomePage = () => {
 
         <div className="p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Dashboard da Psicologa</h1>
-            <p className="text-slate-600 mt-1">Acompanhe suas avaliacoes em andamento e organize sua rotina.</p>
+            <h1 className="text-3xl font-bold text-slate-900">Dashboard da Psicóloga</h1>
+            <p className="text-slate-600 mt-1">Acompanhe suas avaliações em andamento e organize sua rotina.</p>
             <p className="text-slate-500 text-sm mt-1">{administrador?.nome}</p>
           </div>
 
           {loading ? (
             <div className="bg-white p-12 rounded-lg border border-slate-200 text-center">
-              <p className="text-slate-500">Carregando suas informacoes...</p>
+              <p className="text-slate-500">Carregando suas informações...</p>
             </div>
           ) : (
             <>
@@ -573,7 +573,7 @@ export const HomePage = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <AlertTriangle size={20} className="text-amber-600" />
-                      <h3 className="text-lg font-semibold text-amber-800">Atencao: Avaliacoes Pendentes</h3>
+                      <h3 className="text-lg font-semibold text-amber-800">Atenção: Avaliações Pendentes</h3>
                     </div>
                     <div className="space-y-3">
                       {avaliacoesAtrasadas.map((avaliacao) => (
@@ -586,7 +586,7 @@ export const HomePage = () => {
                               <Clock size={20} className="text-amber-600" />
                             </div>
                             <p className="text-sm text-slate-700">
-                              A avaliacao de <span className="font-semibold text-slate-900">{avaliacao.colaborador_nome}</span> foi criada ha mais de {avaliacao.dias_atraso} dias e ainda nao foi finalizada.
+                              A avaliação de <span className="font-semibold text-slate-900">{avaliacao.colaborador_nome}</span> foi criada há mais de {avaliacao.dias_atraso} dias e ainda não foi finalizada.
                             </p>
                           </div>
                           <button
@@ -594,7 +594,7 @@ export const HomePage = () => {
                             className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
                           >
                             <Edit3 size={16} />
-                            Continuar Avaliacao
+                            Continuar Avaliação
                           </button>
                         </div>
                       ))}
@@ -605,7 +605,7 @@ export const HomePage = () => {
 
               <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900">Minhas Avaliacoes Atribuidas</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">Minhas Avaliações Atribuídas</h3>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <input
@@ -661,7 +661,7 @@ export const HomePage = () => {
                           </button>
                         </th>
                         <th className="text-right py-3 px-4 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                          Acoes
+                          Ações
                         </th>
                       </tr>
                     </thead>
@@ -669,7 +669,7 @@ export const HomePage = () => {
                       {filteredPsicologaAvaliacoes.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="py-8 text-center text-slate-500">
-                            {psicologaSearchTerm ? 'Nenhuma avaliacao encontrada com esse filtro' : 'Nenhuma avaliacao atribuida'}
+                            {psicologaSearchTerm ? 'Nenhuma avaliação encontrada com esse filtro' : 'Nenhuma avaliação atribuída'}
                           </td>
                         </tr>
                       ) : (
@@ -705,7 +705,7 @@ export const HomePage = () => {
                                   className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
                                 >
                                   <Edit3 size={16} />
-                                  Continuar Avaliacao
+                                  Continuar Avaliação
                                 </button>
                               )}
                             </td>
@@ -716,7 +716,7 @@ export const HomePage = () => {
                   </table>
                 </div>
                 <div className="mt-4 text-sm text-slate-500">
-                  Mostrando {filteredPsicologaAvaliacoes.length} de {todasAvaliacoes.length} avaliacoes
+                  Mostrando {filteredPsicologaAvaliacoes.length} de {todasAvaliacoes.length} avaliações
                 </div>
               </div>
 
@@ -729,8 +729,8 @@ export const HomePage = () => {
                     <Plus size={24} className="text-blue-600" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-slate-900">Nova Avaliacao</p>
-                    <p className="text-sm text-slate-600">Criar uma nova avaliacao</p>
+                    <p className="font-semibold text-slate-900">Nova Avaliação</p>
+                    <p className="text-sm text-slate-600">Criar uma nova avaliação</p>
                   </div>
                   <ArrowRight size={20} className="ml-auto text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                 </button>
@@ -743,8 +743,8 @@ export const HomePage = () => {
                     <CheckCircle2 size={24} className="text-green-600" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-slate-900">Minhas Avaliacoes Finalizadas</p>
-                    <p className="text-sm text-slate-600">Ver avaliacoes concluidas</p>
+                    <p className="font-semibold text-slate-900">Minhas Avaliações Finalizadas</p>
+                    <p className="text-sm text-slate-600">Ver avaliações concluídas</p>
                   </div>
                   <ArrowRight size={20} className="ml-auto text-slate-400 group-hover:text-green-600 group-hover:translate-x-1 transition-all" />
                 </button>
@@ -757,7 +757,7 @@ export const HomePage = () => {
                     <BookOpen size={24} className="text-slate-600" />
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold text-slate-900">Modelos de Avaliacao</p>
+                    <p className="font-semibold text-slate-900">Modelos de Avaliação</p>
                     <p className="text-sm text-slate-600">Gerenciar modelos</p>
                   </div>
                   <ArrowRight size={20} className="ml-auto text-slate-400 group-hover:text-slate-600 group-hover:translate-x-1 transition-all" />

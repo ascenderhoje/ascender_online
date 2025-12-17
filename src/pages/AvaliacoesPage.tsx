@@ -88,7 +88,7 @@ export const AvaliacoesPage = () => {
       if (error) throw error;
       setAvaliacoes(data || []);
     } catch (error: any) {
-      showToast('error', error.message || 'Erro ao carregar avaliacoes');
+      showToast('error', error.message || 'Erro ao carregar avaliações');
     } finally {
       setLoading(false);
     }
@@ -243,8 +243,8 @@ export const AvaliacoesPage = () => {
     });
 
   const pageTitle = filterMode === 'minhas-finalizadas'
-    ? 'Minhas Avaliacoes Finalizadas'
-    : 'Avaliacoes';
+    ? 'Minhas Avaliações Finalizadas'
+    : 'Avaliações';
 
   const clearFilterMode = () => {
     setFilterMode('all');
@@ -261,7 +261,7 @@ export const AvaliacoesPage = () => {
           <div className="flex gap-2">
             {filterMode === 'minhas-finalizadas' && (
               <Button variant="secondary" onClick={clearFilterMode}>
-                Ver Todas Avaliacoes
+                Ver Todas Avaliações
               </Button>
             )}
             <Button variant="secondary" icon={Mail} disabled={selectedIds.length === 0}>
@@ -271,7 +271,7 @@ export const AvaliacoesPage = () => {
               Copiar
             </Button>
             <Button icon={Plus} onClick={() => navigate('/avaliacoes/new')}>
-              Adicionar Avaliacao
+              Adicionar Avaliação
             </Button>
           </div>
         }
