@@ -10,7 +10,14 @@ import {
   TrendingUp,
   Clock,
   UserPlus,
-  FileText
+  FileText,
+  Search,
+  ArrowUp,
+  ArrowDown,
+  Plus,
+  Eye,
+  Edit3,
+  BookOpen
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { useRouter } from '../utils/router';
@@ -27,19 +34,27 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-interface AvaliacaoRascunho {
+interface AvaliacaoTabela {
   id: string;
   data_avaliacao: string;
   colaborador_nome: string;
   empresa_nome: string;
+  status: string;
   updated_at: string;
+  created_at: string;
+}
+
+interface AvaliacaoAtrasada {
+  id: string;
+  colaborador_nome: string;
+  dias_atraso: number;
 }
 
 interface PsicologaStats {
+  avaliacoesAtribuidas: number;
   avaliacoesRascunho: number;
   avaliacoesFinalizadas: number;
-  empresasAtendidas: number;
-  colaboradoresAvaliados: number;
+  avaliacoesFinalizadasMes: number;
 }
 
 interface AdminDashboardStats {
@@ -135,13 +150,17 @@ const getActivityColor = (entityType: string) => {
 export const HomePage = () => {
   const { navigate } = useRouter();
   const { administrador } = useAuth();
-  const [avaliacoesRecentes, setAvaliacoesRecentes] = useState<AvaliacaoRascunho[]>([]);
+  const [todasAvaliacoes, setTodasAvaliacoes] = useState<AvaliacaoTabela[]>([]);
+  const [avaliacoesAtrasadas, setAvaliacoesAtrasadas] = useState<AvaliacaoAtrasada[]>([]);
   const [psicologaStats, setPsicologaStats] = useState<PsicologaStats>({
+    avaliacoesAtribuidas: 0,
     avaliacoesRascunho: 0,
     avaliacoesFinalizadas: 0,
-    empresasAtendidas: 0,
-    colaboradoresAvaliados: 0,
+    avaliacoesFinalizadasMes: 0,
   });
+  const [psicologaSearchTerm, setPsicologaSearchTerm] = useState('');
+  const [psicologaSortBy, setPsicologaSortBy] = useState<'colaborador' | 'empresa' | 'status' | 'data'>('data');
+  const [psicologaSortOrder, setPsicologaSortOrder] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(true);
 
   const [adminStats, setAdminStats] = useState<AdminDashboardStats>({
@@ -173,31 +192,60 @@ export const HomePage = () => {
     try {
       setLoading(true);
 
-      const { data: rascunhoData, error: rascunhoError } = await supabase
+      const { data: todasData, error: todasError } = await supabase
         .from('avaliacoes')
         .select(`
           id,
           data_avaliacao,
+          status,
           updated_at,
+          created_at,
           empresa:empresas(nome),
           colaborador:pessoas!colaborador_id(nome)
         `)
         .eq('psicologa_responsavel_id', administrador.id)
-        .eq('status', 'rascunho')
-        .order('updated_at', { ascending: false })
-        .limit(10);
+        .order('updated_at', { ascending: false });
 
-      if (rascunhoError) throw rascunhoError;
+      if (todasError) throw todasError;
 
-      const avaliacoes = (rascunhoData || []).map((a: any) => ({
+      const avaliacoes = (todasData || []).map((a: any) => ({
         id: a.id,
         data_avaliacao: a.data_avaliacao,
         colaborador_nome: a.colaborador?.nome || 'N/A',
         empresa_nome: a.empresa?.nome || 'N/A',
+        status: a.status,
         updated_at: a.updated_at,
+        created_at: a.created_at,
       }));
 
-      setAvaliacoesRecentes(avaliacoes);
+      setTodasAvaliacoes(avaliacoes);
+
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const atrasadas = avaliacoes
+        .filter((a: AvaliacaoTabela) => {
+          if (a.status !== 'rascunho') return false;
+          const createdAt = new Date(a.created_at);
+          return createdAt < sevenDaysAgo;
+        })
+        .map((a: AvaliacaoTabela) => {
+          const createdAt = new Date(a.created_at);
+          const diffTime = now.getTime() - createdAt.getTime();
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          return {
+            id: a.id,
+            colaborador_nome: a.colaborador_nome,
+            dias_atraso: diffDays,
+          };
+        });
+
+      setAvaliacoesAtrasadas(atrasadas);
+
+      const { count: totalCount } = await supabase
+        .from('avaliacoes')
+        .select('id', { count: 'exact', head: true })
+        .eq('psicologa_responsavel_id', administrador.id);
 
       const { count: rascunhoCount } = await supabase
         .from('avaliacoes')
@@ -211,28 +259,25 @@ export const HomePage = () => {
         .eq('psicologa_responsavel_id', administrador.id)
         .eq('status', 'finalizada');
 
-      const { data: empresasData } = await supabase
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+
+      const { count: finalizadasMesCount } = await supabase
         .from('avaliacoes')
-        .select('empresa_id')
-        .eq('psicologa_responsavel_id', administrador.id);
-
-      const empresasUnicas = new Set(empresasData?.map(a => a.empresa_id) || []).size;
-
-      const { data: colaboradoresData } = await supabase
-        .from('avaliacoes')
-        .select('colaborador_id')
-        .eq('psicologa_responsavel_id', administrador.id);
-
-      const colaboradoresUnicos = new Set(colaboradoresData?.map(a => a.colaborador_id) || []).size;
+        .select('id', { count: 'exact', head: true })
+        .eq('psicologa_responsavel_id', administrador.id)
+        .eq('status', 'finalizada')
+        .gte('updated_at', firstDayOfMonth)
+        .lte('updated_at', lastDayOfMonth);
 
       setPsicologaStats({
+        avaliacoesAtribuidas: totalCount || 0,
         avaliacoesRascunho: rascunhoCount || 0,
         avaliacoesFinalizadas: finalizadaCount || 0,
-        empresasAtendidas: empresasUnicas,
-        colaboradoresAvaliados: colaboradoresUnicos,
+        avaliacoesFinalizadasMes: finalizadasMesCount || 0,
       });
     } catch (error: any) {
-      console.error('Erro ao carregar dados da psicóloga:', error);
+      console.error('Erro ao carregar dados da psicologa:', error);
     } finally {
       setLoading(false);
     }
@@ -421,140 +466,302 @@ export const HomePage = () => {
     }
   };
 
+  const handlePsicologaSort = (column: 'colaborador' | 'empresa' | 'status' | 'data') => {
+    if (psicologaSortBy === column) {
+      setPsicologaSortOrder(psicologaSortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPsicologaSortBy(column);
+      setPsicologaSortOrder('asc');
+    }
+  };
+
+  const filteredPsicologaAvaliacoes = todasAvaliacoes
+    .filter((a) => {
+      const search = psicologaSearchTerm.toLowerCase();
+      return (
+        a.colaborador_nome.toLowerCase().includes(search) ||
+        a.empresa_nome.toLowerCase().includes(search)
+      );
+    })
+    .sort((a, b) => {
+      let compareValue = 0;
+      if (psicologaSortBy === 'colaborador') {
+        compareValue = a.colaborador_nome.localeCompare(b.colaborador_nome);
+      } else if (psicologaSortBy === 'empresa') {
+        compareValue = a.empresa_nome.localeCompare(b.empresa_nome);
+      } else if (psicologaSortBy === 'status') {
+        compareValue = a.status.localeCompare(b.status);
+      } else if (psicologaSortBy === 'data') {
+        compareValue = new Date(a.data_avaliacao).getTime() - new Date(b.data_avaliacao).getTime();
+      }
+      return psicologaSortOrder === 'asc' ? compareValue : -compareValue;
+    });
+
   const psicologaStatsCards = [
     {
-      label: 'Avaliações em Rascunho',
-      value: psicologaStats.avaliacoesRascunho.toString(),
+      label: 'Avaliacoes Atribuidas a Mim',
+      value: psicologaStats.avaliacoesAtribuidas.toString(),
       icon: ClipboardList,
-      bgColor: 'bg-amber-100',
-      textColor: 'text-amber-600',
-      path: '/avaliacoes',
+      bgColor: 'bg-blue-100',
+      textColor: 'text-blue-600',
     },
     {
-      label: 'Avaliações Finalizadas',
+      label: 'Avaliacoes em Rascunho',
+      value: psicologaStats.avaliacoesRascunho.toString(),
+      icon: Clock,
+      bgColor: 'bg-amber-100',
+      textColor: 'text-amber-600',
+    },
+    {
+      label: 'Avaliacoes Finalizadas',
       value: psicologaStats.avaliacoesFinalizadas.toString(),
       icon: CheckCircle2,
       bgColor: 'bg-green-100',
       textColor: 'text-green-600',
-      path: '/avaliacoes',
     },
     {
-      label: 'Empresas Atendidas',
-      value: psicologaStats.empresasAtendidas.toString(),
-      icon: Building2,
-      bgColor: 'bg-blue-100',
-      textColor: 'text-blue-600',
-      path: '/empresas',
-    },
-    {
-      label: 'Colaboradores Avaliados',
-      value: psicologaStats.colaboradoresAvaliados.toString(),
-      icon: Users,
+      label: 'Finalizadas no Mes',
+      value: psicologaStats.avaliacoesFinalizadasMes.toString(),
+      icon: Calendar,
       bgColor: 'bg-teal-100',
       textColor: 'text-teal-600',
-      path: '/pessoas',
     },
   ];
 
   if (isPsicologa) {
     return (
       <>
-        <Header title="Dashboard" />
+        <Header title="Dashboard da Psicologa" />
 
         <div className="p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Bem-vindo(a), {administrador?.nome}</h1>
-            <p className="text-slate-600 mt-2">Aqui está um resumo das suas avaliações</p>
+            <h1 className="text-3xl font-bold text-slate-900">Dashboard da Psicologa</h1>
+            <p className="text-slate-600 mt-1">Acompanhe suas avaliacoes em andamento e organize sua rotina.</p>
+            <p className="text-slate-500 text-sm mt-1">{administrador?.nome}</p>
           </div>
 
           {loading ? (
             <div className="bg-white p-12 rounded-lg border border-slate-200 text-center">
-              <p className="text-slate-500">Carregando suas informações...</p>
+              <p className="text-slate-500">Carregando suas informacoes...</p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {psicologaStatsCards.map((stat) => {
                   const Icon = stat.icon;
                   return (
-                    <button
+                    <div
                       key={stat.label}
-                      onClick={() => navigate(stat.path)}
-                      className="bg-white p-6 rounded-lg border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all text-left group"
+                      className="bg-white p-6 rounded-xl border border-slate-200 hover:shadow-md transition-all"
                     >
-                      <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
                           <Icon size={24} className={stat.textColor} />
                         </div>
-                        <ArrowRight size={20} className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                        <div>
+                          <p className="text-sm font-medium text-slate-600">{stat.label}</p>
+                          <p className={`text-2xl font-bold ${stat.textColor}`}>{stat.value}</p>
+                        </div>
                       </div>
-                      <p className="text-sm font-medium text-slate-600 mb-1">{stat.label}</p>
-                      <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
 
-              <div className="grid grid-cols-1 gap-6">
-                <div className="bg-white rounded-lg border border-slate-200 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-900">Avaliações em Rascunho</h3>
-                    <button
-                      onClick={() => navigate('/avaliacoes')}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                    >
-                      Ver todas
-                      <ArrowRight size={16} />
-                    </button>
-                  </div>
-                  {avaliacoesRecentes.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      <ClipboardList size={48} className="mx-auto mb-3 text-slate-300" />
-                      <p>Você não tem avaliações em rascunho no momento</p>
+              {avaliacoesAtrasadas.length > 0 && (
+                <div className="mb-8">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <AlertTriangle size={20} className="text-amber-600" />
+                      <h3 className="text-lg font-semibold text-amber-800">Atencao: Avaliacoes Pendentes</h3>
                     </div>
-                  ) : (
                     <div className="space-y-3">
-                      {avaliacoesRecentes.map((avaliacao) => (
-                        <button
+                      {avaliacoesAtrasadas.map((avaliacao) => (
+                        <div
                           key={avaliacao.id}
-                          onClick={() => navigate(`/avaliacoes/${avaliacao.id}/edit`)}
-                          className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors group text-left"
+                          className="flex items-center justify-between bg-white p-4 rounded-lg border border-amber-100"
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="font-medium text-slate-900">{avaliacao.colaborador_nome}</p>
-                              <span className="text-slate-400">-</span>
-                              <p className="text-sm text-slate-600">{avaliacao.empresa_nome}</p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                              <Clock size={20} className="text-amber-600" />
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-slate-500">
-                              <span className="flex items-center gap-1">
-                                <Calendar size={12} />
-                                Avaliação: {formatDate(avaliacao.data_avaliacao)}
-                              </span>
-                              <span>Última edição: {formatRelativeTime(avaliacao.updated_at)}</span>
-                            </div>
+                            <p className="text-sm text-slate-700">
+                              A avaliacao de <span className="font-semibold text-slate-900">{avaliacao.colaborador_nome}</span> foi criada ha mais de {avaliacao.dias_atraso} dias e ainda nao foi finalizada.
+                            </p>
                           </div>
-                          <ArrowRight size={20} className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
-                        </button>
+                          <button
+                            onClick={() => navigate(`/avaliacoes/${avaliacao.id}/edit`)}
+                            className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
+                          >
+                            <Edit3 size={16} />
+                            Continuar Avaliacao
+                          </button>
+                        </div>
                       ))}
                     </div>
-                  )}
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-900">Minhas Avaliacoes Atribuidas</h3>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      value={psicologaSearchTerm}
+                      onChange={(e) => setPsicologaSearchTerm(e.target.value)}
+                      placeholder="Buscar por nome ou empresa..."
+                      className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                    />
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left py-3 px-4">
+                          <button
+                            onClick={() => handlePsicologaSort('colaborador')}
+                            className={`flex items-center text-xs font-semibold uppercase tracking-wider ${
+                              psicologaSortBy === 'colaborador' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-800'
+                            }`}
+                          >
+                            Nome do Colaborador
+                            {psicologaSortBy === 'colaborador' && (
+                              psicologaSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                        </th>
+                        <th className="text-left py-3 px-4">
+                          <button
+                            onClick={() => handlePsicologaSort('empresa')}
+                            className={`flex items-center text-xs font-semibold uppercase tracking-wider ${
+                              psicologaSortBy === 'empresa' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-800'
+                            }`}
+                          >
+                            Empresa
+                            {psicologaSortBy === 'empresa' && (
+                              psicologaSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                        </th>
+                        <th className="text-left py-3 px-4">
+                          <button
+                            onClick={() => handlePsicologaSort('status')}
+                            className={`flex items-center text-xs font-semibold uppercase tracking-wider ${
+                              psicologaSortBy === 'status' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-800'
+                            }`}
+                          >
+                            Status
+                            {psicologaSortBy === 'status' && (
+                              psicologaSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                        </th>
+                        <th className="text-right py-3 px-4 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                          Acoes
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPsicologaAvaliacoes.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="py-8 text-center text-slate-500">
+                            {psicologaSearchTerm ? 'Nenhuma avaliacao encontrada com esse filtro' : 'Nenhuma avaliacao atribuida'}
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredPsicologaAvaliacoes.map((avaliacao) => (
+                          <tr key={avaliacao.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                            <td className="py-3 px-4">
+                              <span className="font-medium text-slate-900">{avaliacao.colaborador_nome}</span>
+                            </td>
+                            <td className="py-3 px-4 text-slate-600">{avaliacao.empresa_nome}</td>
+                            <td className="py-3 px-4">
+                              {avaliacao.status === 'finalizada' ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Finalizada
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                  Rascunho
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {avaliacao.status === 'finalizada' ? (
+                                <button
+                                  onClick={() => navigate(`/avaliacoes/${avaliacao.id}/view`)}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                >
+                                  <Eye size={16} />
+                                  Visualizar
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => navigate(`/avaliacoes/${avaliacao.id}/edit`)}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors"
+                                >
+                                  <Edit3 size={16} />
+                                  Continuar Avaliacao
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-4 text-sm text-slate-500">
+                  Mostrando {filteredPsicologaAvaliacoes.length} de {todasAvaliacoes.length} avaliacoes
                 </div>
               </div>
 
-              <div className="mt-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg p-8 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2">Iniciar nova avaliação?</h3>
-                    <p className="text-blue-50">Crie uma nova avaliação e acompanhe o desenvolvimento dos colaboradores</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => navigate('/avaliacoes/new')}
+                  className="flex items-center gap-4 p-5 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors group"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <Plus size={24} className="text-blue-600" />
                   </div>
-                  <button
-                    onClick={() => navigate('/avaliacoes/new')}
-                    className="px-6 py-3 bg-white text-blue-600 rounded-lg font-medium hover:shadow-lg transition-all"
-                  >
-                    Nova Avaliação
-                  </button>
-                </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-slate-900">Nova Avaliacao</p>
+                    <p className="text-sm text-slate-600">Criar uma nova avaliacao</p>
+                  </div>
+                  <ArrowRight size={20} className="ml-auto text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                </button>
+
+                <button
+                  onClick={() => navigate('/avaliacoes?filter=minhas-finalizadas')}
+                  className="flex items-center gap-4 p-5 bg-green-50 border border-green-200 rounded-xl hover:bg-green-100 transition-colors group"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+                    <CheckCircle2 size={24} className="text-green-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-slate-900">Minhas Avaliacoes Finalizadas</p>
+                    <p className="text-sm text-slate-600">Ver avaliacoes concluidas</p>
+                  </div>
+                  <ArrowRight size={20} className="ml-auto text-slate-400 group-hover:text-green-600 group-hover:translate-x-1 transition-all" />
+                </button>
+
+                <button
+                  onClick={() => navigate('/modelos')}
+                  className="flex items-center gap-4 p-5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors group"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <BookOpen size={24} className="text-slate-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-slate-900">Modelos de Avaliacao</p>
+                    <p className="text-sm text-slate-600">Gerenciar modelos</p>
+                  </div>
+                  <ArrowRight size={20} className="ml-auto text-slate-400 group-hover:text-slate-600 group-hover:translate-x-1 transition-all" />
+                </button>
               </div>
             </>
           )}

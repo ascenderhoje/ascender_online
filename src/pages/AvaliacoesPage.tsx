@@ -5,6 +5,7 @@ import { Button } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { supabase } from '../lib/supabase';
 import { useRouter } from '../utils/router';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Avaliacao {
   id: string;
@@ -25,6 +26,7 @@ interface Empresa {
 export const AvaliacoesPage = () => {
   const { showToast } = useToast();
   const { navigate } = useRouter();
+  const { administrador } = useAuth();
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,11 +37,18 @@ export const AvaliacoesPage = () => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [sortBy, setSortBy] = useState<'data_avaliacao' | 'status' | 'empresa' | 'colaborador'>('data_avaliacao');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [filterMode, setFilterMode] = useState<'all' | 'minhas-finalizadas'>('all');
 
   useEffect(() => {
-    loadAvaliacoes();
+    const urlParams = new URLSearchParams(window.location.search);
+    const filter = urlParams.get('filter');
+    if (filter === 'minhas-finalizadas') {
+      setFilterMode('minhas-finalizadas');
+      setStatusFilter('finalizada');
+    }
+    loadAvaliacoes(filter === 'minhas-finalizadas');
     loadEmpresas();
-  }, []);
+  }, [administrador]);
 
   const loadEmpresas = async () => {
     try {
@@ -55,10 +64,10 @@ export const AvaliacoesPage = () => {
     }
   };
 
-  const loadAvaliacoes = async () => {
+  const loadAvaliacoes = async (filterByPsicologa = false) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('avaliacoes')
         .select(`
           *,
@@ -68,10 +77,18 @@ export const AvaliacoesPage = () => {
         `)
         .order('data_avaliacao', { ascending: false });
 
+      if (filterByPsicologa && administrador) {
+        query = query
+          .eq('psicologa_responsavel_id', administrador.id)
+          .eq('status', 'finalizada');
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       setAvaliacoes(data || []);
     } catch (error: any) {
-      showToast('error', error.message || 'Erro ao carregar avaliações');
+      showToast('error', error.message || 'Erro ao carregar avaliacoes');
     } finally {
       setLoading(false);
     }
@@ -225,12 +242,28 @@ export const AvaliacoesPage = () => {
       return sortOrder === 'asc' ? compareValue : -compareValue;
     });
 
+  const pageTitle = filterMode === 'minhas-finalizadas'
+    ? 'Minhas Avaliacoes Finalizadas'
+    : 'Avaliacoes';
+
+  const clearFilterMode = () => {
+    setFilterMode('all');
+    setStatusFilter('todos');
+    window.history.replaceState({}, '', window.location.pathname);
+    loadAvaliacoes(false);
+  };
+
   return (
     <>
       <Header
-        title="Avaliações"
+        title={pageTitle}
         action={
           <div className="flex gap-2">
+            {filterMode === 'minhas-finalizadas' && (
+              <Button variant="secondary" onClick={clearFilterMode}>
+                Ver Todas Avaliacoes
+              </Button>
+            )}
             <Button variant="secondary" icon={Mail} disabled={selectedIds.length === 0}>
               E-Mail Devolutiva
             </Button>
@@ -238,7 +271,7 @@ export const AvaliacoesPage = () => {
               Copiar
             </Button>
             <Button icon={Plus} onClick={() => navigate('/avaliacoes/new')}>
-              Adicionar Avaliação
+              Adicionar Avaliacao
             </Button>
           </div>
         }
@@ -424,17 +457,19 @@ export const AvaliacoesPage = () => {
                         {getStatusBadge(avaliacao.status)}
                       </td>
                       <td className="px-4 py-4 text-sm text-right space-x-2">
-                        <button
-                          onClick={() => navigate(`/avaliacoes/${avaliacao.id}/view`)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Visualizar
-                        </button>
+                        {avaliacao.status === 'finalizada' && (
+                          <button
+                            onClick={() => navigate(`/avaliacoes/${avaliacao.id}/view`)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Visualizar
+                          </button>
+                        )}
                         <button
                           onClick={() => navigate(`/avaliacoes/${avaliacao.id}/edit`)}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-teal-600 hover:text-teal-900"
                         >
-                          Editar
+                          {avaliacao.status === 'rascunho' ? 'Continuar' : 'Editar'}
                         </button>
                         <button
                           onClick={() => handleDelete(avaliacao.id)}
