@@ -103,12 +103,12 @@ export const Sidebar = () => {
         <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-gray-200 transition-all duration-300`}>
           <button
             onClick={() => navigate('/')}
-            className="hover:opacity-80 transition-opacity w-full"
+            className="hover:opacity-80 transition-opacity w-full flex items-center justify-center"
           >
             <img
               src="/Aplicação 1 copy.png"
               alt="Ascender Hoje"
-              className={`${isCollapsed ? 'h-8' : 'h-12'} w-auto mx-auto transition-all duration-300`}
+              className={`${isCollapsed ? 'h-10 max-w-[3.5rem]' : 'h-12 max-w-full'} object-contain object-left transition-all duration-300`}
             />
           </button>
         </div>

@@ -124,12 +124,12 @@ export const UserSidebar = () => {
         <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-ascender-purple/20 transition-all duration-300`}>
           <button
             onClick={handleLogoClick}
-            className="hover:opacity-80 transition-opacity w-full"
+            className="hover:opacity-80 transition-opacity w-full flex items-center justify-center"
           >
             <img
               src="/Aplicação 1 copy.png"
               alt="Ascender Hoje"
-              className={`${isCollapsed ? 'h-8' : 'h-14'} w-auto mx-auto transition-all duration-300`}
+              className={`${isCollapsed ? 'h-10 max-w-[3.5rem]' : 'h-14 max-w-full'} object-contain object-left transition-all duration-300`}
             />
           </button>
         </div>
