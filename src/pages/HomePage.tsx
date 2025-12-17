@@ -531,7 +531,7 @@ export const HomePage = () => {
   if (isPsicologa) {
     return (
       <>
-        <Header title="Dashboard da Psicologa" />
+        <Header title="Dashboard" />
 
         <div className="p-8">
           <div className="mb-8">
