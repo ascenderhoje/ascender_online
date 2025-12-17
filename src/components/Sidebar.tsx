@@ -97,7 +97,7 @@ export const Sidebar = () => {
 
   return (
     <div className="relative">
-      <aside className={`bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col transition-all duration-300 ease-in-out ${
+      <aside className={`bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 flex flex-col transition-all duration-300 ease-in-out z-50 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}>
         <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-gray-200 transition-all duration-300`}>
@@ -149,7 +149,7 @@ export const Sidebar = () => {
 
       <button
         onClick={toggleSidebar}
-        className={`fixed top-0 h-screen w-1 hover:w-1.5 bg-gradient-to-r from-gray-200 to-gray-100 hover:from-gray-300 hover:to-gray-200 transition-all duration-300 cursor-col-resize ${
+        className={`fixed top-0 h-screen w-1 hover:w-1.5 bg-gradient-to-r from-gray-200 to-gray-100 hover:from-gray-300 hover:to-gray-200 transition-all duration-300 cursor-col-resize z-50 ${
           isCollapsed ? 'left-20' : 'left-64'
         }`}
         title={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
