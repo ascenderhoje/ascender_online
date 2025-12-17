@@ -201,7 +201,7 @@ export const PDIBibliotecaPage = () => {
               {filteredContents.length} conteúdo{filteredContents.length !== 1 ? 's' : ''}{' '}
               encontrado{filteredContents.length !== 1 ? 's' : ''}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredContents.map((content) => (
                 <PDIContentCard
                   key={content.id}

@@ -121,7 +121,7 @@ export function UserDashboardPage() {
           <div className="absolute top-10 right-20 w-32 h-32 rounded-full bg-ascender-yellow"></div>
           <div className="absolute bottom-10 left-20 w-24 h-24 rounded-full bg-ascender-purple-light"></div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        <div className="px-4 sm:px-6 lg:px-8 py-12 relative z-10">
           <div className="flex items-center gap-6">
             <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
               <User className="w-12 h-12 text-ascender-purple" />
@@ -134,8 +134,8 @@ export function UserDashboardPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-2xl shadow-md p-6 border border-ascender-purple-light/20 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-ascender-purple-light/20 rounded-xl flex items-center justify-center">

@@ -174,7 +174,7 @@ export function GestorDashboardPage() {
 
   return (
     <div className="min-h-screen bg-ascender-neutral">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="gradient-purple text-white rounded-3xl p-8 mb-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 opacity-20">
             <div className="relative">
@@ -199,7 +199,7 @@ export function GestorDashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-ascender-purple-light/30 rounded-xl flex items-center justify-center">
@@ -241,7 +241,7 @@ export function GestorDashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-8 text-white">
             <h3 className="text-lg font-poppins font-semibold mb-2">PDIs Completos</h3>
             <p className="text-6xl font-poppins font-bold">{stats.pdisCompletos}</p>

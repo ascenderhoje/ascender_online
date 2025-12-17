@@ -235,7 +235,7 @@ export const HomePage = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                 {psicologaStatsCards.map((stat) => {
                   const Icon = stat.icon;
                   return (
@@ -335,7 +335,7 @@ export const HomePage = () => {
           <p className="text-slate-600 mt-2">Gerencie suas empresas, pessoas e grupos de forma eficiente</p>
         </div>
 
-        <div className="grid grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
@@ -357,7 +357,7 @@ export const HomePage = () => {
           })}
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <div className="bg-white rounded-lg border border-slate-200 p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Atividades Recentes</h3>
             <div className="space-y-4">

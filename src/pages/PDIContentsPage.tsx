@@ -170,7 +170,7 @@ export const PDIContentsPage = () => {
 
         {showFilters && (
           <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tipo de Mídia
@@ -225,7 +225,7 @@ export const PDIContentsPage = () => {
               {filteredContents.length} conteúdo{filteredContents.length !== 1 ? 's' : ''}{' '}
               encontrado{filteredContents.length !== 1 ? 's' : ''}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredContents.map((content) => (
                 <div key={content.id} className="relative">
                   <PDIContentCard
