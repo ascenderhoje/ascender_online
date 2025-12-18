@@ -68,7 +68,7 @@ export function LoginPage() {
         </div>
 
         {/* Login card */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-ascender-purple/10 border border-gray-200/50 p-8 transition-all duration-300 hover:shadow-ascender-purple/20">
+        <div className="bg-ascender-purple/5 backdrop-blur-xl rounded-3xl shadow-2xl shadow-ascender-purple/10 border border-ascender-purple/10 p-8 transition-all duration-300 hover:shadow-ascender-purple/20">
           <div className="mb-6 text-center">
             <h3 className="text-2xl font-semibold font-poppins text-ascender-purple mb-2">
               Bem-vindo de volta!
@@ -92,7 +92,7 @@ export function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
                   required
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/70 border border-gray-300/50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ascender-purple/30 focus:border-ascender-purple transition-all duration-300 font-nunito"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white/80 border border-ascender-purple/15 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ascender-purple/30 focus:border-ascender-purple transition-all duration-300 font-nunito"
                   disabled={loading}
                 />
               </div>
@@ -111,7 +111,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/70 border border-gray-300/50 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ascender-purple/30 focus:border-ascender-purple transition-all duration-300 font-nunito"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white/80 border border-ascender-purple/15 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ascender-purple/30 focus:border-ascender-purple transition-all duration-300 font-nunito"
                   disabled={loading}
                 />
               </div>
