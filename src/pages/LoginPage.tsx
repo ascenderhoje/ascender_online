@@ -171,6 +171,17 @@ export function LoginPage() {
           <p className="text-gray-600 text-xs font-nunito">
             © 2025 Ascender Hoje. Todos os direitos reservados.
           </p>
+          <p className="text-gray-600 text-xs font-nunito mt-2">
+            Quer conhecer melhor a Ascender Hoje?
+          </p>
+          <a
+            href="https://www.ascenderhoje.com.br/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ascender-purple hover:text-ascender-purple-dark text-xs font-nunito transition-colors"
+          >
+            Clique aqui para visitar nosso site.
+          </a>
         </div>
       </div>
 
