@@ -54,23 +54,23 @@ export function LoginPage() {
       {/* Main content */}
       <div className="w-full max-w-md relative z-10 animate-fade-in">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-2">
-            <Sparkles className="w-10 h-10 text-ascender-yellow animate-pulse" />
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center gap-2.5 mb-1">
+            <Sparkles className="w-8 h-8 text-ascender-yellow animate-pulse" />
             <div className="text-left">
-              <h1 className="text-3xl font-bold font-poppins text-ascender-yellow">ascender</h1>
-              <h2 className="text-2xl font-bold font-poppins text-gray-800">online</h2>
+              <h1 className="text-2xl font-bold font-poppins text-ascender-yellow leading-tight">ascender</h1>
+              <h2 className="text-xl font-bold font-poppins text-gray-800 leading-tight">online</h2>
             </div>
           </div>
-          <p className="text-gray-700 text-sm mt-3 font-nunito">
+          <p className="text-gray-700 text-sm mt-1.5 font-nunito">
             Desenvolvimento de pessoas e gestão de times
           </p>
         </div>
 
         {/* Login card */}
-        <div className="bg-ascender-purple/5 backdrop-blur-xl rounded-3xl shadow-2xl shadow-ascender-purple/10 border border-ascender-purple/10 p-8 transition-all duration-300 hover:shadow-ascender-purple/20">
-          <div className="mb-6 text-center">
-            <h3 className="text-2xl font-semibold font-poppins text-ascender-purple mb-2">
+        <div className="bg-ascender-purple/5 backdrop-blur-xl rounded-2xl shadow-2xl shadow-ascender-purple/10 border border-ascender-purple/10 p-6 transition-all duration-300 hover:shadow-ascender-purple/20">
+          <div className="mb-4 text-center">
+            <h3 className="text-xl font-semibold font-poppins text-ascender-purple mb-1">
               Bem-vindo de volta!
             </h3>
             <p className="text-gray-600 text-sm font-nunito">
@@ -78,10 +78,10 @@ export function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email input */}
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-nunito">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5 font-nunito">
                 E-mail
               </label>
               <div className="relative">
@@ -92,7 +92,7 @@ export function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seu@email.com"
                   required
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/80 border border-ascender-purple/15 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ascender-purple/30 focus:border-ascender-purple transition-all duration-300 font-nunito"
+                  className="w-full pl-12 pr-4 py-3 bg-white/80 border border-ascender-purple/15 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ascender-purple/30 focus:border-ascender-purple transition-all duration-300 font-nunito"
                   disabled={loading}
                 />
               </div>
@@ -100,7 +100,7 @@ export function LoginPage() {
 
             {/* Password input */}
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-nunito">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5 font-nunito">
                 Senha
               </label>
               <div className="relative">
@@ -111,7 +111,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/80 border border-ascender-purple/15 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ascender-purple/30 focus:border-ascender-purple transition-all duration-300 font-nunito"
+                  className="w-full pl-12 pr-4 py-3 bg-white/80 border border-ascender-purple/15 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ascender-purple/30 focus:border-ascender-purple transition-all duration-300 font-nunito"
                   disabled={loading}
                 />
               </div>
@@ -119,7 +119,7 @@ export function LoginPage() {
 
             {/* Error message */}
             {error && (
-              <div className="p-4 bg-red-50/80 border border-red-200/50 rounded-xl backdrop-blur-sm animate-shake">
+              <div className="p-3 bg-red-50/80 border border-red-200/50 rounded-xl backdrop-blur-sm animate-shake">
                 <p className="text-sm text-red-600 font-nunito">{error}</p>
               </div>
             )}
@@ -128,7 +128,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-ascender-yellow to-ascender-yellow-dark hover:from-ascender-yellow-dark hover:to-ascender-yellow text-gray-900 font-semibold py-3.5 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-ascender-yellow/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 font-poppins"
+              className="w-full bg-gradient-to-r from-ascender-yellow to-ascender-yellow-dark hover:from-ascender-yellow-dark hover:to-ascender-yellow text-gray-900 font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-ascender-yellow/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 font-poppins"
             >
               {loading ? (
                 <>
@@ -145,7 +145,7 @@ export function LoginPage() {
           </form>
 
           {/* Secondary actions */}
-          <div className="mt-6 flex flex-col gap-3 items-center">
+          <div className="mt-4 flex flex-col gap-2 items-center">
             <button
               onClick={() => navigate('/forgot-password')}
               disabled={loading}
@@ -167,7 +167,7 @@ export function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center">
+        <div className="mt-4 text-center">
           <p className="text-gray-600 text-xs font-nunito">
             © 2025 Ascender Hoje. Todos os direitos reservados.
           </p>
