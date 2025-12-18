@@ -293,7 +293,7 @@ export function UserDashboardPage() {
 
       setRecommendedContents(orderedContents);
     } catch (error: any) {
-      console.error('Erro ao carregar recomendacoes:', error);
+      console.error('Erro ao carregar recomendações:', error);
     }
   };
 
@@ -309,18 +309,18 @@ export function UserDashboardPage() {
 
       if (error) {
         if (error.code === '23505') {
-          showToast('error', 'Este conteudo ja esta no seu PDI');
+          showToast('error', 'Este conteúdo já está no seu PDI');
         } else {
           throw error;
         }
         return;
       }
 
-      showToast('success', 'Conteudo adicionado ao seu PDI');
+      showToast('success', 'Conteúdo adicionado ao seu PDI');
       loadPDIData();
       loadRecommendations();
     } catch (error: any) {
-      showToast('error', error.message || 'Erro ao adicionar conteudo');
+      showToast('error', error.message || 'Erro ao adicionar conteúdo');
     }
   };
 
@@ -359,15 +359,15 @@ export function UserDashboardPage() {
     const total = pdiContents.length + pdiActions.length;
 
     if (total === 0) {
-      return { label: 'Nao Iniciado', color: 'text-gray-600' };
+      return { label: 'Não Iniciado', color: 'text-gray-600' };
     }
     if (concluidos > 0 && emAndamento === 0) {
-      return { label: 'Concluido', color: 'text-green-600' };
+      return { label: 'Concluído', color: 'text-green-600' };
     }
     return { label: 'Em Andamento', color: 'text-blue-600' };
   };
 
-  const firstName = pessoa?.nome?.split(' ')[0] || 'Usuario';
+  const firstName = pessoa?.nome?.split(' ')[0] || 'Usuário';
   const pdiStatus = getPDIStatus();
   const progressPercentage = ultimaAvaliacao ? (ultimaAvaliacao.mediaGeral / 5) * 100 : 0;
   const pdiEmAndamento = pdiContents.filter(c => c.status === 'em_andamento').slice(0, 3);
@@ -394,11 +394,11 @@ export function UserDashboardPage() {
               <User className="w-10 h-10 text-ascender-purple" />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-poppins font-bold mb-2">Ola, {firstName}!</h1>
+              <h1 className="text-3xl font-poppins font-bold mb-2">Olá, {firstName}!</h1>
               <p className="text-ascender-purple-light font-nunito text-base leading-relaxed max-w-3xl">
-                Aqui voce acompanha suas avaliacoes de potencial e constroi seu Plano de Desenvolvimento Individual (PDI).
-                A avaliacao de potencial e uma ferramenta que identifica suas principais competencias, pontos fortes e
-                oportunidades de melhoria. Com base nesses dados, voce pode acessar conteudos e organizar seu plano de
+                Aqui você acompanha suas avaliações de potencial e constrói seu Plano de Desenvolvimento Individual (PDI).
+                A avaliação de potencial é uma ferramenta que identifica suas principais competências, pontos fortes e
+                oportunidades de melhoria. Com base nesses dados, você pode acessar conteúdos e organizar seu plano de
                 desenvolvimento pessoal dentro do sistema.
               </p>
             </div>
@@ -414,7 +414,7 @@ export function UserDashboardPage() {
                 <ClipboardList className="w-7 h-7 text-ascender-purple" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 font-nunito">Avaliacoes Finalizadas</p>
+                <p className="text-sm text-gray-600 font-nunito">Avaliações Finalizadas</p>
                 <p className="text-3xl font-poppins font-bold text-ascender-purple">{avaliacoes.length}</p>
               </div>
             </div>
@@ -440,7 +440,7 @@ export function UserDashboardPage() {
                 <Calendar className="w-7 h-7 text-ascender-yellow-dark" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-600 font-nunito">Proxima Atividade</p>
+                <p className="text-sm text-gray-600 font-nunito">Próxima Atividade</p>
                 {nextActivity ? (
                   <div>
                     <p className="text-lg font-poppins font-bold text-gray-900 truncate" title={nextActivity.title}>
@@ -459,14 +459,14 @@ export function UserDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-200">
-              <h2 className="text-xl font-poppins font-semibold text-gray-900">Resumo da Ultima Avaliacao</h2>
+              <h2 className="text-xl font-poppins font-semibold text-gray-900">Resumo da Última Avaliação</h2>
             </div>
 
             {ultimaAvaliacao ? (
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm text-gray-500 font-nunito">Data da avaliacao</p>
+                    <p className="text-sm text-gray-500 font-nunito">Data da avaliação</p>
                     <p className="font-poppins font-medium text-gray-900">{formatDate(ultimaAvaliacao.data_avaliacao)}</p>
                   </div>
                   {ultimaAvaliacao.modelo && (
@@ -479,7 +479,7 @@ export function UserDashboardPage() {
 
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm text-gray-600 font-nunito">Media Geral</p>
+                    <p className="text-sm text-gray-600 font-nunito">Média Geral</p>
                     <div className="flex items-center gap-2">
                       <span className={`text-2xl font-poppins font-bold ${getMediaColor(ultimaAvaliacao.mediaGeral)}`}>
                         {ultimaAvaliacao.mediaGeral.toFixed(2)}
@@ -506,7 +506,7 @@ export function UserDashboardPage() {
 
                 {ultimaAvaliacao.tags && ultimaAvaliacao.tags.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-sm text-gray-600 font-nunito mb-2">Areas de Desenvolvimento</p>
+                    <p className="text-sm text-gray-600 font-nunito mb-2">Áreas de Desenvolvimento</p>
                     <div className="flex flex-wrap gap-2">
                       {ultimaAvaliacao.tags.map(tag => (
                         <span
@@ -525,15 +525,15 @@ export function UserDashboardPage() {
                   className="w-full mt-4 px-4 py-3 bg-ascender-purple text-white rounded-xl hover:bg-ascender-purple-dark transition-colors font-nunito font-medium flex items-center justify-center gap-2"
                 >
                   <Eye className="w-5 h-5" />
-                  Ver Avaliacao Completa
+                  Ver Avaliação Completa
                 </button>
               </div>
             ) : (
               <div className="p-12 text-center">
                 <ClipboardList className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 font-nunito mb-2">Voce ainda nao possui avaliacoes finalizadas</p>
+                <p className="text-gray-500 font-nunito mb-2">Você ainda não possui avaliações finalizadas</p>
                 <p className="text-sm text-gray-400 font-nunito">
-                  Quando sua primeira avaliacao for concluida, os resultados aparecerao aqui.
+                  Quando sua primeira avaliação for concluída, os resultados aparecerão aqui.
                 </p>
               </div>
             )}
@@ -554,9 +554,9 @@ export function UserDashboardPage() {
             {pdiEmAndamento.length === 0 && acoesEmAndamento.length === 0 ? (
               <div className="p-8 text-center">
                 <Target className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 font-nunito mb-2">Seu PDI ainda esta vazio</p>
+                <p className="text-gray-500 font-nunito mb-2">Seu PDI ainda está vazio</p>
                 <p className="text-sm text-gray-400 font-nunito mb-4">
-                  Monte seu plano de desenvolvimento com base na sua avaliacao
+                  Monte seu plano de desenvolvimento com base na sua avaliação
                 </p>
                 <button
                   onClick={() => navigate('/pdi/biblioteca')}
@@ -570,7 +570,7 @@ export function UserDashboardPage() {
               <div className="p-6">
                 {pdiEmAndamento.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700 font-nunito mb-3">Conteudos em Andamento</p>
+                    <p className="text-sm font-medium text-gray-700 font-nunito mb-3">Conteúdos em Andamento</p>
                     <div className="space-y-3">
                       {pdiEmAndamento.map(uc => (
                         <div key={uc.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -599,7 +599,7 @@ export function UserDashboardPage() {
 
                 {acoesEmAndamento.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700 font-nunito mb-3">Acoes Personalizadas</p>
+                    <p className="text-sm font-medium text-gray-700 font-nunito mb-3">Ações Personalizadas</p>
                     <div className="space-y-3">
                       {acoesEmAndamento.map(action => (
                         <div key={action.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -620,7 +620,7 @@ export function UserDashboardPage() {
                               ? 'bg-green-100 text-green-800'
                               : 'bg-blue-100 text-blue-800'
                           }`}>
-                            {action.status === 'concluido' ? 'Concluido' : 'Em andamento'}
+                            {action.status === 'concluido' ? 'Concluído' : 'Em andamento'}
                           </span>
                         </div>
                       ))}
@@ -645,20 +645,20 @@ export function UserDashboardPage() {
             <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Sparkles className="w-6 h-6 text-ascender-yellow" />
-                <h2 className="text-xl font-poppins font-semibold text-gray-900">Conteudos Recomendados</h2>
+                <h2 className="text-xl font-poppins font-semibold text-gray-900">Conteúdos Recomendados</h2>
               </div>
               <button
                 onClick={() => navigate('/pdi/biblioteca')}
                 className="text-sm text-ascender-purple hover:underline font-nunito flex items-center gap-1"
               >
-                Ver mais conteudos
+                Ver mais conteúdos
                 <ArrowRight size={16} />
               </button>
             </div>
 
             <div className="p-6">
               <p className="text-sm text-gray-600 font-nunito mb-6">
-                Sugestoes baseadas nas areas de desenvolvimento identificadas na sua avaliacao
+                Sugestões baseadas nas áreas de desenvolvimento identificadas na sua avaliação
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {recommendedContents.slice(0, 4).map(content => (
@@ -678,7 +678,7 @@ export function UserDashboardPage() {
         {avaliacoes.length > 1 && (
           <div className="mt-8 bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-200">
-              <h2 className="text-xl font-poppins font-semibold text-gray-900">Historico de Avaliacoes</h2>
+              <h2 className="text-xl font-poppins font-semibold text-gray-900">Histórico de Avaliações</h2>
             </div>
 
             <div className="overflow-x-auto">
@@ -692,10 +692,10 @@ export function UserDashboardPage() {
                       Modelo
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-nunito font-semibold text-gray-500 uppercase tracking-wider">
-                      Media
+                      Média
                     </th>
                     <th className="px-6 py-4 text-right text-xs font-nunito font-semibold text-gray-500 uppercase tracking-wider">
-                      Acoes
+                      Ações
                     </th>
                   </tr>
                 </thead>
