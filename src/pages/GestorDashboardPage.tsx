@@ -317,7 +317,7 @@ export function GestorDashboardPage() {
       case 'sem_avaliacao':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-            Sem avaliacao
+            Sem avaliação
           </span>
         );
     }
@@ -331,7 +331,7 @@ export function GestorDashboardPage() {
 
   const getCurrentMonthName = () => {
     const months = [
-      'Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho',
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
     return months[new Date().getMonth()];
@@ -361,16 +361,16 @@ export function GestorDashboardPage() {
           </div>
           <div className="relative z-10">
             <h1 className="text-4xl font-poppins font-bold mb-4">
-              Ola, {pessoa?.nome?.split(' ')[0]} :)
+              Olá, {pessoa?.nome?.split(' ')[0]} :)
             </h1>
             <p className="text-lg font-nunito mb-2">
-              Aqui voce tera acesso ao desenvolvimento de cada colaborador que faz parte da sua equipe, alem de acompanhar, gerenciar e dar muito feedback!
+              Aqui você terá acesso ao desenvolvimento de cada colaborador que faz parte da sua equipe, além de acompanhar, gerenciar e dar muito feedback!
             </p>
             <p className="text-base font-nunito mt-4 font-semibold">
-              Um sistema mais completo para voce e sua equipe!
+              Um sistema mais completo para você e sua equipe!
             </p>
             <p className="text-base font-nunito mt-2">
-              Voce esta pronto para essa jornada?
+              Você está pronto para essa jornada?
             </p>
           </div>
         </div>
@@ -396,7 +396,7 @@ export function GestorDashboardPage() {
                 <ClipboardCheck className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 font-nunito">Avaliacoes em {getCurrentMonthName()}</p>
+                <p className="text-sm text-gray-600 font-nunito">Avaliações em {getCurrentMonthName()}</p>
                 <p className="text-3xl font-poppins font-bold text-blue-600">
                   {stats.avaliacoesFinalizadasMes}
                 </p>
@@ -407,7 +407,7 @@ export function GestorDashboardPage() {
           <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 md:col-span-2">
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
-                <p className="text-sm text-gray-600 font-nunito">Media geral do time</p>
+                <p className="text-sm text-gray-600 font-nunito">Média geral do time</p>
                 <span className={`text-2xl font-poppins font-bold ${getMediaColor(stats.mediaGeral)}`}>
                   {stats.mediaGeral.toFixed(2)}
                 </span>
@@ -437,7 +437,7 @@ export function GestorDashboardPage() {
                 <Briefcase className="w-5 h-5 text-gray-600" />
               </div>
               <h3 className="text-lg font-poppins font-semibold text-gray-900">
-                Avaliacoes por Funcao ({getCurrentMonthName()})
+                Avaliações por Função ({getCurrentMonthName()})
               </h3>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -463,7 +463,7 @@ export function GestorDashboardPage() {
           <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-6 text-white">
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle className="w-6 h-6" />
-              <h3 className="text-lg font-poppins font-semibold">PDIs Concluidos</h3>
+              <h3 className="text-lg font-poppins font-semibold">PDIs Concluídos</h3>
             </div>
             <p className="text-5xl font-poppins font-bold">{stats.pdisConcluidos}</p>
           </div>
@@ -474,7 +474,7 @@ export function GestorDashboardPage() {
               <h3 className="text-lg font-poppins font-semibold">PDIs Em Atraso</h3>
             </div>
             <p className="text-5xl font-poppins font-bold">{stats.pdisAtrasados}</p>
-            <p className="text-xs mt-1 opacity-80 font-nunito">Sem conteudo adicionado</p>
+            <p className="text-xs mt-1 opacity-80 font-nunito">Sem conteúdo adicionado</p>
           </div>
         </div>
 
@@ -484,13 +484,13 @@ export function GestorDashboardPage() {
               Colaboradores Recentes
             </h3>
             <p className="text-sm text-gray-600 font-nunito">
-              Ordenados pela data da ultima avaliacao finalizada
+              Ordenados pela data da última avaliação finalizada
             </p>
           </div>
 
           {colaboradores.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-gray-500 font-nunito">Nenhum colaborador encontrado nos grupos que voce gerencia.</p>
+              <p className="text-gray-500 font-nunito">Nenhum colaborador encontrado nos grupos que você gerencia.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -501,19 +501,19 @@ export function GestorDashboardPage() {
                       Colaborador
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wider">
-                      Funcao
+                      Função
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wider">
-                      Avaliacoes
+                      Avaliações
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wider">
-                      Ultima Avaliacao
+                      Última Avaliação
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wider">
                       Status PDI
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-poppins font-semibold text-gray-500 uppercase tracking-wider">
-                      Acoes
+                      Ações
                     </th>
                   </tr>
                 </thead>
@@ -561,7 +561,7 @@ export function GestorDashboardPage() {
                             className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-nunito text-ascender-purple hover:bg-ascender-purple-light/10 rounded-lg transition-colors"
                           >
                             <FileText size={14} />
-                            Relatorio
+                            Relatório
                           </button>
                           <button
                             onClick={() => navigate(`/gestor-pessoa/${colab.id}?tab=pdi`)}
